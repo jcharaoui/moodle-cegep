@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="blocks/cegep/db" VERSION="20090601" COMMENT="XMLDB file for Moodle blocks/cegep"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="cegep_request" COMMENT="Holds course requests entered through CEGEP module.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="username"/>
+        <FIELD NAME="username" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="id" NEXT="coursecode"/>
+        <FIELD NAME="coursecode" TYPE="text" LENGTH="small" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="username" NEXT="comments"/>
+        <FIELD NAME="comments" TYPE="text" LENGTH="small" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="coursecode" NEXT="created"/>
+        <FIELD NAME="created" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="comments" NEXT="state"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="8" NOTNULL="true" DEFAULT="new" SEQUENCE="false" ENUM="true" ENUMVALUES="'new', 'waiting', 'accepted', 'denied'" PREVIOUS="created"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="request" UNIQUE="false" FIELDS="username"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
