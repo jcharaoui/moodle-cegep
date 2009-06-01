@@ -113,7 +113,7 @@ function cegep_enrol() {
         $studentlist = '';
         while ($students_rs && !$students_rs->EOF) {
             $student = $students_rs->fields;
-        	$insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `coursegroup_id`) VALUES ('$COURSE->idnumber', '$student[username]', '$coursegroup[id]'); ";
+        	$insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`) VALUES ('$COURSE->idnumber', '$student[username]', '$CFG->block_cegep_studentrole', '$coursegroup[id]');";
             $result = $enroldb->Execute($insert);
             if (!$result) {
                 trigger_error(get_string('errorimportingstudentlist','block_cegep'), E_USER_ERROR);
