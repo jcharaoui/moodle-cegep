@@ -30,5 +30,10 @@ $settings->add(new admin_setting_configtext('sisdb_user', get_string('sisdb_user
 
 $settings->add(new admin_setting_configpasswordunmask('sisdb_pass', get_string('sisdb_pass', 'block_cegep'),
                    null, null, PARAM_TEXT));
-                   
+
+$linklist = '<ul>';
+$linklist .='<li><a href="'.$CFG->wwwroot.'/blocks/cegep/sisdb/sync_csv.php">'.get_string('sisdb_sync_csv', 'block_cegep').'</a></li>';
+$linklist .= '</ul>';
+
+$settings->add(new admin_setting_heading('sisdb_sync_heading', '', $linklist));
 ?>

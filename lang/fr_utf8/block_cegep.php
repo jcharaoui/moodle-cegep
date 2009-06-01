@@ -51,14 +51,13 @@ $string['coursegroupinvalid'] = 'Le groupe-cours spécifié est invalide.';
 $string['studentrole'] = 'Rôle étudiant';
 $string['studentrole_help'] = 'Rôle à assigner aux étudiants dans la base de données externe.';
 $string['sisdb_heading'] = 'Base de données du SIS';
-$string['sisdb_help'] = 'Informations d\'accès pour la base de données intermédiaire du systeèm d\'information scolaire de l\'institution.';
+$string['sisdb_help'] = 'Informations d\'accès pour la base de données intermédiaire du système d\'information scolaire de l\'institution.';
 $string['sisdb_type'] = 'Type de BD';
 $string['sisdb_host'] = 'Hôte';
 $string['sisdb_name'] = 'Nom de la BD';
 $string['sisdb_user'] = 'Nom d\'utilisateur';
 $string['sisdb_pass'] = 'Mot de passe';
-
-
+$string['sisdb_sync_csv'] = 'Synchroniser la BD avec un fichier CSV';
 
 // Errors
 $string['errorenroldbnotavailable'] = 'Le module d\'inscription base de données externe doit être activé pour le fonctionnement de ce module.';
