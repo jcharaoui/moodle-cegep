@@ -59,6 +59,40 @@ $string['sisdb_user'] = '';
 $string['sisdb_pass'] = '';
 $string['sisdb_sync_csv'] = '';
 
+// Course request
+$string['courserequest'] = '';
+$string['courserequest_instructions'] = '';
+$string['courserequest_username'] = '';
+$string['courserequest_success'] = '';
+$string['courserequest_failed'] = '';
+$string['courserequest_nothing'] = '';
+$string['courserequest_nonew'] = '';
+$string['courserequest_nowaiting'] = '';
+$string['courserequest_by'] = '';
+$string['courserequest_since'] = '';
+$string['courserequest_courses'] = '';
+$string['courserequest_comments'] = '';
+$string['courserequest_state'] = '';
+$string['courserequest_new'] = '';
+$string['courserequest_waiting'] = '';
+$string['courserequest_statenew'] = '';
+$string['courserequest_statewaiting'] = '';
+$string['courserequest_stateaccepted'] = '';
+$string['courserequest_statedenied'] = '';
+$string['courserequest_statedelete'] = '';
+$string['courserequest_statemodify'] = '';
+$string['courserequest_modsuccess'] = '';
+$string['courserequest_delsuccess'] = '';
+$string['courserequest_modfailed'] = '';
+$string['courserequest_createsuccess'] = '';
+$string['courserequest_createfailed'] = '';
+$string['courserequest_exists'] = '';
+$string['courserequest_duplicate'] = '';
+$string['invalidcoursecode'] = '';
+$string['atleastonecoursecode'] = '';
+$string['specifycoursenumber'] = '';
+$string['specifycoursenumber'] = '';
+
 // Errors
 $string['errorenroldbnotavailable'] = '';
 $string['erroractionnotavailable'] = '';
