@@ -22,7 +22,7 @@ function cegep_dbconnect($type, $host, $name, $user, $pass) {
         
         return $sisdb;
     } else {
-        trigger_error("Error connecting to SIS DB backend with: "
+        trigger_error("Error connecting to DB backend with: "
                       . "$host, $user, $pass, $name");
         return false;
     }
