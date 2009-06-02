@@ -10,7 +10,7 @@ class cegep_enrol_form extends moodleform {
         $year = date('Y');
 
         $enrol = array();
-        $enrol[] =& $mform->createElement('select', 'semester', null, array('' => '', 'autumn' => get_string('autumn','block_cegep'), 'winter' => get_string('winter','block_cegep'), 'summer' => get_string('summer','block_cegep')));
+        $enrol[] =& $mform->createElement('select', 'semester', null, array('' => '', '1' => get_string('winter','block_cegep'), '2' => get_string('summer','block_cegep'), '3' => get_string('autumn','block_cegep')));
         $enrol[] =& $mform->createElement('select', 'year', null, array('' => '', $year-1 => $year-1, $year => $year, $year+1 => $year+1));
         $mform->addGroup($enrol, 'semester', get_string('semester','block_cegep').' :', '&nbsp;', false);
         $mform->addRule('semester', get_string('specifysemester','block_cegep'), 'required');
@@ -22,7 +22,7 @@ class cegep_enrol_form extends moodleform {
         array(get_string('specifyyear','block_cegep'), 'required')
         )
         ), 'required', null, 2);
-        $mform->setType('semester', PARAM_ALPHA);
+        $mform->setType('semester', PARAM_INT);
         $mform->setType('year', PARAM_INT);
 
         $mform->addElement('text', 'coursegroup', get_string('coursegroup','block_cegep').' :', 'size="6", maxlength="6"');
@@ -47,14 +47,12 @@ class cegep_enrol_form extends moodleform {
         if (!empty($errors))
             return $errors;
 
-        $session = substr($data['semester'],0,1) . $data['year'];
-
         // Verify if the semester/year is available in the system
-        if (!self::validate_semester($session))
+        if (!self::validate_semester("$data[year]$data[semester]"))
             $errors['semester'] = get_string('semesterunavailable','block_cegep');
 
         // Verify if the coursegroup is available in the system
-        elseif (!$coursegroup_id = self::validate_coursegroup_exists($data['coursegroup'], $session))
+        elseif (!$coursegroup_id = self::validate_coursegroup_exists($data['coursegroup'],"$data[year]$data[semester]"))  
             $errors['coursegroup'] = get_string('coursegroupunavailable','block_cegep');
             
         // Verify if the coursegroup is already enrolled into this course
@@ -116,4 +114,4 @@ class cegep_enrol_form extends moodleform {
 
 }
 
-    ?>
+?>

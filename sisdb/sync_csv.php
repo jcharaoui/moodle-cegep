@@ -11,7 +11,7 @@ if (!is_siteadmin($USER->id)) {
 	print_error("Désolé, cette page n'est accessible qu'aux administrateurs du système.");
 }
 
-$trimestre  = optional_param('trimestre', null, PARAM_ALPHA);
+$trimestre  = optional_param('trimestre', null, PARAM_INT);
 $annee      = optional_param('annee', null, PARAM_INT);
 $go         = optional_param('confirmation', null, PARAM_BOOL);
 
@@ -43,9 +43,9 @@ else {
 $msg = '';
 
 if (empty($_FILES) || empty($trimestre) || empty($annee)) {
-	print_box('Mettre à jour la base de données intermédiaire du SIS avec un fichier CSV. Le fichier doit comporter les champs suivants :<br /><br />Service<br />Session (ex. Été)<br />Code du cours, format MEQ (ex. 101-801-MA)<br />Titre du cours<br />Numéro du groupe-cours (six chiffres)<br />Numéro de DA<br />Nom, Prénom<br />Programme', 'generalbox boxwidthnarrow boxaligncenter');
+	print_box('Mettre à jour la base de données intermédiaire du SIS avec un fichier CSV. Le fichier doit comporter les champs suivants :<br /><br />Service<br />Année (ex. 2009)<br />Session (1 pour hiver, etc.)<br />Code du cours, format MEQ (ex. 101-801-MA)<br />Titre du cours<br />Numéro du groupe-cours (six chiffres)<br />Numéro de DA<br />Nom, Prénom<br />Programme', 'generalbox boxwidthnarrow boxaligncenter');
 	$form = '<center><form enctype="multipart/form-data" action="sync_csv.php" method="post">Fichier : <input name="uploadedfile" type="file" /><br /><br />';
-	$form .= 'Session : <select name="trimestre"><option value=""></option><option value="automne">Automne</option><option value="hiver">Hiver</option><option value="ete">Été</option> <input name="annee" type="text" size="4" maxlength="4" />';
+	$form .= 'Session : <select name="trimestre"><option value=""></option><option value="1">Hiver</option><option value="2">Été</option><option value="3">Automne</option></select><input name="annee" type="text" size="4" maxlength="4" />';
 	$form .= '<br /><br /><input type="submit" value="Envoyer" /></form></center>';
 	print_box($form);
 	print_footer();
@@ -73,7 +73,7 @@ else {
 	$del_inscription = 0;
 	$skipped = 0;
 
-	$session = substr($trimestre,0,1) . $annee;
+	$session = $annee . $trimestre;
 
 	foreach ($file as $line) {
 
@@ -85,10 +85,8 @@ else {
 		if (empty($record[5])) { $skipped++; continue; }
 
 		// Mettre à jour les infos de session
-		$record[1] = strtolower($record[1]);
-		if ($record[1] != 'hiver' && $record[1] != 'automne') { $record[1] = 'ete'; }
-		if ($trimestre != $record[1] || $annee != $record[2]) {
-			echo "Erreur, une session trouvée dans le fichier ne correspond pas! ($record[1] $record[2])";
+		if ($session != $record[1] . $record[2]) {
+			echo "Erreur, une session trouvée dans le fichier ne correspond pas! ($record[1])";
 			break;
 		}
 

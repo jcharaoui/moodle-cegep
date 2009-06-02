@@ -95,7 +95,7 @@ function cegep_enrol() {
         $coursecode = substr($COURSE->idnumber, 0, strripos($COURSE->idnumber, '_'));
 
         // Extract semester info
-        $semester = substr($data->semester,0,1) . $data->year;
+        $semester = $data->year . $data->semester;
 
         // Fetch record of the coursegroup from SIS
         $select_coursegroup = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `semester` = '$semester' AND `group` = '$data->coursegroup'";
