@@ -5,7 +5,7 @@ include_once($CFG->dirroot . '/course/lib.php');
 class block_cegep extends block_list {
     function init() {
         $this->title = get_string('admincegep', 'block_cegep');
-        $this->version = 20090529;
+        $this->version = 20090602;
     }
     
     function has_config() {return true;}

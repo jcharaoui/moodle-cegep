@@ -1,5 +1,24 @@
 <?php
 
+function cegep_delete_course_enrolments($course) {
+    global $CFG;
+    
+    $enroldb = enroldb_connect();
+
+    $delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$course->idnumber';";
+
+    $result = $enroldb->Execute($delete);
+    
+    if (!$result) {
+        notify(get_string('errordeletingenrolment','block_cegep'));
+        $enroldb->Close();
+        return false;
+    } else {
+        notify(get_string('coursegroupunenrolled','block_cegep',array($enroldb->Affected_Rows())));
+        $enroldb->Close();
+        return true;
+    }
+}
 
 function sisdb_connect() {
     global $CFG;
