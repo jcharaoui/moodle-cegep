@@ -220,12 +220,12 @@ function cegep_studentlist() {
                     $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `id` = '$coursegroup_id'";
                     $coursegroup = $sisdb->Execute($select)->fields;
             
-                    switch (substr($coursegroup['semester'],0,1)) {
-                        case 'e' : $semester = get_string('summer', 'block_cegep'); break;
-                        case 'a' : $semester = get_string('autumn', 'block_cegep'); break;
-                        case 'h' : $semester = get_string('winter', 'block_cegep'); break;
+                    switch (substr($coursegroup['semester'],-1)) {
+                        case '1' : $semester = get_string('winter', 'block_cegep'); break;
+                        case '2' : $semester = get_string('summer', 'block_cegep'); break;
+                        case '3' : $semester = get_string('autumn', 'block_cegep'); break;
                     }
-                    $year = substr($coursegroup['semester'],1,4);
+                    $year = substr($coursegroup['semester'],0,4);
             
                     $notice = '';
             

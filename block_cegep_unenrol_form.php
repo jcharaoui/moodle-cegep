@@ -58,7 +58,13 @@ class cegep_unenrol_form extends moodleform {
             $coursegroup_num = $coursegroups_rs->fields['num'];
             $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
             $coursegroup = $sisdb->Execute($select)->fields;
-            $coursegroups[$coursegroup_id] = "Gr. $coursegroup[group] - $coursegroup[semester] ($coursegroup_num ".get_string('students', 'block_cegep').')';
+            switch (substr($coursegroup['semester'],-1)) {
+                case '1' : $semester = get_string('winter', 'block_cegep'); break;
+                case '2' : $semester = get_string('summer', 'block_cegep'); break;
+                case '3' : $semester = get_string('autumn', 'block_cegep'); break;
+            }
+            $year = substr($coursegroup['semester'],0,4);
+            $coursegroups[$coursegroup_id] = "Gr. $coursegroup[group] - $semester $year ($coursegroup_num ".get_string('students', 'block_cegep').')';
             $coursegroups_rs->MoveNext();
         }
         return $coursegroups;
@@ -83,4 +89,4 @@ class cegep_unenrol_form extends moodleform {
 
 }
 
-    ?>
+?>
