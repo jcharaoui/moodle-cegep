@@ -109,6 +109,9 @@ function cegep_enrol() {
             print_error('errorimportingstudentlist','block_cegep');
         }
 
+        $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+        $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
+
         // Go through each student and insert Moodle external enrolment database record
         $studentlist = '';
         while ($students_rs && !$students_rs->EOF) {
@@ -120,6 +123,10 @@ function cegep_enrol() {
                 break;
             } else {
                 $studentlist .= $student['username'].'<br />';
+            }
+            // If user exists in database, assign its role right away
+            if ($student_user = get_record('user', 'username', $student['username'])) {
+		        role_assign($student_role->id, $student_user->id, 0, $context->id);
             }
             $students_rs->MoveNext();
         }
@@ -158,8 +165,25 @@ function cegep_unenrol() {
     // Process validated data
     elseif ($data = $unenrolform->get_data()) {
 
-        // Go through each coursegroup and remove Moodle external enrolment database record
         $coursegroup_list = implode(', ', $data->coursegroup);
+
+        // Get usernames before removing
+        $select = "SELECT `$CFG->enrol_remoteuserfield` FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IN ($coursegroup_list);";
+
+        $usernames = recordset_to_array($enroldb->Execute($select));
+
+        // If user exists, unassign role right away
+        if ($usernames) {
+            $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+            $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
+            foreach ($usernames as $username) {
+                if ($student_user = get_record('user', 'username', $username->username)) {
+                    role_unassign($student_role->id, $student_user->id, 0, $context->id);
+                }
+            }
+        }
+
+        // Go through each coursegroup and remove Moodle external enrolment database record
         $delete = "DELETE FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IN ($coursegroup_list)";
         
         $result = $enroldb->Execute($delete);
