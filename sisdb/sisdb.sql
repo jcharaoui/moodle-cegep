@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `coursegroup` (
   `semester` varchar(5) collate utf8_unicode_ci NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `code` (`coursecode`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=3016 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
