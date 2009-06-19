@@ -188,7 +188,7 @@ else {
 		}
 		$enrolments_rs = get_recordset_sql("SELECT DISTINCT `courseidnumber` FROM `$CFG->enrol_dbname`.`enrolments` WHERE `coursegroup_id` = '$inscription[0]'");
 		while ($enrolment = rs_fetch_next_record($enrolments_rs)) {
-			$insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `username`) VALUES ('$enrolment->idnumber', '$inscription[1]'); ";
+			$insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `username`, `coursegroup_id`) VALUES ('$enrolment->courseidnumber', '$inscription[1]', '$inscription[0]'); ";
 			if (!$resultat = $enroldb->Execute($insert)) {
 				trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert);
 				echo "Erreur : inscription process";
