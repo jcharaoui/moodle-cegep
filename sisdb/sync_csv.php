@@ -79,7 +79,7 @@ else {
 
 		$record = explode(';',utf8_encode($line));
 		$code_etudiant = 'e' . substr($record[6], 2, strlen($record[6]) - 2);
-		$code_cours = substr(str_replace('-','',$record[3]), 0, 6);
+		$code_cours = str_replace('-','',$record[3]);
 		$groupecoursid = '';
 
 		if (empty($record[5])) { $skipped++; continue; }
