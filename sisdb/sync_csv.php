@@ -177,6 +177,7 @@ else {
 
 	$ajouts = array_diff($inscriptions, $inscriptions_db);
 	$retraits = array_diff($inscriptions_db, $inscriptions);
+    $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
 
 	foreach ($ajouts as $inscription) {
 		$inscription = unserialize($inscription);
@@ -186,14 +187,19 @@ else {
 			echo "Erreur : inscription process";
 			break;
 		}
-		$enrolments_rs = get_recordset_sql("SELECT DISTINCT `courseidnumber` FROM `$CFG->enrol_dbname`.`enrolments` WHERE `coursegroup_id` = '$inscription[0]'");
+		$enrolments_rs = get_recordset_sql("SELECT DISTINCT `$CFG->enrol_remotecoursefield` AS courseidnumber FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `coursegroup_id` = '$inscription[0]'");
 		while ($enrolment = rs_fetch_next_record($enrolments_rs)) {
-			$insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `username`, `coursegroup_id`) VALUES ('$enrolment->courseidnumber', '$inscription[1]', '$inscription[0]'); ";
+			$insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`) VALUES ('$enrolment->courseidnumber', '$inscription[1]', '$student_role->shortname', '$inscription[0]'); ";
 			if (!$resultat = $enroldb->Execute($insert)) {
 				trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert);
 				echo "Erreur : inscription process";
 				break;
-			}
+            }
+            $course = get_record('course', 'idnumber', $enrolment->courseidnumber);
+            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+            if ($student_user = get_record('user', 'username', $inscription[1])) {
+		        role_assign($student_role->id, $student_user->id, 0, $context->id);
+            }
 			$ins_inscription++;
 		}
 	}
@@ -205,14 +211,19 @@ else {
 			echo "Erreur : inscription process";
 			break;
 		}
-		$enrolments_rs = get_recordset_sql("SELECT DISTINCT `courseidnumber` FROM `$CFG->enrol_dbname`.`enrolments` WHERE `coursegroup_id` = '$inscription[0]'");
+		$enrolments_rs = get_recordset_sql("SELECT DISTINCT `$CFG->enrol_remotecoursefield` AS courseidnumber FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `coursegroup_id` = '$inscription[0]'");
 		while ($enrolment = rs_fetch_next_record($enrolments_rs)) {
-			$delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$enrolment->idnumber' AND `username` = '$inscription[1]'";
+			$delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$enrolment->courseidnumber' AND `$CFG->enrol_remoteuserfield` = '$inscription[1]' AND `$CFG->enrol_db_remoterolefield` = '$student_role->shortname'";
 			if (!$resultat = $enroldb->Execute($delete)) {
 				trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $delete);
 				echo "Erreur : inscription process";
 				break;
 			}
+            $course = get_record('course', 'idnumber', $enrolment->courseidnumber);
+            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+            if ($student_user = get_record('user', 'username', $inscription[1])) {
+		        role_unassign($student_role->id, $student_user->id, 0, $context->id);
+            }            
 		}
 		$del_inscription++;
 	}
