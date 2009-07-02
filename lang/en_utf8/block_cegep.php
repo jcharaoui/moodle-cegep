@@ -19,33 +19,33 @@ $string['semester'] = 'Semester';
 $string['coursegroup'] = 'Coursegroup';
 
 // Student list page
-$string['studentlisttitle'] = '';
-$string['childcoursetitle'] = '';
-$string['coursecode'] = '';
-$string['coursegroupnumber'] = '';
-$string['program'] = '';
-$string['nocoursegroupsenrolled'] = '';
-$string['accessuserprofile'] = '';
+$string['studentlisttitle'] = 'List of students enrolled in this course';
+$string['childcoursetitle'] = 'Child course title';
+$string['coursecode'] = 'Course code';
+$string['coursegroupnumber'] = 'Coursegroup number';
+$string['program'] = 'Program';
+$string['nocoursegroupsenrolled'] = 'No coursegroups are enrolled in this course';
+$string['accessuserprofile'] = 'Access user\'s profile';
 
 // Enrol form
-$string['coursegroupenrolled'] = '';
-$string['enrolanother'] = '';
+$string['coursegroupenrolled'] = '<strong>Enrolment sucessfully completed.</strong><br /><br />These are the students that were enrolled into this course :<br /><br />$a[0]<br />Have a nice semester!<br /><br />';
+$string['enrolanother'] = 'Enrol another coursegroup';
 
 // Unenrol form
-$string['students'] = '';
-$string['unenrolbutton'] = '';
-$string['coursegroupunenrolled'] = '';
+$string['students'] = 'students';
+$string['unenrolbutton'] = 'Unenrol';
+$string['coursegroupunenrolled'] = '<strong>Unenrolment successfully completed.</strong></br /><br />$a[0] students removed from the course.<br /><br />';
 
 // Validation
-$string['specifyyear'] = '';
-$string['specifysemester'] = '';
-$string['specifycoursegroup'] = '';
-$string['semesterunavailable'] = '';
-$string['coursegroupsixnumbersonly'] = '';
-$string['coursegroupalreadyenrolled'] = '';
-$string['coursegroupnotenrolled'] = '';
-$string['coursegroupunavailable'] = '';
-$string['coursegroupinvalid'] = '';
+$string['specifyyear'] = 'Please specify the year.';
+$string['specifysemester'] = 'Please specify the semester.';
+$string['specifycoursegroup'] = 'Please specify a coursegroup.';
+$string['semesterunavailable'] = 'The specified semester is not available in the system.';
+$string['coursegroupsixnumbersonly'] = 'The coursegroup number must contain six numbers.';
+$string['coursegroupalreadyenrolled'] = 'The coursegroup specified is already enroled in this course.';
+$string['coursegroupnotenrolled'] = 'The coursegroup specified is not enrolled in this course.';
+$string['coursegroupunavailable'] = 'The coursegroup specified is not available in the system.';
+$string['coursegroupinvalid'] = 'The coursegroup specified is invalid.';
 
 // Settings
 $string['studentrole'] = '';
