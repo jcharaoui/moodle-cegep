@@ -94,7 +94,7 @@ $string['specifycoursenumber'] = '';
 $string['specifycoursenumber'] = '';
 
 // Errors
-$string['errorenroldbnotavailable'] = '';
+$string['errorenroldbnotavailable'] = 'The external database enrolment plugin is not activated. Please activate it and retry this operation.';
 $string['erroractionnotavailable'] = '';
 $string['errormustbeteacher'] = '';
 $string['errorimportingstudentlist'] = '';
