@@ -82,7 +82,9 @@ class cegep_enrol_form extends moodleform {
     private function validate_coursegroup_exists($coursegroup, $semester) {
         global $CFG, $COURSE, $sisdb;
 
-        $coursecode = substr($COURSE->idnumber, 0, strripos($COURSE->idnumber, '_'));
+        //$coursecode = substr($COURSE->idnumber, 0, strripos($COURSE->idnumber, '_'));
+        $cc = explode('_', $COURSE->idnumber);
+        $coursecode = $cc[0];
 
         $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `semester` = '$semester' AND `group` = '$coursegroup' LIMIT 1";
 

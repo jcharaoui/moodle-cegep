@@ -246,7 +246,7 @@ function cegep_create_course ($coursecode, $seqnum, $meta) {
 	$coursetitle = $sisdb->Execute($select_course)->fields['title'];
 
 	$course = new StdClass;
-	$course->fullname  = $coursetitle;
+    $course->fullname  = utf8_encode($coursetitle);
 	$course->shortname = $coursecode . '_' . $seqnum;
 	$course->idnumber = $coursecode . '_' . $seqnum;
 	$course->metacourse = $meta;
