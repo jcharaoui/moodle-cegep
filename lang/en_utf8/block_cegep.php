@@ -48,16 +48,16 @@ $string['coursegroupunavailable'] = 'The coursegroup specified is not available 
 $string['coursegroupinvalid'] = 'The coursegroup specified is invalid.';
 
 // Settings
-$string['studentrole'] = '';
-$string['studentrole_help'] = '';
-$string['sisdb_heading'] = '';
-$string['sisdb_help'] = '';
-$string['sisdb_type'] = '';
-$string['sisdb_host'] = '';
-$string['sisdb_name'] = '';
-$string['sisdb_user'] = '';
-$string['sisdb_pass'] = '';
-$string['sisdb_sync_csv'] = '';
+$string['studentrole'] = 'Student role';
+$string['studentrole_help'] = 'Role that will be assigned to students created from the external database.';
+$string['sisdb_heading'] = 'SIS external database';
+$string['sisdb_help'] = 'External SIS database access information.';
+$string['sisdb_type'] = 'Database';
+$string['sisdb_host'] = 'Host';
+$string['sisdb_name'] = 'DB Name';
+$string['sisdb_user'] = 'DB User';
+$string['sisdb_pass'] = 'Password';
+$string['sisdb_sync_csv'] = 'Synchronize database with a CSV file';
 
 // Course request
 $string['courserequest'] = '';
@@ -94,7 +94,7 @@ $string['specifycoursenumber'] = '';
 $string['specifycoursenumber'] = '';
 
 // Errors
-$string['errorenroldbnotavailable'] = '';
+$string['errorenroldbnotavailable'] = 'The external database enrolment plugin is not activated. Please activate it and retry this operation.';
 $string['erroractionnotavailable'] = '';
 $string['errormustbeteacher'] = '';
 $string['errorimportingstudentlist'] = '';
