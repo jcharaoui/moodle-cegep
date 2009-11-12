@@ -14,6 +14,9 @@ foreach ($dbtypes as $dbtype) {
 $settings->add(new admin_setting_configselect('block_cegep_studentrole', get_string('studentrole', 'block_cegep'),
                    get_string('studentrole_help', 'block_cegep'), 'student', $options));
 
+$settings->add(new admin_setting_configtext('block_cegep_name', get_string('cegepname', 'block_cegep'),
+                   null, '', PARAM_TEXT));
+
 $settings->add(new admin_setting_heading('sisdb', get_string('sisdb_heading', 'block_cegep'), get_string('sisdb_help', 'block_cegep')));
                    
 $settings->add(new admin_setting_configselect('sisdb_type', get_string('sisdb_type', 'block_cegep'),
@@ -31,9 +34,29 @@ $settings->add(new admin_setting_configtext('sisdb_user', get_string('sisdb_user
 $settings->add(new admin_setting_configpasswordunmask('sisdb_pass', get_string('sisdb_pass', 'block_cegep'),
                    null, null, PARAM_TEXT));
 
+$settings->add(new admin_setting_heading('sisdbsource', '', get_string('sisdbsource_help', 'block_cegep')));
+                   
+$settings->add(new admin_setting_configselect('sisdbsource_type', get_string('sisdbsource_type', 'block_cegep'),
+                  null, 'odbc', $dboptions));
+                   
+$settings->add(new admin_setting_configtext('sisdbsource_host', get_string('sisdbsource_host', 'block_cegep'),
+                   null, '', PARAM_TEXT));
+
+$settings->add(new admin_setting_configtext('sisdbsource_name', get_string('sisdbsource_name', 'block_cegep'),
+                   null, null, PARAM_TEXT));
+                   
+$settings->add(new admin_setting_configtext('sisdbsource_user', get_string('sisdbsource_user', 'block_cegep'),
+                   null, null, PARAM_TEXT));
+
+$settings->add(new admin_setting_configpasswordunmask('sisdbsource_pass', get_string('sisdbsource_pass', 'block_cegep'),
+                   null, null, PARAM_TEXT));
+
+
 $linklist = '<ul>';
+$linklist .='<li><a href="'.$CFG->wwwroot.'/blocks/cegep/sisdb/sync_db.php">'.get_string('sisdb_sync_db', 'block_cegep').'</a></li>';
 $linklist .='<li><a href="'.$CFG->wwwroot.'/blocks/cegep/sisdb/sync_csv.php">'.get_string('sisdb_sync_csv', 'block_cegep').'</a></li>';
 $linklist .= '</ul>';
+
 
 $settings->add(new admin_setting_heading('sisdb_sync_heading', '', $linklist));
 ?>

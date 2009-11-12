@@ -64,7 +64,7 @@ class cegep_unenrol_form extends moodleform {
                 case '3' : $semester = get_string('autumn', 'block_cegep'); break;
             }
             $year = substr($coursegroup['semester'],0,4);
-            $coursegroups[$coursegroup_id] = "Gr. $coursegroup[group] - $semester $year ($coursegroup_num ".get_string('students', 'block_cegep').')';
+            $coursegroups[$coursegroup_id] = "$coursegroup[coursecode] gr. $coursegroup[group] - $semester $year ($coursegroup_num ".get_string('students', 'block_cegep').')';
             $coursegroups_rs->MoveNext();
         }
         return $coursegroups;

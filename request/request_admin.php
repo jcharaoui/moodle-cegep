@@ -84,22 +84,19 @@ if ($requestform->is_cancelled()){
 				foreach ($course as $c) {
 					$coursecode = strtoupper($c['coursecode']);
 					($c['meta'] == 1) ? ($meta = 1) : ($meta = 0);
-					$coursemaxid = get_record_sql("SELECT MAX(CONVERT(SUBSTRING_INDEX(`idnumber`, '_', -1), UNSIGNED)) as num FROM `mdl_course` WHERE idnumber LIKE '$coursecode%'");
-					if ($coursemaxid->num === NULL) { $seqnum = '0'; } else { $seqnum = $coursemaxid->num + 1; }
-
 					for ($i = 1; $i <= $c['num']; $i++) {
-						if (!cegep_create_course($coursecode, $seqnum, $meta)) {
+                        if ($courseid = cegep_local_create_course($coursecode, $meta)) {
+                            $courseidnumber = get_record('course','id',$courseid)->idnumber;
+                            if (!cegep_local_create_enrolment($courseidnumber, $request->username, $request->id)) {
+                                print_error("Une erreur s'est produite lors de l'inscription au cours!");
+                                break;
+                            }
+                        } else {
 							print_error("Une erreur s'est produite lors de la création des cours!");
 							break;
-						}
-						if (!cegep_create_enrolment($coursecode, $seqnum, $request->username, $request->id)) {
-							print_error("Une erreur s'est produite lors de l'inscription du cours!");
-							break;
-						}
-						$seqnum++;
-					}
+                        }
+                    }
 				}
-				
 				$request->state = $state;
 				if (update_record('cegep_request', $request)) {
 					notify(get_string('courserequest_createsuccess','block_cegep').'<br />','notifysuccess');
@@ -184,7 +181,7 @@ if ($requestform->is_cancelled()){
 	print_footer();
 
 
-	function cegep_requestadmin_display() {
+    function cegep_requestadmin_display() {
 
 		global $CFG;
 
@@ -233,206 +230,6 @@ if ($requestform->is_cancelled()){
 
 		notice(get_string('courserequest_nothing','block_cegep').'<br /><br />', $CFG->wwwroot);
 
-	}
-}
-
-function cegep_create_course ($coursecode, $seqnum, $meta) {
-	global $CFG;
-
-	$site = get_site();
-	$sisdb = sisdb_connect();
-
-	$select_course = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = '$coursecode' LIMIT 1";
-	$coursetitle = $sisdb->Execute($select_course)->fields['title'];
-
-	$course = new StdClass;
-    $course->fullname  = utf8_encode($coursetitle);
-	$course->shortname = $coursecode . '_' . $seqnum;
-	$course->idnumber = $coursecode . '_' . $seqnum;
-	$course->metacourse = $meta;
-
-	$template = array(
-                      'startdate'      => time() + 3600 * 24,
-                      'summary'        => get_string("defaultcoursesummary"),
-                      'format'         => "topics",
-                      'password'       => "",
-                      'guest'          => 0,
-                      'numsections'    => 10,
-                      'cost'           => '',
-    				  'maxbytes'       => 8388608,
-                      'newsitems'      => 5,
-                      'showgrades'     => 0,
-                      'groupmode'      => 0,
-                      'groupmodeforce' => 0,
-                      'student'  => $site->student,
-                      'students' => $site->students,
-                      'teacher'  => $site->teacher,
-                      'teachers' => $site->teachers,
-	);
-
-	// overlay template
-	foreach (array_keys($template) AS $key) {
-		if (empty($course->$key)) {
-			$course->$key = $template[$key];
-		}
-	}
-
-	$course->category = 1;     // the misc 'catch-all' category
-
-	// Place the course in the correct category
-	$dept = substr($course->idnumber, 0, 3);
-	switch ($dept) {
-		case ('101') :
-			$course->category = 2; // Biologie
-			break;
-		case ('202') :
-			$course->category = 3; // Chimie
-			break;
-		case ('109') :
-			$course->category = 4; // Éducation physique
-			break;
-		case ('501') :
-		case ('502') :
-		case ('530') :
-		case ('601') :
-			$course->category = 5; // Français
-			break;
-		case ('320') :
-		case ('330') :
-			$course->category = 6; // Histoire-géographie
-			break;
-		case ('520') :
-			$course->category = 7; // Histoire de l'art
-			break;
-		case ('420') :
-			$course->category = 8; // Informatique
-			break;
-		case ('210') :
-			$course->category = 9; // ICP
-			break;
-		case ('604') :
-		case ('607') :
-		case ('609') :
-			$course->category = 10; // Langues modernes
-			break;
-		case ('201') :
-		case ('360') :
-			$course->category = 11; // Mathématiques
-			break;
-		case ('340') :
-			$course->category = 12; // Philosophie
-			break;
-		case ('203') :
-			$course->category = 13; // Physique
-			break;
-		case ('350') :
-			$course->category = 14; // Psychologie
-			break;
-		case ('300') :
-		case ('383') :
-		case ('385') :
-		case ('387') :
-			$course->category = 15; // Sciences sociales
-			break;
-		case ('180') :
-			$course->category = 16; // SIN
-			break;
-		case ('310') :
-			$course->category = 17; // TAJ
-			break;
-		case ('412') :
-			$course->category = 18; // TBU
-			break;
-		case ('401') :
-		case ('410') :
-			$course->category = 19; // TAD
-			break;
-		case ('120') :
-			$course->category = 20; // TDI
-			break;
-		case ('393') :
-			$course->category = 21; // TDOC
-			break;
-		case ('111') :
-			$course->category = 22; // THD
-			break;
-		case ('243') :
-			$course->category = 23; // TGE
-			break;
-		case ('582') :
-			$course->category = 24; // TIM
-			break;
-	}
-
-	// define the sortorder
-	$sort = get_field_sql('SELECT COALESCE(MAX(sortorder)+1, 100) AS max ' .
-                          ' FROM ' . $CFG->prefix . 'course ' .
-                          ' WHERE category=' . $course->category);
-	$course->sortorder = $sort;
-
-	// override with local data
-	$course->startdate   = time() + 3600 * 24;
-	$course->timecreated = time();
-	$course->visible     = 0;
-	$course->enrollable  = 0;
-
-	// clear out id just in case
-	unset($course->id);
-
-	// store it and log
-	if ($newcourseid = insert_record("course", addslashes_object($course))) {  // Set up new course
-		$section = NULL;
-		$section->course = $newcourseid;   // Create a default section.
-		$section->section = 0;
-		$section->id = insert_record("course_sections", $section);
-		$page = page_create_object(PAGE_COURSE_VIEW, $newcourseid);
-		blocks_repopulate_page($page); // Return value no
-
-		fix_course_sortorder();
-
-		// assign teacher role for course
-		//$context = get_context_instance(CONTEXT_COURSE, $newcourseid);
-		//role_assign($CFG->creatornewroleid, $teacherid, 0, $context->id);
-
-		// assign teacher role for site
-		// $sitecontext = get_context_instance(CONTEXT_SYSTEM);
-		// role_assign(3, $teacherid, 0, $sitecontext->id);
-
-		add_to_log($newcourseid, "course", "new", "view.php?id=$newcourseid", "block_cegep/request course created");
-
-	} else {
-		trigger_error("Could not create new course $extcourse from  from database");
-		notify("Serious Error! Could not create the new course!");
-		$sisdb->Close();
-		return false;
-	}
-
-	$sisdb->Close();
-	
-	return true;
-}
-
-function cegep_create_enrolment($courseidnumber, $seqnum, $username, $request_id) {
-	global $CFG;
-	
-	if (empty($courseidnumber) or empty($username)) {
-		print_error("Le cours ou l'utilisateur spécifié est invalide!");
-		return false;
-	}
-	
-	$enroldb = enroldb_connect();
-	$insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` , `request_id`) VALUES ('${courseidnumber}_${seqnum}', '$username', 'editingteacher', '$request_id');";	
-	
-	$result = $enroldb->Execute($insert);
-
-	if (!$result) {
-		trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert, E_USER_ERROR);
-		$enroldb->Close();		
-		return false;
-	}
-	else {
-		$enroldb->Close();
-		return true;
 	}
 }
 

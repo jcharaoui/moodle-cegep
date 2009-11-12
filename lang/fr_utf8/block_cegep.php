@@ -9,6 +9,8 @@ $tring['delete'] = 'Détruire';
 $string['studentlist'] = 'Liste d\'étudiants';
 $string['enrol'] = 'Inscrire groupe-cours';
 $string['unenrol'] = 'Désinscrire groupe-cours';
+$string['enrolprogram'] = 'Inscrire un programme';
+$string['unenrolprogram'] = 'Désinscrire un programme';
 
 // Common
 $string['summer'] = 'Été';
@@ -32,26 +34,44 @@ $string['accessuserprofile'] = 'Accéder au profil de l\'utilisateur';
 // Enrol form
 $string['coursegroupenrolled'] = '<strong>Inscription complétée avec succès.</strong><br /><br />Voici les étudiants ajoutés au cours :<br /><br />$a[0]<br />Bonne session!<br /><br />';
 $string['enrolanother'] = 'Inscrire un autre groupe-cours';
+$string['make_visible'] = 'Rendre ce cours disponible aux étudiants';
 
 // Unenrol form
 $string['students'] = 'étudiants';
 $string['unenrolbutton'] = 'Désinscrire';
 $string['coursegroupunenrolled'] = '<strong>Désinscription complétée avec succès.</strong><br /><br />$a[0] étudiants enlevés du cours.<br /><br />';
 
+// Program enrol form
+$string['programenrolled'] = '<strong>Inscription complétée avec succès.</strong><br />Bonne session!<br /><br />';
+$string['programyear'] = 'Année';
+$string['programyear1'] = '1ère année';
+$string['programyear2'] = '2e année';
+$string['programyear3'] = '3e année';
+
+// Program unenrol form
+$string['unenrolprogrambutton'] = 'Désinscrire';
+$string['programunenrolled'] = '<strong>Désinscription complétée avec succès.</strong><br /><br />$a[0] étudiants enlevés du cours.<br /><br />';
+
 // Enrolment validation
 $string['specifyyear'] = 'Veuillez spécifier l\'année.';
 $string['specifysemester'] = 'Veuillez spécifier la session.';
 $string['specifycoursegroup'] = 'Veuillez spécifier le groupe-cours.';
+$string['specifyprogram'] = 'Veuillez spécifier le programme.';
+$string['specifyprogramyear'] = 'Veuillez spécifier l\'année.';
 $string['semesterunavailable'] = 'La session spécifiée n\'est pas disponible dans le système.';
 $string['coursegroupsixnumbersonly'] = 'Le numéro du groupe-cours doit comporter six chiffres.';
 $string['coursegroupalreadyenrolled'] = 'Le groupe-cours spécifié est déjà inscrit à ce cours.';
 $string['coursegroupnotenrolled'] = 'Le groupe-cours spécifié n\'est pas inscrit à ce cours.';
 $string['coursegroupunavailable'] = 'Le groupe-cours spécifié n\'est pas disponible dans le système.';
 $string['coursegroupinvalid'] = 'Le groupe-cours spécifié est invalide.';
+$string['programinvalid'] = 'Le programme spécifié est invalide.';
+$string['programalreadyenrolled'] = 'Le programme spécifié est déjà inscrit à ce cours.';
 
 // Settings
 $string['studentrole'] = 'Rôle étudiant';
 $string['studentrole_help'] = 'Rôle à assigner aux étudiants dans la base de données externe.';
+$string['cegepname'] = 'Nom du CEGEP';
+$string['cegepname_help'] = 'Nom du CEGEP en minuscule pour les lib';
 $string['sisdb_heading'] = 'Base de données du SIS';
 $string['sisdb_help'] = 'Informations d\'accès pour la base de données intermédiaire du système d\'information scolaire de l\'institution.';
 $string['sisdb_type'] = 'Type de BD';
@@ -60,6 +80,14 @@ $string['sisdb_name'] = 'Nom de la BD';
 $string['sisdb_user'] = 'Nom d\'utilisateur';
 $string['sisdb_pass'] = 'Mot de passe';
 $string['sisdb_sync_csv'] = 'Synchroniser la BD avec un fichier CSV';
+$string['sisdbsource_help'] = 'Informations d\'accès pour la base de données du système d\'information scolaire de l\'institution. Cette base de données sera utilisée comme source d\'informations. (Clara, Datamart, etc.)';
+$string['sisdbsource_type'] = 'Type de BD';
+$string['sisdbsource_host'] = 'Hôte';
+$string['sisdbsource_name'] = 'Nom de la BD';
+$string['sisdbsource_user'] = 'Nom d\'utilisateur';
+$string['sisdbsource_pass'] = 'Mot de passe';
+$string['sisdb_sync_csv'] = 'Synchroniser la BD avec un fichier CSV';
+$string['sisdb_sync_db'] = 'Synchroniser la BD avec la BD source';
 
 // Course request
 $string['courserequest'] = 'Demande de cours';

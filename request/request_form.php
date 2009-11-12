@@ -50,8 +50,12 @@ class cegep_request_form extends moodleform {
 		        	$errors['request'.$i] = get_string('specifycoursenumber','block_cegep');
 	        	continue;
 	        }
-	        $coursecode = $data["coursecode$i"];
-	        $num = $data["num$i"];
+            $coursecode = $data["coursecode$i"];
+            // Make sure codecode is alphanumeric
+            if (!ctype_alnum($coursecode)) {
+                $errors['request'.$i] = get_string('courserequest_exists','block_cegep');
+            }
+            $num = $data["num$i"];
 	        $recordcount = count_records_select('cegep_request', "`username` = '$USER->username' AND `coursecodes` LIKE '%\"coursecode\";s:6:\"$coursecode\";%' AND (`state` = 'new' OR `state` = 'waiting')");
 	        if ($recordcount > 0 AND empty($data['id'])) {
 	        	$errors['request'.$i] = get_string('courserequest_exists','block_cegep');

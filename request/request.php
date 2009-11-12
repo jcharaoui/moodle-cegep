@@ -21,6 +21,12 @@ if (!isadmin() or !$authldap->ldap_isgroupmember($USER->username, 'CN=g_profs,OU
 
 $requestform = new cegep_request_form();
 
+$context = get_context_instance(CONTEXT_SYSTEM);
+if (has_capability('moodle/site:doanything', $context)) {
+    $requestform->_form->insertElementBefore($requestform->_form->createElement('text', 'username', get_string('username'), 'maxlength="16"'), 'request1');
+    $requestform->_form->setType('username', PARAM_TEXT);
+}
+
 $strtitle = get_string('courserequest','block_cegep');
 $navlinks = array();
 $navlinks[] = array('name' => $strtitle, 'link' => null, 'type' => 'misc');
@@ -35,7 +41,13 @@ if ($requestform->is_cancelled()){
 } elseif ($data = $requestform->get_data()) {
 
     $insdata = new stdClass();
-    $insdata->username = $USER->username;
+    
+    $context = get_context_instance(CONTEXT_SYSTEM);
+    if (has_capability('moodle/site:doanything', $context) && !empty($data->username)) {
+        $insdata->username = $data->username;
+    } else {
+        $insdata->username = $USER->username;
+    }
     $insdata->comments = $data->comments;
     $insdata->created = time();
 

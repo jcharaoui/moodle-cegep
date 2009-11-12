@@ -7,11 +7,14 @@ class cegep_enrol_form extends moodleform {
     function definition() {
         $mform =& $this->_form;
 
-        $year = date('Y');
+        $current = cegep_maisonneuve_current_trimester();
+        $year = substr($current, 0, 4);
+        $semester = substr($current, 4, 1);
 
         $enrol = array();
-        $enrol[] =& $mform->createElement('select', 'semester', null, array('' => '', '1' => get_string('winter','block_cegep'), '2' => get_string('summer','block_cegep'), '3' => get_string('autumn','block_cegep')));
-        $enrol[] =& $mform->createElement('select', 'year', null, array('' => '', $year-1 => $year-1, $year => $year, $year+1 => $year+1));
+        $enrol[] =& $mform->createElement('select', 'semester', null, array('1' => get_string('winter','block_cegep'), '2' => get_string('summer','block_cegep'), '3' => get_string('autumn','block_cegep')));
+        $enrol[] =& $mform->createElement('select', 'year', null, array($year-1 => $year-1, $year => $year, $year+1 => $year+1));
+
         $mform->addGroup($enrol, 'semester', get_string('semester','block_cegep').' :', '&nbsp;', false);
         $mform->addRule('semester', get_string('specifysemester','block_cegep'), 'required');
         $mform->addGroupRule('semester', array(
@@ -25,10 +28,20 @@ class cegep_enrol_form extends moodleform {
         $mform->setType('semester', PARAM_INT);
         $mform->setType('year', PARAM_INT);
 
+        $context = get_context_instance(CONTEXT_SYSTEM);
+        if (has_capability('moodle/site:doanything', $context)) {
+            $mform->addElement('text', 'coursecode', get_string('coursecode','block_cegep').' :', 'size="8", maxlength="8"');
+            $mform->setType('coursecode', PARAM_TEXT);
+        }
         $mform->addElement('text', 'coursegroup', get_string('coursegroup','block_cegep').' :', 'size="6", maxlength="6"');
         $mform->addRule('coursegroup', get_string('specifycoursegroup','block_cegep'), 'required');
         $mform->addRule('coursegroup', get_string('coursegroupsixnumbersonly','block_cegep'), 'numeric');
         $mform->setType('coursegroup', PARAM_TEXT);
+
+        $mform->SetDefaults(array(
+            'year' => $year,
+            'semester' => $semester,
+        ));
 
         $this->add_action_buttons();
     }
@@ -52,7 +65,7 @@ class cegep_enrol_form extends moodleform {
             $errors['semester'] = get_string('semesterunavailable','block_cegep');
 
         // Verify if the coursegroup is available in the system
-        elseif (!$coursegroup_id = self::validate_coursegroup_exists($data['coursegroup'],"$data[year]$data[semester]"))  
+        elseif (!$coursegroup_id = self::validate_coursegroup_exists($data['coursecode'], $data['coursegroup'],"$data[year]$data[semester]"))  
             $errors['coursegroup'] = get_string('coursegroupunavailable','block_cegep');
             
         // Verify if the coursegroup is already enrolled into this course
@@ -79,12 +92,14 @@ class cegep_enrol_form extends moodleform {
             return true;
     }
 
-    private function validate_coursegroup_exists($coursegroup, $semester) {
+    private function validate_coursegroup_exists($coursecode, $coursegroup, $semester) {
         global $CFG, $COURSE, $sisdb;
 
-        //$coursecode = substr($COURSE->idnumber, 0, strripos($COURSE->idnumber, '_'));
-        $cc = explode('_', $COURSE->idnumber);
-        $coursecode = $cc[0];
+        $context = get_context_instance(CONTEXT_SYSTEM);
+        if (empty($coursecode) || !has_capability('moodle/site:doanything', $context)) {
+            $cc = explode('_', $COURSE->idnumber);
+            $coursecode = $cc[0];
+        }
 
         $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `semester` = '$semester' AND `group` = '$coursegroup' LIMIT 1";
 
