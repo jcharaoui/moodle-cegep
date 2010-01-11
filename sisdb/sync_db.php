@@ -104,6 +104,10 @@ else {
     //$sisdbsource->debug = true;
     $sisdbsource_rs = $sisdbsource->Execute($select); 
 
+    if (!$sisdbsource_rs || $sisdbsource_rs->EOF || $sisdbsource_rs->RowCount() == 0) {
+        die("Database query returned no results!");
+    }
+
     while ($sisdbsource_rs && !$sisdbsource_rs->EOF) {
 
         // TODO: Any instances of 'session' or 'semester' should be renamed 'trimester'
