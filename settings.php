@@ -16,6 +16,12 @@ $settings->add(new admin_setting_configselect('block_cegep_studentrole', get_str
 
 $settings->add(new admin_setting_configtext('block_cegep_name', get_string('cegepname', 'block_cegep'),
                    null, '', PARAM_TEXT));
+                   
+$settings->add(new admin_setting_configselect('block_cegep_autotopic', get_string('autotopic', 'block_cegep'),
+                  get_string('autotopic_help', 'block_cegep'), 'false', array('true' => 'Yes', 'false' => 'No')));
+
+$settings->add(new admin_setting_configselect('block_cegep_autogroups', get_string('autogroups', 'block_cegep'),
+                  get_string('autogroups_help', 'block_cegep'), 'false', array('true' => 'Yes', 'false' => 'No')));
 
 $settings->add(new admin_setting_heading('sisdb', get_string('sisdb_heading', 'block_cegep'), get_string('sisdb_help', 'block_cegep')));
                    
