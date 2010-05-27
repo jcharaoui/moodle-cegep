@@ -1,6 +1,5 @@
 <?php
 
-
 if (file_exists($CFG->dirroot .'/blocks/cegep/lib_'. $CFG->block_cegep_name .'.php')) {
     require_once($CFG->dirroot .'/blocks/cegep/lib_'. $CFG->block_cegep_name .'.php');
 }
@@ -44,7 +43,7 @@ function cegep_local_course_category($category) {
 }
 
 /**
- * Return the SIS db source select to execute
+ * Return the SIS db source select to execute (students)
  * This select statement must return the following columns :
  * - CourseCampus
  * - CourseTrimester
@@ -58,7 +57,25 @@ function cegep_local_course_category($category) {
  * - StudentProgramName
  * - StudentProgramYear
  */
-function cegep_local_sisdbsource_select($trimester) {
+function cegep_local_sisdbsource_select_students($trimester) {
+
+    global $CFG;
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_sisdbsource_select_students')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_sisdbsource_select_students', $trimester);
+    } else {
+        return 1;
+    }
+}
+
+/**
+ * Return the SIS db source select to execute (teachers)
+ * This select statement must return the following columns :
+ * - TeacherNumber
+ * - CourseNumber
+ * - CourseGroup
+ * - CourseTerm
+ */
+function cegep_local_sisdbsource_select_teachers($trimester) {
 
     global $CFG;
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_sisdbsource_select')) {

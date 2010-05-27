@@ -75,7 +75,7 @@ if (empty($start_trimester)) {
 }
 else {
 
-    $select = cegep_local_sisdbsource_select($start_trimester);
+    $select = cegep_local_sisdbsource_select_students($start_trimester);
 
     $sessions = array();
     $codes_etudiants = array();
@@ -128,12 +128,6 @@ else {
         $programyear = cegep_local_sisdbsource_decode('studentprogramyear',$sisdbsource_rs->fields['StudentProgramYear']);
         $programtitle = cegep_local_sisdbsource_decode('studentprogramname',$sisdbsource_rs->fields['StudentProgramName']);
         $groupecoursid = '';
-
-        /*
-         print("$session,$code_etudiant,$code_cours,$titre_cours,$code_groupe,$first_name,$last_name,$service,$program,$programyear,$programtitle<br />\n");
-        $sisdbsource_rs->MoveNext();
-        continue;
-         */
 
         if (empty($sisdbsource_rs->fields['CourseGroup'])) { $skipped++; continue; }
 
@@ -266,7 +260,7 @@ else {
         $sisdbsource_rs->moveNext();
     }
 
-    // Mettre à jour les inscriptions
+    // Mettre à jour les inscriptions (etudiants)
     $inscriptions_db = array();
     $select = "SELECT * FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` IN (SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `semester` >= '$start_trimester')";
 
@@ -328,6 +322,76 @@ else {
         $del_inscription++;
     }
 
+
+    // Synchronise teacher enrolments
+
+    $teacher_enrol_localdb = array();
+    $teacher_enrol_remotedb = array();
+    $count['teacher_enrolments_added'] = 0;
+    $count['teacher_enrolments_removed'] = 0;
+
+    // Get enrolments from remote database (ie, Clara)
+
+    $select = cegep_local_sisdbsource_select_teachers($start_trimester);
+    $sisdbsource_rs = $sisdbsource->Execute($select); 
+
+    if (!$sisdbsource_rs || $sisdbsource_rs->EOF || $sisdbsource_rs->RowCount() == 0) {
+        die("Database query returned no results!");
+    }
+
+    while ($sisdbsource_rs && !$sisdbsource_rs->EOF) {
+        $term = implode(cegep_local_sisdbsource_decode('courseterm',$sisdbsource_rs->fields['CourseTerm']));
+        $teacher_number = cegep_local_sisdbsource_decode('teachernumber',$sisdbsource_rs->fields['TeacherNumber']);
+        $course_number = cegep_local_sisdbsource_decode('coursenumber',$sisdbsource_rs->fields['CourseNumber']);
+        $course_group = cegep_local_sisdbsource_decode('coursegroup',$sisdbsource_rs->fields['CourseGroup']);
+        foreach ($groupecours as $gc) {
+          if ($gc['coursecode'] == $course_number && $gc['group'] == $course_group && $gc['semester'] == $term) {
+            array_push($teacher_enrol_remotedb, serialize(array($gc['id'], $teacher_number)));
+            break;
+          }
+        }
+        $sisdbsource_rs->moveNext();
+    }
+
+    // Get enrolments from local database
+
+    $select = "SELECT * FROM `$CFG->sisdb_name`.`teacher_enrolment` WHERE `coursegroup_id` IN (SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `semester` >= '$start_trimester')";
+    $result = $sisdb->Execute($select);
+
+    while ($result && !$result->EOF) {
+        array_push($teacher_enrol_localdb, serialize(array($result->fields['coursegroup_id'], $result->fields['idnumber'])));
+        $result->MoveNext();
+    }
+
+    // Compute differences between local and remote datasets
+
+    $enrolments_add = array_diff($teacher_enrol_remotedb, $teacher_enrol_localdb);
+    $enrolments_del = array_diff($teacher_enrol_localdb, $teacher_enrol_remotedb);
+
+    // Add and remove enrolments as required
+
+    foreach ($enrolments_add as $enrolment) {
+        $enrolment = unserialize($enrolment);
+        $insert = "INSERT INTO `$CFG->sisdb_name`.`teacher_enrolment` (`coursegroup_id` , `idnumber`) VALUES ('$enrolment[0]', '$enrolment[1]'); ";
+        if (!$resultat = $sisdb->Execute($insert)) {
+            trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
+            if (!$in_cron) echo "Erreur : inscription process";
+            break;
+        }
+        $count['teacher_enrolments_added']++;
+    }
+
+    foreach ($enrolments_del as $enrolment) {
+        $enrolment = unserialize($enrolment);
+        $delete = "DELETE FROM `$CFG->sisdb_name`.`teacher_enrolment` WHERE `coursegroup_id` = '$enrolment[0]' AND `idnumber` = '$enrolment[1]';";
+        if (!$resultat = $sisdb->Execute($delete)) {
+            trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $delete);
+            if (!$in_cron) echo "Erreur : inscription process";
+            break;
+        }
+        $count['teacher_enrolments_removed']++;
+    }
+
     // Nettoyage
 
     // À faire ...
@@ -346,6 +410,7 @@ else {
     $msg .= "<strong>Groupecours</strong> : $ins_groupecours ajouts; " . count($groupecours) . " total<br /><br />";
     $msg .= "<strong>Inscriptions groupecours</strong> : $ins_inscription ajouts; $del_inscription ret; $skipped skp " . count($inscriptions) . " total<br /><br />";
     $msg .= "<strong>Inscriptions programmes</strong> : $ins_inscription_prog ajouts; $del_inscription_prog ret;<br /><br />";
+    $msg .= "<strong>Teacher enrolments</strong> : $count[teacher_enrolments_added] added; $count[teacher_enrolments_removed] removed; " . count($teacher_enrol_remotedb) . " processed<br /><br />";
     $msg .= "Temps d'exécution : ". sprintf("%.4f", ($end_time-$start_time))." secondes"; 
 
     notice($msg,$CFG->wwwroot);

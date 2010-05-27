@@ -1,6 +1,6 @@
 <?php
 
-function cegep_maisonneuve_sisdbsource_select($trimester) {
+function cegep_maisonneuve_sisdbsource_select_students($trimester) {
 
     $select = "
         DECLARE @AnSession_IN smallint;
@@ -32,6 +32,30 @@ function cegep_maisonneuve_sisdbsource_select($trimester) {
     return $select;
 }
 
+function cegep_maisonneuve_sisdbsource_select_teachers($term) {
+
+   $select = "
+       DECLARE @AnSession_IN smallint;
+       SET @AnSession_IN = $term;
+       SELECT DISTINCT
+           g.AnSession CourseTerm,
+           e.Numero TeacherNumber,
+           c.Numero CourseNumber,
+           g.Numero CourseGroup
+        FROM
+            Employes.Employe e
+            JOIN Horaires.RencontreEmploye hre ON hre.IDEmploye = e.IDEmploye
+            JOIN Horaires.RencontreGroupe hrg ON hrg.IDRencontre = hre.IDRencontre
+            JOIN Groupes.Groupe g ON g.IDGroupe = hrg.IDGroupe
+            JOIN BanqueCours.Cours c ON g.IDCours = c.IDCours
+        WHERE
+            e.IDTypeEmploye = 1 AND
+            g.AnSession >= @AnSession_IN
+       ORDER BY
+            g.AnSession, e.Numero, c.Numero, g.Numero;";
+
+    return $select;
+}
 
 function cegep_maisonneuve_current_trimester() {
 
@@ -82,6 +106,7 @@ function cegep_maisonneuve_sisdbsource_decode($field, $data) {
         break;
 
     case 'coursetrimester':
+    case 'courseterm':
         // Break into array of year and trimester
         return array('year' => substr($data, 0, 4), 'trimester' => substr($data, 4, 1));
         break;
@@ -92,6 +117,7 @@ function cegep_maisonneuve_sisdbsource_decode($field, $data) {
         break;
 
     default:
+        // Do nothing
         return $data;
         break;
     }
