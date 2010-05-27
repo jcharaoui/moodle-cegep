@@ -16,7 +16,10 @@ $settings->add(new admin_setting_configselect('block_cegep_studentrole', get_str
 
 $settings->add(new admin_setting_configtext('block_cegep_name', get_string('cegepname', 'block_cegep'),
                    null, '', PARAM_TEXT));
-                   
+
+$settings->add(new admin_setting_configtext('block_cegep_cron_password', get_string('cronpassword', 'block_cegep'),
+                   get_string('cronpassword_help', 'block_cegep'), '', PARAM_TEXT));
+
 $settings->add(new admin_setting_configselect('block_cegep_autotopic', get_string('autotopic', 'block_cegep'),
                   get_string('autotopic_help', 'block_cegep'), 'false', array('true' => 'Yes', 'false' => 'No')));
 

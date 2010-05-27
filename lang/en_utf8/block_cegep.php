@@ -50,6 +50,8 @@ $string['coursegroupinvalid'] = 'The coursegroup specified is invalid.';
 // Settings
 $string['studentrole'] = 'Student role';
 $string['studentrole_help'] = 'Role that will be assigned to students created from the external database.';
+$string['cronpassword'] = 'Cron password';
+$string['cronpassword_help'] = 'Enter a password for automated synchronisation mode via cron. When calling the script, add this string to the \'password\' parameter. If you leave this field blank, you will need to run the synchronisation scripts manually while logged in as site administrator.';
 $string['sisdb_heading'] = 'SIS external database';
 $string['sisdb_help'] = 'External SIS database access information.';
 $string['sisdb_type'] = 'Database';

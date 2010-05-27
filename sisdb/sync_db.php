@@ -6,10 +6,10 @@ $start_time = (float) array_sum(explode(' ',microtime()));
 require_once(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
 require_once($CFG->dirroot .'/blocks/cegep/lib.php');
 
-$hash = optional_param('hash', null, PARAM_ALPHANUM);
+$password = optional_param('password', null, PARAM_ALPHANUM);
 $in_cron = false;
 
-if ($hash == "Aith5xhOow5iuduaez3ahs5Eera") {
+if (!empty($CFG->block_cegep_cron_password) && $password == $CFG->block_cegep_cron_password) {
     $start_trimester = cegep_local_current_trimester();
     $in_cron = true;
 } else {
