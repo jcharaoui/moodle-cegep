@@ -12,11 +12,22 @@ $string['unenrol'] = 'Unenrol coursegroup';
 
 // Common
 $string['summer'] = 'Summer';
-$string['autumn'] = 'Autumn';
+$string['autumn'] = 'Fall';
+$string['fall'] = 'Fall';
 $string['winter'] = 'Winter';
 $string['year'] = 'Year';
 $string['semester'] = 'Semester';
 $string['coursegroup'] = 'Coursegroup';
+
+// My moodle page
+$string['cegepsection'] = 'Section';
+$string['cegepenrolled'] = 'Enrolled Sections:';
+$string['cegepenrolledstud'] = 'Section(s):';
+$string['cegepvisible'] = 'Visible to students:';
+$string['cegepnosections'] = 'None';
+$string['cegepvisibleyes'] = 'Yes';
+$string['cegepvisibleno'] = 'No';
+$string['cegepeditsettings'] = 'Edit settings';
 
 // Student list page
 $string['studentlisttitle'] = 'List of students enrolled in this course';
@@ -30,6 +41,16 @@ $string['accessuserprofile'] = 'Access user\'s profile';
 // Enrol form
 $string['coursegroupenrolled'] = '<strong>Enrolment sucessfully completed.</strong><br /><br />These are the students that were enrolled into this course :<br /><br />$a[0]<br />Have a nice semester!<br /><br />';
 $string['enrolanother'] = 'Enrol another coursegroup';
+$string['enrolprogram'] = 'Enrol program';
+$string['programyear'] = 'Program year';
+$string['programyear1'] = '1st';
+$string['programyear2'] = '2nd';
+$string['programyear3'] = '3rd';
+$string['programenrolled'] = 'The program was enrolled successfully.';
+$string['programunenrolled'] = 'The program was unenrolled successfully.';
+$string['unenrolprogram'] = 'Unenrol program';
+$string['enrolhelp'] = 'You can choose which section(s) you want to enrol in this course. Please take note: if you want to have <b>separate courses for each section</b>, you must enrol <b>only one section here</b> and create a course for each section you have.';
+$string['enrolsection'] = 'Enrol this section';
 
 // Unenrol form
 $string['students'] = 'students';
@@ -39,13 +60,14 @@ $string['coursegroupunenrolled'] = '<strong>Unenrolment successfully completed.<
 // Validation
 $string['specifyyear'] = 'Please specify the year.';
 $string['specifysemester'] = 'Please specify the semester.';
-$string['specifycoursegroup'] = 'Please specify a coursegroup.';
+$string['specifycoursegroup'] = 'Please specify a section.';
 $string['semesterunavailable'] = 'The specified semester is not available in the system.';
-$string['coursegroupsixnumbersonly'] = 'The coursegroup number must contain six numbers.';
-$string['coursegroupalreadyenrolled'] = 'The coursegroup specified is already enroled in this course.';
-$string['coursegroupnotenrolled'] = 'The coursegroup specified is not enrolled in this course.';
-$string['coursegroupunavailable'] = 'The coursegroup specified is not available in the system.';
-$string['coursegroupinvalid'] = 'The coursegroup specified is invalid.';
+$string['coursegroupsixnumbersonly'] = 'The section number must contain six numbers.';
+$string['coursegroupalreadyenrolled'] = 'The section specified is already enroled in this course.';
+$string['coursegroupnotenrolled'] = 'The section specified is not enrolled in this course.';
+$string['coursegroupunavailable'] = 'The section specified is not available in the system.';
+$string['coursegroupinvalid'] = 'The section specified is invalid.';
+$string['sectionalreadyenrolled'] = 'Section already enrolled';
 
 // Settings
 $string['studentrole'] = 'Student role';
@@ -60,6 +82,20 @@ $string['sisdb_name'] = 'DB Name';
 $string['sisdb_user'] = 'DB User';
 $string['sisdb_pass'] = 'Password';
 $string['sisdb_sync_csv'] = 'Synchronize database with a CSV file';
+$string['sisdb_sync_db'] = 'Synchronize database via PHP script';
+$string['cegepname'] = "Cegep Name";
+$string['sisdbsource_type'] = "SIS Database Type";
+$string['sisdbsource_host'] = "SIS Database Host";
+$string['sisdbsource_name'] = "SIS Database Name";
+$string['sisdbsource_user'] = "SIS Database User";
+$string['sisdbsource_pass'] = "SIS Database Password";
+$string['sisdbsource_help'] = "Source SIS database access information";
+
+$string['autotopic'] = "Auto fill topic 0";
+$string['autotopic_help'] = "Answering yes will automatically fill courses' topic 0 with the course name and the list of teachers.";
+
+$string['autogroups'] = "Create groups";
+$string['autogroups_help'] = "Answering yes will automatically create and add students to groups, which are named according to course sections.";
 
 // Course request
 $string['courserequest'] = '';
