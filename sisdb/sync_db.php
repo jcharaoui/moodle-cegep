@@ -241,7 +241,7 @@ else {
             }
         }
         if (empty($groupecoursid)) {
-			$select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$code_cours' AND `group` = '$code_groupe' AND `semester` = '$session'";
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$code_cours' AND `group` = '$code_groupe' AND `semester` = '$session'";
             $resultat = $sisdb->Execute($select);
             if ($resultat && $resultat->RecordCount() == 0) {
                 $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `semester`) VALUES ('$code_cours', '$code_groupe', '$session'); ";
@@ -323,7 +323,7 @@ else {
     }
 
 
-	// Synchronise teacher enrolments
+    // Synchronise teacher enrolments
 
     $teacher_enrol_localdb = array();
     $teacher_enrol_remotedb = array();
@@ -410,7 +410,7 @@ else {
     $msg .= "<strong>Groupecours</strong> : $ins_groupecours ajouts; " . count($groupecours) . " total<br /><br />";
     $msg .= "<strong>Inscriptions groupecours</strong> : $ins_inscription ajouts; $del_inscription ret; $skipped skp " . count($inscriptions) . " total<br /><br />";
     $msg .= "<strong>Inscriptions programmes</strong> : $ins_inscription_prog ajouts; $del_inscription_prog ret;<br /><br />";
-	$msg .= "<strong>Teacher enrolments</strong> : $count[teacher_enrolments_added] added; $count[teacher_enrolments_removed] removed; " . count($teacher_enrol_remotedb) . " processed<br /><br />";
+    $msg .= "<strong>Teacher enrolments</strong> : $count[teacher_enrolments_added] added; $count[teacher_enrolments_removed] removed; " . count($teacher_enrol_remotedb) . " processed<br /><br />";
     $msg .= "Temps d'exécution : ". sprintf("%.4f", ($end_time-$start_time))." secondes"; 
 
     notice($msg,$CFG->wwwroot);

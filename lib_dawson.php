@@ -2,31 +2,31 @@
 /* New lib_dawson.php */
 
 function cegep_dawson_sisdbsource_select_students($trimester) {
-	$select = "SELECT 
-  				uo.Numero AS CourseCampus,
-				c.Numero AS CourseNumber,
-				ISNULL(c.TitreMoyenTraduit,c.TitreMoyen)  As CourseTitle,
-				g.Numero AS CourseGroup,
-				e.Numero AS StudentNumber,
-				e.Nom AS StudentLastName,
-				e.Prenom AS StudentFirstName,
-				es.AnSession AS CourseTrimester,
-				p.Numero AS StudentProgram,
-				CEILING(CAST(es.SPE AS FLOAT)/2) AS StudentProgramYear,
-				p.TitreLong AS StudentProgramName
-			FROM Etudiants.Etudiant e
-			JOIN Etudiants.EtudiantSession es ON es.IDEtudiant = e.IDEtudiant
-			JOIN Inscriptions.Inscription i ON i.IDEtudiantSession = es.IDEtudiantSession
-			JOIN Groupes.Groupe g ON g.IDGroupe = i.IDGroupe
-			JOIN BanqueCours.Cours c ON c.IDCours = i.IDCours
-			JOIN Programmes.Programme p on p.IDProgramme = es.IDProgramme
-			JOIN Reference.UniteOrg uo ON uo.IDUniteOrg = i.IDUniteOrg
-			WHERE es.Etat > 0
-				AND i.Etat > 0
-				AND uo.IndicateurLocal = 1
-				AND es.AnSession >= '$trimester'
-			ORDER BY e.Numero, c.Numero";
-	return cegep_dawson_prepare_select_query($select);
+    $select = "SELECT 
+                  uo.Numero AS CourseCampus,
+                c.Numero AS CourseNumber,
+                ISNULL(c.TitreMoyenTraduit,c.TitreMoyen)  As CourseTitle,
+                g.Numero AS CourseGroup,
+                e.Numero AS StudentNumber,
+                e.Nom AS StudentLastName,
+                e.Prenom AS StudentFirstName,
+                es.AnSession AS CourseTrimester,
+                p.Numero AS StudentProgram,
+                CEILING(CAST(es.SPE AS FLOAT)/2) AS StudentProgramYear,
+                p.TitreLong AS StudentProgramName
+            FROM Etudiants.Etudiant e
+            JOIN Etudiants.EtudiantSession es ON es.IDEtudiant = e.IDEtudiant
+            JOIN Inscriptions.Inscription i ON i.IDEtudiantSession = es.IDEtudiantSession
+            JOIN Groupes.Groupe g ON g.IDGroupe = i.IDGroupe
+            JOIN BanqueCours.Cours c ON c.IDCours = i.IDCours
+            JOIN Programmes.Programme p on p.IDProgramme = es.IDProgramme
+            JOIN Reference.UniteOrg uo ON uo.IDUniteOrg = i.IDUniteOrg
+            WHERE es.Etat > 0
+                AND i.Etat > 0
+                AND uo.IndicateurLocal = 1
+                AND es.AnSession >= '$trimester'
+            ORDER BY e.Numero, c.Numero";
+    return cegep_dawson_prepare_select_query($select);
 }
 
 function cegep_dawson_sisdbsource_select_teachers($term) {
@@ -49,7 +49,7 @@ function cegep_dawson_sisdbsource_select_teachers($term) {
        ORDER BY
             g.AnSession, e.Numero, c.Numero, g.Numero;";
 
-	return cegep_dawson_prepare_select_query($select);
+    return cegep_dawson_prepare_select_query($select);
 }
 
 function cegep_dawson_current_trimester() {
@@ -81,29 +81,29 @@ function cegep_dawson_current_trimester() {
 
 function cegep_dawson_sisdbsource_decode($field, $data) {
     switch ($field) {
-		case 'studentnumber':
-			// Replace two leading numbers by 'e'
-			return cegep_dawson_convert_longstudentno_to_dawno($data);
-			break;
+        case 'studentnumber':
+            // Replace two leading numbers by 'e'
+            return cegep_dawson_convert_longstudentno_to_dawno($data);
+            break;
 
-		case 'coursetrimester':
-			// Break into array of year and trimester
-			return array('year' => substr($data, 0, 4), 'trimester' => substr($data, 4, 1));
-			break;
+        case 'coursetrimester':
+            // Break into array of year and trimester
+            return array('year' => substr($data, 0, 4), 'trimester' => substr($data, 4, 1));
+            break;
 
-		case 'program':
-		case 'coursecampus':
-			// no need for these
-			return '';
-			break;
+        case 'program':
+        case 'coursecampus':
+            // no need for these
+            return '';
+            break;
 
-		case 'studentlastname':
-		case 'studentfirstname':
-			return utf8_encode($data);
+        case 'studentlastname':
+        case 'studentfirstname':
+            return utf8_encode($data);
 
-		default:
-			return $data;
-			break;
+        default:
+            return $data;
+            break;
     }
 }
 
@@ -314,7 +314,7 @@ function cegep_dawson_courses_get_sections($courseidnumber, $courseid = 0, &$has
   $echo_course = false;
 
   if ($filter_term == 'all') {
-  	$echo_course = true;
+      $echo_course = true;
   }
 
   $enroldb = enroldb_connect();
@@ -338,39 +338,39 @@ function cegep_dawson_courses_get_sections($courseidnumber, $courseid = 0, &$has
 
   while (!$coursegroups_rs->EOF) {
     if($on_first) {
-		$html .= '<span class="cegep_section">';
-	}
+        $html .= '<span class="cegep_section">';
+    }
 
     $coursegroup_id = $coursegroups_rs->fields['coursegroup_id'];
     $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
     $coursegroup = $sisdb->Execute($select)->fields;
 
-	if (!$on_first) {
-		$html .= ', ' . strtolower(get_string("cegepsection", "block_cegep")) . ' ' . $coursegroup['group'] .' (' . cegep_dawson_trimester_to_string($coursegroup['semester']) . ')';
-	}
-	else {
-		$html .= get_string("cegepsection", "block_cegep") . ' ' . $coursegroup['group'] .' (' . cegep_dawson_trimester_to_string($coursegroup['semester']) . ')';
-	}
+    if (!$on_first) {
+        $html .= ', ' . strtolower(get_string("cegepsection", "block_cegep")) . ' ' . $coursegroup['group'] .' (' . cegep_dawson_trimester_to_string($coursegroup['semester']) . ')';
+    }
+    else {
+        $html .= get_string("cegepsection", "block_cegep") . ' ' . $coursegroup['group'] .' (' . cegep_dawson_trimester_to_string($coursegroup['semester']) . ')';
+    }
 
-	if (!empty($filter_term) && $filter_term != 'all') {
-		if ($coursegroup['semester'] == $filter_term) {
-			$echo_course = true;
-		}
-	}
+    if (!empty($filter_term) && $filter_term != 'all') {
+        if ($coursegroup['semester'] == $filter_term) {
+            $echo_course = true;
+        }
+    }
 
-	$has_sections = true;
+    $has_sections = true;
     $coursegroups_rs->MoveNext();
 
-	if ($on_first) {
-		$on_first = false;
-	}
+    if ($on_first) {
+        $on_first = false;
+    }
   }
 
   if (!$has_sections) {
-		$html .= '<span class="error">' . get_string("cegepnosections", "block_cegep") . '</span>';
+        $html .= '<span class="error">' . get_string("cegepnosections", "block_cegep") . '</span>';
   }
   else {
-		$html .= '</span>';
+        $html .= '</span>';
   }
 
   $enroldb->Close();
@@ -477,34 +477,34 @@ function cegep_dawson_date_to_code($date = null) {
  * dawson 7-digit numbers, with leading #s and letters.
  */
 function cegep_dawson_convert_longstudentno_to_dawno($studentno) {
-	$substr = substr($studentno, 0, 2);
-	$newno = '';
+    $substr = substr($studentno, 0, 2);
+    $newno = '';
 
-	switch ($substr) {
-		case '20':
-			$newno = substr($studentno, 2, 7);
-			if ($newno[0] == '0') {
-				$newno[0] = 'A';
-			}
-			else if ($newno[0] == '1') {
-				$newno[0] = 'B';
-			}
-			else if ($newno[0] == '2') {
-				$newno[0] = 'C';
-			}
-			else if ($newno[0] == '3') {
-				$newno[0] = 'D';
-			}
-			break;
+    switch ($substr) {
+        case '20':
+            $newno = substr($studentno, 2, 7);
+            if ($newno[0] == '0') {
+                $newno[0] = 'A';
+            }
+            else if ($newno[0] == '1') {
+                $newno[0] = 'B';
+            }
+            else if ($newno[0] == '2') {
+                $newno[0] = 'C';
+            }
+            else if ($newno[0] == '3') {
+                $newno[0] = 'D';
+            }
+            break;
 
-		case '19':
-			$newno = substr($studentno, 2, 7);
-			break;
+        case '19':
+            $newno = substr($studentno, 2, 7);
+            break;
 
-		default:
-			break;
-	}
-	return $newno;
+        default:
+            break;
+    }
+    return $newno;
 }
 
 /**
@@ -512,34 +512,34 @@ function cegep_dawson_convert_longstudentno_to_dawno($studentno) {
  * like 'Fall 2009' or 'Winter 2010'.
  */
 function cegep_dawson_trimester_to_string($code) {
-	$year = substr($code, 0, 4);
-	$semester = substr($code, 4, 1);
+    $year = substr($code, 0, 4);
+    $semester = substr($code, 4, 1);
 
-	$str = '';
+    $str = '';
 
-	switch ($semester) {
-		case '1':
-			$str = get_string("winter", "block_cegep") . ' ';
-			break;
-		case '2':
-			$str = get_string("summer", "block_cegep") . ' ';
-			break;
-		case '3':
-			$str = get_string("fall", "block_cegep") . ' ';
-			break;
-		default:
-			$str = get_string("fall", "block_cegep") . ' ';
-			break;
-	}
+    switch ($semester) {
+        case '1':
+            $str = get_string("winter", "block_cegep") . ' ';
+            break;
+        case '2':
+            $str = get_string("summer", "block_cegep") . ' ';
+            break;
+        case '3':
+            $str = get_string("fall", "block_cegep") . ' ';
+            break;
+        default:
+            $str = get_string("fall", "block_cegep") . ' ';
+            break;
+    }
 
-	$str .= $year;
-	return $str;
+    $str .= $year;
+    return $str;
 }
 
 function cegep_dawson_prepare_select_query($query) {
-	$query = str_replace("'","''",$query);
-	$query = "SELECT * FROM OPENQUERY(CLARAREPROTPRODLINK, '$query')";
-	return $query;
+    $query = str_replace("'","''",$query);
+    $query = "SELECT * FROM OPENQUERY(CLARAREPROTPRODLINK, '$query')";
+    return $query;
 }
 
 function cegep_dawson_sisdbsource_connect($type, $host, $name, $user, $pass) {
@@ -547,8 +547,8 @@ function cegep_dawson_sisdbsource_connect($type, $host, $name, $user, $pass) {
     $db = &ADONewConnection($type);
     if ($db->Connect($host, $user, $pass, $name, true)) {
         $db->SetFetchMode(ADODB_FETCH_ASSOC); ///Set Assoc mode always after DB connection
-		$db->Execute("SET ANSI_WARNINGS ON");
-		$db->Execute("SET ANSI_NULLS ON");
+        $db->Execute("SET ANSI_WARNINGS ON");
+        $db->Execute("SET ANSI_NULLS ON");
         return $db;
     } else {
         trigger_error("Error connecting to DB backend with: "
@@ -558,151 +558,151 @@ function cegep_dawson_sisdbsource_connect($type, $host, $name, $user, $pass) {
 }
 
 function cegep_dawson_print_course_information($course, $view_filters = array(), &$echo_course = false) {
-	global $CFG;
+    global $CFG;
 
-	$context = get_context_instance(CONTEXT_COURSE, $course->id);
+    $context = get_context_instance(CONTEXT_COURSE, $course->id);
 
 
-	$linkcss = '';
-	if (empty($course->visible)) {
-		$linkcss = 'class="dimmed"';
-	}
+    $linkcss = '';
+    if (empty($course->visible)) {
+        $linkcss = 'class="dimmed"';
+    }
 
-	$can_edit = has_capability('moodle/course:update', $context);
+    $can_edit = has_capability('moodle/course:update', $context);
 
-	if ($can_edit) { //display for teachers
+    if ($can_edit) { //display for teachers
 
-		if (!empty($view_filters['filter_visible']) && $view_filters['filter_visible'] == 'visible' && empty($course->visible)) {
-			$echo_course = false;
-			return '';
-		}
+        if (!empty($view_filters['filter_visible']) && $view_filters['filter_visible'] == 'visible' && empty($course->visible)) {
+            $echo_course = false;
+            return '';
+        }
 
-		if (!empty($view_filters['filter_visible']) && $view_filters['filter_visible'] == 'invisible' && $course->visible) {
-			$echo_course = false;
-			return '';
-		}
+        if (!empty($view_filters['filter_visible']) && $view_filters['filter_visible'] == 'invisible' && $course->visible) {
+            $echo_course = false;
+            return '';
+        }
 
-		if (empty($view_filters['filter_term'])) {
-			$view_filters['filter_term'] = 'all';
-		}
+        if (empty($view_filters['filter_term'])) {
+            $view_filters['filter_term'] = 'all';
+        }
 
-		$html = '<table class="cegep_course_status">';
+        $html = '<table class="cegep_course_status">';
 
         $html .= '<thead><tr><th colspan="3"><a title="' . format_string($course->fullname) . '" ' . $linkcss . ' href="' . $CFG->wwwroot . '/course/view.php?id=' . $course->id . '">' . format_string($course->fullname) . '</a> <span class="course_settings_link">(<a href="' . $CFG->wwwroot . '/course/edit.php?id=' . $course->id . '">' . get_string("cegepeditsettings", "block_cegep") . '</a>)</span></th></tr></thead>';
 
-		$html .= '<tbody>';
+        $html .= '<tbody>';
 
         if ($course->idnumber != '') {
-			$html .= '<tr><td class="left">' . get_string("cegepenrolled", "block_cegep") . '</td><td>' . cegep_dawson_courses_get_sections($course->idnumber, $course->id, $has_sections, $view_filters['filter_term'], $echo_course) .'</td>';
+            $html .= '<tr><td class="left">' . get_string("cegepenrolled", "block_cegep") . '</td><td>' . cegep_dawson_courses_get_sections($course->idnumber, $course->id, $has_sections, $view_filters['filter_term'], $echo_course) .'</td>';
 
-			/* if we find the term name in the title of the course, consider it
-			 * as part of this term. */
-			 if (stripos($course->fullname, cegep_dawson_trimester_to_string($view_filters['filter_term'])) !== false) {
-			 	$echo_course = true;
-			}
-		}
-		else {
-			$html .= '<tr><td class="left">' . get_string("cegepenrolled", "block_cegep") . '</td><td>N/A&nbsp;&nbsp;<a onclick="this.target=\'popup\'; return openpopup(\'/help.php?module=cegep&file=no.sections.html\', \'popup\',\'menubar=0,location=0,scrollbars,resizable,width=500,height=400\',0);" href="' . $CFG->wwwroot . '/blocks/cegep/no.sections.html"><img src="' . $CFG->wwwroot . '/pix/help.gif" alt="Why no sections?" title="Why no sections?" class="iconhelp" /></a></td>';
-		}
+            /* if we find the term name in the title of the course, consider it
+             * as part of this term. */
+             if (stripos($course->fullname, cegep_dawson_trimester_to_string($view_filters['filter_term'])) !== false) {
+                 $echo_course = true;
+            }
+        }
+        else {
+            $html .= '<tr><td class="left">' . get_string("cegepenrolled", "block_cegep") . '</td><td>N/A&nbsp;&nbsp;<a onclick="this.target=\'popup\'; return openpopup(\'/help.php?module=cegep&file=no.sections.html\', \'popup\',\'menubar=0,location=0,scrollbars,resizable,width=500,height=400\',0);" href="' . $CFG->wwwroot . '/blocks/cegep/no.sections.html"><img src="' . $CFG->wwwroot . '/pix/help.gif" alt="Why no sections?" title="Why no sections?" class="iconhelp" /></a></td>';
+        }
 
-		if ($can_edit) {
-			if (!empty($has_sections) && $has_sections) {
-				$html .= '<td><input type="button" onclick="window.location=\'' . $CFG->wwwroot . '/blocks/cegep/block_cegep_enrolment.php?a=unenrol&id=' . $course->id . '\';" value="Manage sections" /></td>';
-			}
-			else {
-				$html .= '<td><input type="button" onclick="window.location=\'' . $CFG->wwwroot . '/blocks/cegep/block_cegep_enrolment.php?a=enrol&id=' . $course->id . '\';" value="Manage sections" /></td>';
-			}
-		}
-		else {
-			$html .= '<td></td>';
-		}
+        if ($can_edit) {
+            if (!empty($has_sections) && $has_sections) {
+                $html .= '<td><input type="button" onclick="window.location=\'' . $CFG->wwwroot . '/blocks/cegep/block_cegep_enrolment.php?a=unenrol&id=' . $course->id . '\';" value="Manage sections" /></td>';
+            }
+            else {
+                $html .= '<td><input type="button" onclick="window.location=\'' . $CFG->wwwroot . '/blocks/cegep/block_cegep_enrolment.php?a=enrol&id=' . $course->id . '\';" value="Manage sections" /></td>';
+            }
+        }
+        else {
+            $html .= '<td></td>';
+        }
 
-		$html .= '</tr>';
+        $html .= '</tr>';
 
 
-		$html .= '<tr><td class="left">' . get_string("cegepvisible", "block_cegep") . '</td><td>' . ($course->visible ? '<span class="good">' . get_string('cegepvisibleyes', 'block_cegep') . '</span>' : '<span class="error">' . get_string('cegepvisibleno', 'block_cegep') . '</span></td>') . '<td class="right"><input type="button" onclick="window.location=\'' . $CFG->wwwroot . '/course/edit.php?id=' . $course->id . '&change_avail=1#avail\';" value="Change" /></td></tr>';
-	}
-	else { //display for students / non-editing teachers
-		if (!empty($view_filters['filter_visible']) && $view_filters['filter_visible'] == 'visible' && empty($course->visible)) {
-			$echo_course = false;
-			return '';
-		}
+        $html .= '<tr><td class="left">' . get_string("cegepvisible", "block_cegep") . '</td><td>' . ($course->visible ? '<span class="good">' . get_string('cegepvisibleyes', 'block_cegep') . '</span>' : '<span class="error">' . get_string('cegepvisibleno', 'block_cegep') . '</span></td>') . '<td class="right"><input type="button" onclick="window.location=\'' . $CFG->wwwroot . '/course/edit.php?id=' . $course->id . '&change_avail=1#avail\';" value="Change" /></td></tr>';
+    }
+    else { //display for students / non-editing teachers
+        if (!empty($view_filters['filter_visible']) && $view_filters['filter_visible'] == 'visible' && empty($course->visible)) {
+            $echo_course = false;
+            return '';
+        }
 
-		if (!empty($view_filters['filter_visible']) && $view_filters['filter_visible'] == 'invisible' && $course->visible) {
-			$echo_course = false;
-			return '';
-		}
+        if (!empty($view_filters['filter_visible']) && $view_filters['filter_visible'] == 'invisible' && $course->visible) {
+            $echo_course = false;
+            return '';
+        }
 
-		$html = '<table class="cegep_course_status">';
+        $html = '<table class="cegep_course_status">';
 
         $html .= '<thead><tr><th colspan="3"><a title="' . format_string($course->fullname) . '" ' . $linkcss . ' href="' . $CFG->wwwroot . '/course/view.php?id=' . $course->id . '">' . format_string($course->fullname) . '</a></th></tr></thead>';
 
-		$html .= '<tbody>';
+        $html .= '<tbody>';
 
-		$teachers = cegep_dawson_get_teachers($course->id);
-		if (strlen($teachers) > 0) {
-			$html .= '<tr><td class="left">Teacher' . (count(explode(",", $teachers)) > 1 ? 's' : '') . ':</td><td>' . $teachers . '</td></tr>';
-		}
+        $teachers = cegep_dawson_get_teachers($course->id);
+        if (strlen($teachers) > 0) {
+            $html .= '<tr><td class="left">Teacher' . (count(explode(",", $teachers)) > 1 ? 's' : '') . ':</td><td>' . $teachers . '</td></tr>';
+        }
 
-		$sections = cegep_dawson_courses_get_sections($course->idnumber, $course->id, $has_sections, $view_filters['filter_term'], $echo_course);
+        $sections = cegep_dawson_courses_get_sections($course->idnumber, $course->id, $has_sections, $view_filters['filter_term'], $echo_course);
 
-		if (strpos($sections, "None") === false) {
-			$html .= '<tr><td class="left">Section' . (count(explode(",",$sections)) > 1 ? 's' : '') . ':</td><td>' . $sections .'</td></tr>';
-		}
-	}
-	if (!$echo_course) {
-		$html = '';
-	}
-	return $html;
+        if (strpos($sections, "None") === false) {
+            $html .= '<tr><td class="left">Section' . (count(explode(",",$sections)) > 1 ? 's' : '') . ':</td><td>' . $sections .'</td></tr>';
+        }
+    }
+    if (!$echo_course) {
+        $html = '';
+    }
+    return $html;
 }
 
 function cegep_dawson_print_delete_button($course) {
-	global $CFG;
-	$context = get_context_instance(CONTEXT_COURSE, $course->id);
-	$can_edit = has_capability('moodle/course:update', $context);
-	$html = '';
-	if ($can_edit) {
-		$html .= '<tr><td colspan="3"><table style="width: 100%;"><tr><td style="text-align: center; border: none;"><form method="get" action="' . $CFG->wwwroot . '/course/delete.php"><input type="submit" value="Delete this course" /><input type="hidden" name="id" value="' . $course->id . '" /></form></td>';
-	}
-	return $html;
+    global $CFG;
+    $context = get_context_instance(CONTEXT_COURSE, $course->id);
+    $can_edit = has_capability('moodle/course:update', $context);
+    $html = '';
+    if ($can_edit) {
+        $html .= '<tr><td colspan="3"><table style="width: 100%;"><tr><td style="text-align: center; border: none;"><form method="get" action="' . $CFG->wwwroot . '/course/delete.php"><input type="submit" value="Delete this course" /><input type="hidden" name="id" value="' . $course->id . '" /></form></td>';
+    }
+    return $html;
 }
 
 function cegep_dawson_print_backup_button($course) {
-	global $CFG;
-	$context = get_context_instance(CONTEXT_COURSE, $course->id);
-	$can_edit = has_capability('moodle/course:update', $context);
-	$html = '';
-	if ($can_edit) {
-		$html .= '<td style="text-align: center; border: none;"><form method="get" action="' . $CFG->wwwroot . '/backup/backup.php"><input type="submit" value="Backup this course" /><input type="hidden" name="id" value="' . $course->id . '" /></form></td></tr></table></td></tr>';
-	}
-	return $html;
+    global $CFG;
+    $context = get_context_instance(CONTEXT_COURSE, $course->id);
+    $can_edit = has_capability('moodle/course:update', $context);
+    $html = '';
+    if ($can_edit) {
+        $html .= '<td style="text-align: center; border: none;"><form method="get" action="' . $CFG->wwwroot . '/backup/backup.php"><input type="submit" value="Backup this course" /><input type="hidden" name="id" value="' . $course->id . '" /></form></td></tr></table></td></tr>';
+    }
+    return $html;
 }
 
 /* Return a comma-separated list of teachers */
 function cegep_dawson_get_teachers ($courseid) {
-	if (! $course = get_record('course', 'id', $courseid)) {
-		return '';
-	}
+    if (! $course = get_record('course', 'id', $courseid)) {
+        return '';
+    }
 
-	if (! $context = get_context_instance(CONTEXT_COURSE, $course->id)) {
-		return '';
-	}
+    if (! $context = get_context_instance(CONTEXT_COURSE, $course->id)) {
+        return '';
+    }
 
-	$query = "SELECT * FROM mdl_role WHERE shortname='editingteacher' OR shortname='teacher'";
-	if (! $roleset = get_recordset_sql($query)) {
-		return '';
-	}
+    $query = "SELECT * FROM mdl_role WHERE shortname='editingteacher' OR shortname='teacher'";
+    if (! $roleset = get_recordset_sql($query)) {
+        return '';
+    }
 
-	$roleids = array();
+    $roleids = array();
 
-	foreach ($roleset as $role) {
-		$roleids[] = $role['id'];
-	}
+    foreach ($roleset as $role) {
+        $roleids[] = $role['id'];
+    }
 
-	$roleidlist = join(",", $roleids);
+    $roleidlist = join(",", $roleids);
 
-	$query = "
-	SELECT DISTINCT u.id, u.username, u.firstname, u.lastname,
+    $query = "
+    SELECT DISTINCT u.id, u.username, u.firstname, u.lastname,
                       u.email, u.city, u.country, u.picture,
                       u.lang, u.timezone, u.emailstop, u.maildisplay, u.imagealt,
                       COALESCE(ul.timeaccess, 0) AS lastaccess,
@@ -721,83 +721,83 @@ function cegep_dawson_get_teachers ($courseid) {
             AND r.roleid NOT IN (1,11,81)
               ORDER BY lastaccess DESC, r.hidden DESC";
 
-	$userlist = get_recordset_sql($query);
-	$teachers = '';
-	$first = true;
-	foreach ($userlist as $usr) {
-		if ($first) {
-			$teachers .= $usr['firstname'] . ' ' . $usr['lastname'];
-			$first = false;
-		}
-		else {
-			$teachers .= ', ' . $usr['firstname'] . ' ' . $usr['lastname'];
-		}
-	}
-	return $teachers;
+    $userlist = get_recordset_sql($query);
+    $teachers = '';
+    $first = true;
+    foreach ($userlist as $usr) {
+        if ($first) {
+            $teachers .= $usr['firstname'] . ' ' . $usr['lastname'];
+            $first = false;
+        }
+        else {
+            $teachers .= ', ' . $usr['firstname'] . ' ' . $usr['lastname'];
+        }
+    }
+    return $teachers;
 }
 
 function cegep_dawson_get_enrolled_sections() {
-	global $CFG, $COURSE, $enroldb, $sisdb;
+    global $CFG, $COURSE, $enroldb, $sisdb;
 
-	$course = $COURSE->idnumber;
+    $course = $COURSE->idnumber;
 
-	$coursecode = substr($course, 0, 8);
+    $coursecode = substr($course, 0, 8);
 
-	$select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` like '". $coursecode ."_%' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`";
+    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` like '". $coursecode ."_%' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`";
 
-	$coursegroups_rs = $enroldb->Execute($select);
+    $coursegroups_rs = $enroldb->Execute($select);
 
-	if (!$coursegroups_rs) {
-		trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
-		return false;
-	} 
+    if (!$coursegroups_rs) {
+        trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
+        return false;
+    } 
 
-	$coursegroup_id = '';
-	while (!$coursegroups_rs->EOF) {
-		$coursegroup_id = $coursegroups_rs->fields['coursegroup_id'];
-		$coursegroup_num = $coursegroups_rs->fields['num'];
-		$select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
-		$coursegroup = $sisdb->Execute($select)->fields;
+    $coursegroup_id = '';
+    while (!$coursegroups_rs->EOF) {
+        $coursegroup_id = $coursegroups_rs->fields['coursegroup_id'];
+        $coursegroup_num = $coursegroups_rs->fields['num'];
+        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
+        $coursegroup = $sisdb->Execute($select)->fields;
 
-		if (!is_array($terms_sections[$coursegroup['semester']])) {
-			$terms_sections[$coursegroup['semester']] = array();
-		}
-		$terms_sections[$coursegroup['semester']][] = $coursegroup['group'];
+        if (!is_array($terms_sections[$coursegroup['semester']])) {
+            $terms_sections[$coursegroup['semester']] = array();
+        }
+        $terms_sections[$coursegroup['semester']][] = $coursegroup['group'];
 
-		$coursegroups_rs->MoveNext();
-	}
-	return $terms_sections;
+        $coursegroups_rs->MoveNext();
+    }
+    return $terms_sections;
 }
 
 function cegep_dawson_get_sisdb_student_insert($code_etudiant, $last_name, $first_name, $program, $programyear) {
-	global $CFG;
-	return "INSERT INTO `$CFG->sisdb_name`.`student` (`username` , `lastname`, `firstname`, `program`) VALUES ('$code_etudiant', \"$last_name\", \"$first_name\", \"$program\"); ";
+    global $CFG;
+    return "INSERT INTO `$CFG->sisdb_name`.`student` (`username` , `lastname`, `firstname`, `program`) VALUES ('$code_etudiant', \"$last_name\", \"$first_name\", \"$program\"); ";
 }
 
 function cegep_dawson_get_sisdb_student_update($code_etudiant, $last_name, $first_name, $program, $programyear) {
-	global $CFG;
-	return "UPDATE `$CFG->sisdb_name`.`student` SET `lastname` = \"$last_name\", `firstname` = \"$first_name\", `program` = \"$program\" WHERE `username` = '$code_etudiant'; ";
+    global $CFG;
+    return "UPDATE `$CFG->sisdb_name`.`student` SET `lastname` = \"$last_name\", `firstname` = \"$first_name\", `program` = \"$program\" WHERE `username` = '$code_etudiant'; ";
 }
 
 function cegep_dawson_convert_dawno_to_studentno($studentno) {
-	$newno = $studentno;
+    $newno = $studentno;
 
-	switch(strtolower($studentno[0])) {
+    switch(strtolower($studentno[0])) {
         case 'a':
-		    $newno[0] = '0';
-			break;
-	    case 'b':
-		    $newno[0] = '1';
-			break;
-		case 'c':
-		    $newno[0] = '2';
-			break;
-		case 'd':
-		    $newno[0] = '3';
-			break;
-		default:
-		    break;
-	}
-	return $newno;
+            $newno[0] = '0';
+            break;
+        case 'b':
+            $newno[0] = '1';
+            break;
+        case 'c':
+            $newno[0] = '2';
+            break;
+        case 'd':
+            $newno[0] = '3';
+            break;
+        default:
+            break;
+    }
+    return $newno;
 }
 

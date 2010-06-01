@@ -18,10 +18,10 @@ class cegep_enrol_form extends moodleform {
         $mform->addGroup($enrol, 'semester', get_string('semester','block_cegep').' :', '&nbsp;', false);
         $mform->addRule('semester', get_string('specifysemester','block_cegep'), 'required');
         $mform->addGroupRule('semester', array(
-    		'trimestre' => array(
+            'trimestre' => array(
         array(get_string('specifysemester','block_cegep'), 'required')
         ),
-    		'year' => array(
+            'year' => array(
         array(get_string('specifyyear','block_cegep'), 'required')
         )
         ), 'required', null, 2);

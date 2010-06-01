@@ -89,11 +89,11 @@ switch ($action) {
 function cegep_enrol() {
     global $CFG, $COURSE, $enroldb, $sisdb;
     
-	$context = get_context_instance(CONTEXT_SYSTEM);
+    $context = get_context_instance(CONTEXT_SYSTEM);
 
-	if (!has_capability('moodle/site:doanything', $context)) { 
+    if (!has_capability('moodle/site:doanything', $context)) { 
         return call_user_func('cegep_restricted_enrol');
-	}
+    }
 
     $currenttab = 'enrol';
     require('block_cegep_tabs.php');
@@ -143,7 +143,7 @@ function cegep_enrol() {
         $studentlist = '';
         while ($students_rs && !$students_rs->EOF) {
             $student = $students_rs->fields;
-        	$insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`) VALUES ('$COURSE->idnumber', '$student[username]', '$CFG->block_cegep_studentrole', '$coursegroup[id]');";
+            $insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`) VALUES ('$COURSE->idnumber', '$student[username]', '$CFG->block_cegep_studentrole', '$coursegroup[id]');";
             $result = $enroldb->Execute($insert);
             if (!$result) {
                 trigger_error(get_string('errorimportingstudentlist','block_cegep'), E_USER_ERROR);
@@ -153,7 +153,7 @@ function cegep_enrol() {
             }
             // If user exists in database, assign its role right away
             if ($student_user = get_record('user', 'username', $student['username'])) {
-		        role_assign($student_role->id, $student_user->id, 0, $context->id);
+                role_assign($student_role->id, $student_user->id, 0, $context->id);
             }
             $students_rs->MoveNext();
         }
@@ -201,33 +201,33 @@ function cegep_restricted_enrol() {
 
     $coursecode = $course_to_enrol;
 
-	echo get_string('coursecode', 'block_cegep') . $coursecode;
+    echo get_string('coursecode', 'block_cegep') . $coursecode;
 
-	$section = $section_to_enrol;
+    $section = $section_to_enrol;
 
-	if ($CFG->block_cegep_autogroups == true) {
-		/* Check if a group already exists for this course */
-		$group = get_record("groups", "courseid", $COURSE->id, "name", "Section " . $section);
+    if ($CFG->block_cegep_autogroups == true) {
+        /* Check if a group already exists for this course */
+        $group = get_record("groups", "courseid", $COURSE->id, "name", "Section " . $section);
 
-		if ($group) {
-			$groupid = $group->id;
-		}
-		else {
-			$groupdata->name = "Section " . $section;
-			$groupdata = new stdClass();
-			$groupdata->name = "Section " . $section;
-			$groupdata->description = '';
-			$groupdata->enrolmentkey = '';
-			$groupdata->hidepicture = 0;
-			$groupdata->id = 0;
-			$groupdata->courseid = $COURSE->id;
-			$groupdata->submitbutton = "Save changes";
-			$groupdata->timecreated = time();
-			$groupdata->timemodified = $groupdata->timecreated;
-			$groupid = insert_record('groups', $groupdata);
-		}
-	}
-	
+        if ($group) {
+            $groupid = $group->id;
+        }
+        else {
+            $groupdata->name = "Section " . $section;
+            $groupdata = new stdClass();
+            $groupdata->name = "Section " . $section;
+            $groupdata->description = '';
+            $groupdata->enrolmentkey = '';
+            $groupdata->hidepicture = 0;
+            $groupdata->id = 0;
+            $groupdata->courseid = $COURSE->id;
+            $groupdata->submitbutton = "Save changes";
+            $groupdata->timecreated = time();
+            $groupdata->timemodified = $groupdata->timecreated;
+            $groupid = insert_record('groups', $groupdata);
+        }
+    }
+    
     // Extract semester info
     $semester = $session_to_enrol;
 
@@ -263,9 +263,9 @@ function cegep_restricted_enrol() {
       // If user exists in database, assign its role right away
       if ($student_user = get_record('user', 'username', $student['username'])) {
         role_assign($student_role->id, $student_user->id, 0, $context->id);
-		if ($CFG->block_cegep_autogroups == true && !empty($groupid)) {
-			groups_add_member($groupid, $student_user->id);
-		}
+        if ($CFG->block_cegep_autogroups == true && !empty($groupid)) {
+            groups_add_member($groupid, $student_user->id);
+        }
       }
       $students_rs->MoveNext();
     }
@@ -280,71 +280,71 @@ function cegep_restricted_enrol() {
     echo "</div>";
   }
 
-	$coursecode = substr($COURSE->idnumber, 0, strpos($COURSE->idnumber, '_'));
-	
-	$session = cegep_local_date_to_datecode();
+    $coursecode = substr($COURSE->idnumber, 0, strpos($COURSE->idnumber, '_'));
+    
+    $session = cegep_local_date_to_datecode();
 
-	$select = "
-		SELECT
-			cg.coursecode AS CourseNumber,
-			cg.group AS SectionId,
-			cg.semester AS session
-		FROM teacher_enrolment te
-		LEFT JOIN coursegroup cg ON cg.id = te.coursegroup_id
-		LEFT JOIN course c ON c.coursecode = cg.coursecode
-		WHERE 
-			te.idnumber = '$USER->idnumber' AND
-			cg.semester >= '$session' AND
-			cg.coursecode = '$coursecode'
-		ORDER BY
-			cg.semester, cg.coursecode, cg.group
-	";
+    $select = "
+        SELECT
+            cg.coursecode AS CourseNumber,
+            cg.group AS SectionId,
+            cg.semester AS session
+        FROM teacher_enrolment te
+        LEFT JOIN coursegroup cg ON cg.id = te.coursegroup_id
+        LEFT JOIN course c ON c.coursecode = cg.coursecode
+        WHERE 
+            te.idnumber = '$USER->idnumber' AND
+            cg.semester >= '$session' AND
+            cg.coursecode = '$coursecode'
+        ORDER BY
+            cg.semester, cg.coursecode, cg.group
+    ";
 
-	$sisdb_rs = $sisdb->Execute($select); 
+    $sisdb_rs = $sisdb->Execute($select); 
 
-	$terms_sections = array();
-	$terms_sections = cegep_local_get_enrolled_sections();
+    $terms_sections = array();
+    $terms_sections = cegep_local_get_enrolled_sections();
 
-	echo '<div class="help">' . get_string('enrolhelp', 'block_cegep') . '</div>';
+    echo '<div class="help">' . get_string('enrolhelp', 'block_cegep') . '</div>';
 
-	while ($sisdb_rs && !$sisdb_rs->EOF) {
-		$row = $sisdb_rs->fields;
+    while ($sisdb_rs && !$sisdb_rs->EOF) {
+        $row = $sisdb_rs->fields;
 
-		$session = $row['session'];
+        $session = $row['session'];
 
-		if (is_numeric($row['SectionId']) && $row['SectionId'] < 10) {
-			$sectionid = sprintf("%02d", $row['SectionId']);
-		}
-		else {
-			$sectionid = $row['SectionId'];
-		}
+        if (is_numeric($row['SectionId']) && $row['SectionId'] < 10) {
+            $sectionid = sprintf("%02d", $row['SectionId']);
+        }
+        else {
+            $sectionid = $row['SectionId'];
+        }
 
-		// TODO: skip any section that is already enrolled somewhere.
-		echo '<form action="'. $ME .'" method="POST">'.
-		  '<div class="coursegroup-enrol-list">'.
-		  '<span class="coursegrouprow">'.
-		  '<input type="hidden" name="coursenumber" value="'. $row['CourseNumber'] .'" />'.
-		  '<input type="hidden" name="session" value="' . $row['session'] . '" />'.
-		  '<input type="hidden" name="sectionid" value=" ' . $sectionid . '" />'.
-		  '<input type="hidden" name="a" value="enrol" />'.
-		  '<input type="hidden" name="id" value="'. $courseid .'" />'.
-		  'Session <b>'. $row['session'] .'</b>, section <b>'. $sectionid .'</b>';
+        // TODO: skip any section that is already enrolled somewhere.
+        echo '<form action="'. $ME .'" method="POST">'.
+          '<div class="coursegroup-enrol-list">'.
+          '<span class="coursegrouprow">'.
+          '<input type="hidden" name="coursenumber" value="'. $row['CourseNumber'] .'" />'.
+          '<input type="hidden" name="session" value="' . $row['session'] . '" />'.
+          '<input type="hidden" name="sectionid" value=" ' . $sectionid . '" />'.
+          '<input type="hidden" name="a" value="enrol" />'.
+          '<input type="hidden" name="id" value="'. $courseid .'" />'.
+          'Session <b>'. $row['session'] .'</b>, section <b>'. $sectionid .'</b>';
 
-		if (!is_array($terms_sections) || !in_array($session, $terms_sections)) {
-			if (!in_array($sectionid, $terms_sections[$session])) {
-				echo '<input type="submit" name="submit" value="' . get_string('enrolsection', 'block_cegep') . '" />';
-			}
-			else {
-				echo '<em>' . get_string('sectionalreadyenrolled', 'block_cegep') . '</em>';
-			}
-		}
-		else {
-			echo '<em>' . get_string('sectionalreadyenrolled', 'block_cegep') . '</em>';
-		}
-		echo '</span>' . '</div>' . '</form>';
-		$sisdb_rs->moveNext();
-	}
-	$sisdb->Close();
+        if (!is_array($terms_sections) || !in_array($session, $terms_sections)) {
+            if (!in_array($sectionid, $terms_sections[$session])) {
+                echo '<input type="submit" name="submit" value="' . get_string('enrolsection', 'block_cegep') . '" />';
+            }
+            else {
+                echo '<em>' . get_string('sectionalreadyenrolled', 'block_cegep') . '</em>';
+            }
+        }
+        else {
+            echo '<em>' . get_string('sectionalreadyenrolled', 'block_cegep') . '</em>';
+        }
+        echo '</span>' . '</div>' . '</form>';
+        $sisdb_rs->moveNext();
+    }
+    $sisdb->Close();
 }
 
 // Unenrol a coursegroup from a Moodle course
@@ -394,7 +394,7 @@ function cegep_unenrol() {
             break;
         } else {
             notify(get_string('coursegroupunenrolled','block_cegep',array($enroldb->Affected_Rows())),'notifysuccess');
-	        echo "<div class='continuebutton'>";
+            echo "<div class='continuebutton'>";
             print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
             echo "</div>";
         }       
@@ -441,10 +441,10 @@ function cegep_enrolprogram() {
         $studentlist = '';
         while ($students_rs && !$students_rs->EOF) {
             $student = $students_rs->fields;
-        	$insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`, `program_idyear`) VALUES ('$COURSE->idnumber', '$student[username]', '$CFG->block_cegep_studentrole', NULL, '$program_idyear');";
+            $insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`, `program_idyear`) VALUES ('$COURSE->idnumber', '$student[username]', '$CFG->block_cegep_studentrole', NULL, '$program_idyear');";
             $result = $enroldb->Execute($insert);
             if (!$result) {
-				echo $insert;
+                echo $insert;
                 trigger_error(get_string('errorimportingstudentlist','block_cegep'), E_USER_ERROR);
                 break;
             } else {
@@ -452,14 +452,14 @@ function cegep_enrolprogram() {
             }
             // If user exists in database, assign its role right away
             if ($student_user = get_record('user', 'username', $student['username'])) {
-		        role_assign($student_role->id, $student_user->id, 0, $context->id);
+                role_assign($student_role->id, $student_user->id, 0, $context->id);
             }
             $students_rs->MoveNext();
         }
         
         // Display nice confirmation with student list and buttons
         notify(get_string('programenrolled','block_cegep'),'notifysuccess');
-	    echo "<div class='continuebutton'>";
+        echo "<div class='continuebutton'>";
         print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
         echo "</div>";
     }
@@ -520,7 +520,7 @@ function cegep_unenrolprogram() {
             break;
         } else {
             notify(get_string('programunenrolled','block_cegep',array($enroldb->Affected_Rows())),'notifysuccess');
-	        echo "<div class='continuebutton'>";
+            echo "<div class='continuebutton'>";
             print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
             echo "</div>";
         }       
@@ -628,13 +628,13 @@ function cegep_studentlist() {
                         $notice .= print_table($table,true);
                         $notice .= '<br /><strong>'.get_string('total').'</strong> : ' . count($table->data);
                     } 
-					else if (is_null($coursegroup[id])) {
-						$coursegroups->MoveNext();
-						continue;
-					}
-					else { 
-						$notice .= get_string('nocoursegroupsenrolled','block_cegep');
-					}
+                    else if (is_null($coursegroup[id])) {
+                        $coursegroups->MoveNext();
+                        continue;
+                    }
+                    else { 
+                        $notice .= get_string('nocoursegroupsenrolled','block_cegep');
+                    }
             
                     $body .= print_simple_box($notice, 'center', '700px', '', 5, 'generalbox', '', true);
                     
