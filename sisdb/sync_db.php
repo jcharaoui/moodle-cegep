@@ -24,7 +24,7 @@ if (!empty($CFG->block_cegep_cron_password) && $password == $CFG->block_cegep_cr
     echo "<!-- $start_trimester -->";
 }
 
-set_time_limit(600);
+set_time_limit(6000);
 
 $strtitle = 'Synchronize from database';
 if (!$in_cron) {
@@ -129,7 +129,7 @@ else {
         $programtitle = cegep_local_sisdbsource_decode('studentprogramname',$sisdbsource_rs->fields['StudentProgramName']);
         $groupecoursid = '';
 
-        if (empty($sisdbsource_rs->fields['CourseGroup'])) { $skipped++; continue; }
+        if (empty($sisdbsource_rs->fields['CourseGroup'])) { $skipped++; $sisdbsource_rs->moveNext(); continue; }
 
             // Mettre à jour les infos des étudiants
             if (!in_array($code_etudiant, $codes_etudiants)) {
@@ -241,7 +241,7 @@ else {
             }
         }
         if (empty($groupecoursid)) {
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$code_cours' AND `group` = '$code_groupe' AND `semester` = '$session'";
+			$select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$code_cours' AND `group` = '$code_groupe' AND `semester` = '$session'";
             $resultat = $sisdb->Execute($select);
             if ($resultat && $resultat->RecordCount() == 0) {
                 $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `semester`) VALUES ('$code_cours', '$code_groupe', '$session'); ";
@@ -323,7 +323,7 @@ else {
     }
 
 
-    // Synchronise teacher enrolments
+	// Synchronise teacher enrolments
 
     $teacher_enrol_localdb = array();
     $teacher_enrol_remotedb = array();
@@ -410,7 +410,7 @@ else {
     $msg .= "<strong>Groupecours</strong> : $ins_groupecours ajouts; " . count($groupecours) . " total<br /><br />";
     $msg .= "<strong>Inscriptions groupecours</strong> : $ins_inscription ajouts; $del_inscription ret; $skipped skp " . count($inscriptions) . " total<br /><br />";
     $msg .= "<strong>Inscriptions programmes</strong> : $ins_inscription_prog ajouts; $del_inscription_prog ret;<br /><br />";
-    $msg .= "<strong>Teacher enrolments</strong> : $count[teacher_enrolments_added] added; $count[teacher_enrolments_removed] removed; " . count($teacher_enrol_remotedb) . " processed<br /><br />";
+	$msg .= "<strong>Teacher enrolments</strong> : $count[teacher_enrolments_added] added; $count[teacher_enrolments_removed] removed; " . count($teacher_enrol_remotedb) . " processed<br /><br />";
     $msg .= "Temps d'exécution : ". sprintf("%.4f", ($end_time-$start_time))." secondes"; 
 
     notice($msg,$CFG->wwwroot);
