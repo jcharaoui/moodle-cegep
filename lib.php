@@ -19,15 +19,38 @@ function cegep_local_get_block_content() {
 }
 
 /**
- * Return current trimester in yyyyt format
+ * Return current term in yyyys (year/semester) format
  */
-function cegep_local_current_trimester() {
+function cegep_local_current_term() {
 
     global $CFG;
-    if (function_exists('cegep_' . $CFG->block_cegep_name . '_current_trimester')) {
-        return call_user_func('cegep_' . $CFG->block_cegep_name . '_current_trimester');
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_current_term')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_current_term');
     } else {
-        return 1;
+        // Year
+        $term = date('Y');
+        // Semester
+        switch (date('m')) {
+            case '01':
+            case '02':
+            case '03':
+            case '04':
+            case '05':
+                $term .= '1';
+                break;
+            case '06':
+            case '07':
+            case '08':
+                $term .= '2';
+                break;
+            case '09':
+            case '10':
+            case '11':
+            case '12':
+                $term .= '3';
+                break;
+        }
+        return $term;
     }
 }
 
@@ -60,7 +83,7 @@ function cegep_local_course_category($category) {
  * Return the SIS db source select to execute (students)
  * This select statement must return the following columns :
  * - CourseCampus
- * - CourseTrimester
+ * - CourseTerm
  * - CourseNumber
  * - CourseTitle 
  * - CourseGroup
@@ -110,7 +133,7 @@ function cegep_local_get_create_course_buttons() {
         print_error('dbconnectionfailed','error');
     }
 
-    $session = cegep_local_current_trimester();
+    $session = cegep_local_current_term();
 
     $select = "
         SELECT
@@ -156,7 +179,7 @@ function cegep_local_get_create_course_buttons() {
 
         $already_displayed_courses[] = $course_number;
 
-        $cursession = cegep_local_trimester_to_string($course_trimester);
+        $cursession = cegep_local_term_to_string($course_trimester);
 
         if ($cursession != $prevsession) {
             $items[] = '<div style="font-weight: bold; font-size: 1.2em;">' . $cursession . '</div>';
@@ -196,7 +219,7 @@ function cegep_local_create_course($coursecode = '', $coursetitle = '', $course_
             $seqnum = $coursemaxid->num + 1;
         }
 
-        $cursession = cegep_local_trimester_to_string($session);
+        $cursession = cegep_local_term_to_string($session);
 
         $site = get_site();
         $sisdb = sisdb_connect();
@@ -240,14 +263,14 @@ function cegep_local_create_course($coursecode = '', $coursetitle = '', $course_
                     te.idnumber AS Instructor,
                     cg.coursecode AS CourseNumber,
                     cg.group AS SectionId,
-                    cg.semester AS session
+                    cg.term AS session
                 FROM teacher_enrolment te
                 LEFT JOIN coursegroup cg ON cg.id = te.coursegroup_id
                 LEFT JOIN course c ON c.coursecode = cg.coursecode
                 WHERE 
                     cg.coursecode = '" . $coursecode . "' AND
                     cg.group = '$course_section' AND
-                    cg.semester >= '$session'
+                    cg.term >= '$session'
             ";
 
             $sisdb_rs = $sisdb->Execute($select); 
@@ -415,12 +438,12 @@ function cegep_local_prepare_select_query($query) {
 }
 
 /**
- * Convert a semester code (YYYYS) into a string,
+ * Convert a term code (YYYYS) into a string,
  * like 'Fall 2009' or 'Winter 2010'.
  */
-function cegep_local_trimester_to_string($code) {
-    if (function_exists('cegep_' . $CFG->block_cegep_name . '_trimester_to_string')) {
-        return call_user_func('cegep_' . $CFG->block_cegep_name . '_trimester_to_string', $code);
+function cegep_local_term_to_string($code) {
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_term_to_string')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_term_to_string', $code);
     } 
     else {
         $year = substr($code, 0, 4);

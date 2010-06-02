@@ -1,7 +1,7 @@
 <?php
 /* New lib_dawson.php */
 
-function cegep_dawson_sisdbsource_select_students($trimester) {
+function cegep_dawson_sisdbsource_select_students($term) {
     $select = "SELECT 
                 uo.Numero AS CourseUnit,
                 c.Numero AS CourseNumber,
@@ -10,7 +10,7 @@ function cegep_dawson_sisdbsource_select_students($trimester) {
                 e.Numero AS StudentNumber,
                 e.Nom AS StudentLastName,
                 e.Prenom AS StudentFirstName,
-                es.AnSession AS CourseTrimester,
+                es.AnSession AS CourseTerm,
                 p.Numero AS StudentProgram,
                 CEILING(CAST(es.SPE AS FLOAT)/2) AS StudentProgramYear,
                 p.TitreLong AS StudentProgramName
@@ -24,7 +24,7 @@ function cegep_dawson_sisdbsource_select_students($trimester) {
             WHERE es.Etat > 0
                 AND i.Etat > 0
                 AND uo.IndicateurLocal = 1
-                AND es.AnSession >= '$trimester'
+                AND es.AnSession >= '$term'
             ORDER BY e.Numero, c.Numero";
     return cegep_dawson_prepare_select_query($select);
 }
@@ -52,33 +52,6 @@ function cegep_dawson_sisdbsource_select_teachers($term) {
     return cegep_dawson_prepare_select_query($select);
 }
 
-function cegep_dawson_current_trimester() {
-    // Year
-    $trimester = date('Y');
-    // Trimester
-    switch (date('m')) {
-        case '01':
-        case '02':
-        case '03':
-        case '04':
-        case '05':
-            $trimester .= '1';
-            break;
-        case '06':
-        case '07':
-        case '08':
-            $trimester .= '2';
-            break;
-        case '09':
-        case '10':
-        case '11':
-        case '12':
-            $trimester .= '3';
-            break;
-    }
-    return $trimester;
-}
-
 function cegep_dawson_sisdbsource_decode($field, $data) {
     switch ($field) {
         case 'studentnumber':
@@ -86,9 +59,9 @@ function cegep_dawson_sisdbsource_decode($field, $data) {
             return cegep_dawson_convert_longstudentno_to_dawno($data);
             break;
 
-        case 'coursetrimester':
-            // Break into array of year and trimester
-            return array('year' => substr($data, 0, 4), 'trimester' => substr($data, 4, 1));
+        case 'courseterm':
+            // Break into array of year and semester
+            return array('year' => substr($data, 0, 4), 'semester' => substr($data, 4, 1));
             break;
 
         case 'program':
@@ -346,10 +319,10 @@ function cegep_dawson_courses_get_sections($courseidnumber, $courseid = 0, &$has
     $coursegroup = $sisdb->Execute($select)->fields;
 
     if (!$on_first) {
-        $html .= ', ' . strtolower(get_string("cegepsection", "block_cegep")) . ' ' . $coursegroup['group'] .' (' . cegep_dawson_trimester_to_string($coursegroup['semester']) . ')';
+        $html .= ', ' . strtolower(get_string("cegepsection", "block_cegep")) . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['semester']) . ')';
     }
     else {
-        $html .= get_string("cegepsection", "block_cegep") . ' ' . $coursegroup['group'] .' (' . cegep_dawson_trimester_to_string($coursegroup['semester']) . ')';
+        $html .= get_string("cegepsection", "block_cegep") . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['semester']) . ')';
     }
 
     if (!empty($filter_term) && $filter_term != 'all') {
@@ -411,7 +384,7 @@ function cegep_dawson_code_to_date($string) {
 }
 
 /**
- * Convert The given date (or current date if no date is given) into a trimester code
+ * Convert The given date (or current date if no date is given) into a term code
  * Date must be given as yyyy-mm-dd
  */
 function cegep_dawson_date_to_code($date = null) {
@@ -511,7 +484,7 @@ function cegep_dawson_convert_longstudentno_to_dawno($studentno) {
  * Convert a semester code (YYYYS) into a string,
  * like 'Fall 2009' or 'Winter 2010'.
  */
-function cegep_dawson_trimester_to_string($code) {
+function cegep_dawson_term_to_string($code) {
     $year = substr($code, 0, 4);
     $semester = substr($code, 4, 1);
 
@@ -597,7 +570,7 @@ function cegep_dawson_print_course_information($course, $view_filters = array(),
 
             /* if we find the term name in the title of the course, consider it
              * as part of this term. */
-             if (stripos($course->fullname, cegep_dawson_trimester_to_string($view_filters['filter_term'])) !== false) {
+             if (stripos($course->fullname, cegep_dawson_term_to_string($view_filters['filter_term'])) !== false) {
                  $echo_course = true;
             }
         }

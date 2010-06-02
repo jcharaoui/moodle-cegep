@@ -7,7 +7,7 @@ class cegep_enrol_form extends moodleform {
     function definition() {
         $mform =& $this->_form;
 
-        $current = cegep_local_current_trimester();
+        $current = cegep_local_current_term();
         $year = substr($current, 0, 4);
         $semester = substr($current, 4, 1);
 

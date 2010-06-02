@@ -1,90 +1,60 @@
 <?php
 
-function cegep_maisonneuve_sisdbsource_select_students($trimester) {
-
-    $select = "
-        DECLARE @AnSession_IN smallint;
-        SET @AnSession_IN = $trimester;
-        SELECT uo.Numero AS CourseUnit
-            ,c.Numero AS CourseNumber
-            ,c.TitreMoyen AS CourseTitle
-            ,g.Numero AS CourseGroup
-            ,e.Numero AS StudentNumber
-            ,e.Nom AS StudentLastName
-            ,e.Prenom AS StudentFirstName
-            ,es.AnSession AS CourseTrimester
-            ,p.Numero AS StudentProgram
-            ,CEILING(CAST(es.SPE AS FLOAT)/2) AS StudentProgramYear
-            ,p.TitreLong AS StudentProgramName
-        FROM Etudiants.Etudiant e
-            JOIN Etudiants.EtudiantSession es ON es.IDEtudiant = e.IDEtudiant
-            JOIN Inscriptions.Inscription i ON i.IDEtudiantSession = es.IDEtudiantSession
-            JOIN Groupes.Groupe g ON g.IDGroupe = i.IDGroupe
-            JOIN BanqueCours.Cours c ON c.IDCours = i.IDCours
-            JOIN Programmes.Programme p on p.IDProgramme = es.IDProgramme
-            JOIN Reference.UniteOrg uo ON uo.IDUniteOrg = i.IDUniteOrg
-        WHERE es.Etat > 0
-            AND i.Etat > 0
-            AND uo.IndicateurLocal = 1
-            AND es.AnSession >= @AnSession_IN
-        ORDER BY e.Numero, c.Numero;";
-
-    return $select;
+function cegep_maisonneuve_sisdbsource_select_students($term) {
+return <<< EOD
+    DECLARE @AnSession_IN smallint;
+    SET @AnSession_IN = $term;
+    SELECT
+        uo.Numero AS CourseUnit
+        ,c.Numero AS CourseNumber
+        ,c.TitreMoyen AS CourseTitle
+        ,g.Numero AS CourseGroup
+        ,e.Numero AS StudentNumber
+        ,e.Nom AS StudentLastName
+        ,e.Prenom AS StudentFirstName
+        ,es.AnSession AS CourseTerm
+        ,p.Numero AS StudentProgram
+        ,CEILING(CAST(es.SPE AS FLOAT)/2) AS StudentProgramYear
+        ,p.TitreLong AS StudentProgramName
+    FROM
+        Etudiants.Etudiant e
+        JOIN Etudiants.EtudiantSession es ON es.IDEtudiant = e.IDEtudiant
+        JOIN Inscriptions.Inscription i ON i.IDEtudiantSession = es.IDEtudiantSession
+        JOIN Groupes.Groupe g ON g.IDGroupe = i.IDGroupe
+        JOIN BanqueCours.Cours c ON c.IDCours = i.IDCours
+        JOIN Programmes.Programme p on p.IDProgramme = es.IDProgramme
+        JOIN Reference.UniteOrg uo ON uo.IDUniteOrg = i.IDUniteOrg
+    WHERE
+        es.Etat > 0
+        AND i.Etat > 0
+        AND uo.IndicateurLocal = 1
+        AND es.AnSession >= @AnSession_IN
+    ORDER BY
+        e.Numero, c.Numero;
+EOD;
 }
 
 function cegep_maisonneuve_sisdbsource_select_teachers($term) {
-
-   $select = "
-       DECLARE @AnSession_IN smallint;
-       SET @AnSession_IN = $term;
-       SELECT DISTINCT
-           g.AnSession CourseTerm,
-           e.Numero TeacherNumber,
-           c.Numero CourseNumber,
-           g.Numero CourseGroup
-        FROM
-            Employes.Employe e
-            JOIN Horaires.RencontreEmploye hre ON hre.IDEmploye = e.IDEmploye
-            JOIN Horaires.RencontreGroupe hrg ON hrg.IDRencontre = hre.IDRencontre
-            JOIN Groupes.Groupe g ON g.IDGroupe = hrg.IDGroupe
-            JOIN BanqueCours.Cours c ON g.IDCours = c.IDCours
-        WHERE
-            e.IDTypeEmploye = 1 AND
-            g.AnSession >= @AnSession_IN
-       ORDER BY
-            g.AnSession, e.Numero, c.Numero, g.Numero;";
-
-    return $select;
-}
-
-function cegep_maisonneuve_current_trimester() {
-
-    // Year
-    $trimester = date('Y');
-
-    // Trimester
-    switch (date('m')) {
-        case '01':
-        case '02':
-        case '03':
-        case '04':
-            $trimester .= '1';
-            break;
-        case '05':
-        case '06':
-        case '07':
-        case '08':
-            $trimester .= '2';
-            break;
-        case '09':
-        case '10':
-        case '11':
-        case '12':
-            $trimester .= '3';
-            break;
-    }
-
-    return $trimester;
+return <<< EOD
+   DECLARE @AnSession_IN smallint;
+   SET @AnSession_IN = $term;
+   SELECT DISTINCT
+       g.AnSession CourseTerm,
+       e.Numero TeacherNumber,
+       c.Numero CourseNumber,
+       g.Numero CourseGroup
+    FROM
+        Employes.Employe e
+        JOIN Horaires.RencontreEmploye hre ON hre.IDEmploye = e.IDEmploye
+        JOIN Horaires.RencontreGroupe hrg ON hrg.IDRencontre = hre.IDRencontre
+        JOIN Groupes.Groupe g ON g.IDGroupe = hrg.IDGroupe
+        JOIN BanqueCours.Cours c ON g.IDCours = c.IDCours
+    WHERE
+        e.IDTypeEmploye = 1 AND
+        g.AnSession >= @AnSession_IN
+   ORDER BY
+        g.AnSession, e.Numero, c.Numero, g.Numero;
+EOD;
 }
 
 function cegep_maisonneuve_sisdbsource_decode($field, $data) {
@@ -105,10 +75,9 @@ function cegep_maisonneuve_sisdbsource_decode($field, $data) {
         return str_pad($data, 6, '0', STR_PAD_LEFT);
         break;
 
-    case 'coursetrimester':
     case 'courseterm':
-        // Break into array of year and trimester
-        return array('year' => substr($data, 0, 4), 'trimester' => substr($data, 4, 1));
+        // Break into array of year and semester
+        return array('year' => substr($data, 0, 4), 'semester' => substr($data, 4, 1));
         break;
 
     case 'program':

@@ -114,7 +114,7 @@ else {
     while ($sisdbsource_rs && !$sisdbsource_rs->EOF) {
 
         $term = array();
-        $term = implode(cegep_local_sisdbsource_decode('courseterm',$sisdbsource_rs->fields['CourseTrimester']));
+        $term = implode(cegep_local_sisdbsource_decode('courseterm',$sisdbsource_rs->fields['CourseTerm']));
         if (!in_array($term,$terms)) {
             $terms[] = $term;
         }
@@ -259,10 +259,10 @@ else {
         }
 
         if (empty($coursegroup_id)) {
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$course' AND `group` = '$coursegroup' AND `semester` = '$term'";
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$course' AND `group` = '$coursegroup' AND `term` = '$term'";
             $result = $sisdb->Execute($select);
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `semester`) VALUES ('$course', '$coursegroup', '$term'); ";
+                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `term`) VALUES ('$course', '$coursegroup', '$term'); ";
                 $result = $sisdb->Execute($insert);
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
@@ -284,7 +284,7 @@ else {
     // Get enrolments from local database
 
     $student_enrol_localdb = array();
-    $select = "SELECT * FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` IN (SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `semester` >= '$start_term')";
+    $select = "SELECT * FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` IN (SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `term` >= '$start_term')";
 
     $result = $sisdb->Execute($select);
     while ($result && !$result->EOF) {
@@ -382,7 +382,7 @@ else {
 
     // Get enrolments from local database
 
-    $select = "SELECT * FROM `$CFG->sisdb_name`.`teacher_enrolment` WHERE `coursegroup_id` IN (SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `semester` >= '$start_term')";
+    $select = "SELECT * FROM `$CFG->sisdb_name`.`teacher_enrolment` WHERE `coursegroup_id` IN (SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `term` >= '$start_term')";
     $result = $sisdb->Execute($select);
 
     while ($result && !$result->EOF) {
