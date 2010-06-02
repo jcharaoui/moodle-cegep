@@ -64,12 +64,6 @@ function cegep_dawson_sisdbsource_decode($field, $data) {
             return array('year' => substr($data, 0, 4), 'semester' => substr($data, 4, 1));
             break;
 
-        case 'program':
-        case 'courseunit':
-            // no need for these
-            return '';
-            break;
-
         case 'studentlastname':
         case 'studentfirstname':
             return utf8_encode($data);

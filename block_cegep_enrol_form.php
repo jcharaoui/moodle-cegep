@@ -61,7 +61,7 @@ class cegep_enrol_form extends moodleform {
             return $errors;
 
         // Verify if the semester/year is available in the system
-        if (!self::validate_semester("$data[year]$data[semester]"))
+        if (!self::validate_term("$data[year]$data[semester]"))
             $errors['semester'] = get_string('semesterunavailable','block_cegep');
 
         // Verify if the coursegroup is available in the system
@@ -75,10 +75,10 @@ class cegep_enrol_form extends moodleform {
         return $errors;
     }
 
-    private function validate_semester($semester) {
+    private function validate_term($term) {
         global $CFG, $sisdb;
 
-        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `semester` = '$semester' LIMIT 1";
+        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `term` = '$term' LIMIT 1";
 
         $result = $sisdb->Execute($select);
         
@@ -92,7 +92,7 @@ class cegep_enrol_form extends moodleform {
             return true;
     }
 
-    private function validate_coursegroup_exists($coursecode, $coursegroup, $semester) {
+    private function validate_coursegroup_exists($coursecode, $coursegroup, $term) {
         global $CFG, $COURSE, $sisdb;
 
         $context = get_context_instance(CONTEXT_SYSTEM);
@@ -101,7 +101,7 @@ class cegep_enrol_form extends moodleform {
             $coursecode = $cc[0];
         }
 
-        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `semester` = '$semester' AND `group` = '$coursegroup' LIMIT 1";
+        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `term` = '$term' AND `group` = '$coursegroup' LIMIT 1";
 
         $result = $sisdb->Execute($select);
         

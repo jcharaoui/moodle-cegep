@@ -133,65 +133,64 @@ function cegep_local_get_create_course_buttons() {
         print_error('dbconnectionfailed','error');
     }
 
-    $session = cegep_local_current_term();
+    $term = cegep_local_current_term();
 
     $select = "
         SELECT
-            te.idnumber AS Instructor,
-            cg.coursecode AS CourseNumber,
-            cg.group AS SectionId,
-            c.title AS CourseTitle,
-            cg.semester AS session
+            cg.coursecode,
+            cg.group AS coursegroup,
+            c.title AS coursetitle,
+            cg.term
         FROM teacher_enrolment te
         LEFT JOIN coursegroup cg ON cg.id = te.coursegroup_id
         LEFT JOIN course c ON c.coursecode = cg.coursecode
         WHERE 
             te.idnumber = '$USER->idnumber' AND
-            cg.semester >= '$session'
+            cg.term >= '$term'
     ";
 
     $sisdb_rs = $sisdb->Execute($select); 
 
       // Some courses have many different "CourseTitle" for the same course 
-      // code. Need to use the sectionid to have a key to fetch it later, so
+      // code. Need to use the coursegroup to have a key to fetch it later, so
       // looping to remove duplicate course names
     $already_displayed_courses = array();
 
-    $prevsession = '';
+    $prevterm = '';
 
     while ($sisdb_rs && !$sisdb_rs->EOF) {
         //$row = $sisdbsource_rs->fields;
-        if (strlen($sisdb_rs->fields['CourseTitle']) > 0) {
-            $course_title = $sisdb_rs->fields['CourseTitle'];
+        if (strlen($sisdb_rs->fields['coursetitle']) > 0) {
+            $coursetitle = $sisdb_rs->fields['coursetitle'];
         }
         else {
-            $course_title = "Course name not yet entered by registrar.";
+            $coursetitle = "Course name not yet entered by registrar.";
         }
 
-        $course_section = $sisdb_rs->fields['SectionId'];
-        $course_number = $sisdb_rs->fields['CourseNumber'];
-        $course_trimester = $sisdb_rs->fields['session'];
+        $coursegroup = $sisdb_rs->fields['coursegroup'];
+        $coursecode = $sisdb_rs->fields['coursecode'];
+        $courseterm = $sisdb_rs->fields['term'];
 
-        if(in_array($course_number, $already_displayed_courses)) {
+        if(in_array($coursecode, $already_displayed_courses)) {
             $sisdb_rs->moveNext();
             continue;
         }
 
-        $already_displayed_courses[] = $course_number;
+        $already_displayed_courses[] = $coursecode;
 
-        $cursession = cegep_local_term_to_string($course_trimester);
+        $curterm= cegep_local_term_to_string($courseterm);
 
-        if ($cursession != $prevsession) {
-            $items[] = '<div style="font-weight: bold; font-size: 1.2em;">' . $cursession . '</div>';
+        if ($curterm != $prevterm) {
+            $items[] = '<div style="font-weight: bold; font-size: 1.2em;">' . $curterm . '</div>';
         }
 
       $items[] = '<form action="'. $ME .'" method="post" class="form_create">'.
-        '<div class="coursenumber create_button"><input type="hidden" name="cegepcoursetitle" value="' . $course_title . '" /><input type="hidden" name="cegepcoursenumber" value="'. $course_number .'" />'.
-        '<input type="hidden" name="cegepcoursesection" value="' . $course_section . '" />' .
-        '<input type="hidden" name="cegepcoursetrimester" value="' . $course_trimester . '" />' .
+        '<div class="coursenumber create_button"><input type="hidden" name="cegepcoursetitle" value="' . $coursetitle . '" /><input type="hidden" name="cegepcoursenumber" value="'. $coursecode .'" />'.
+        '<input type="hidden" name="cegepcoursesection" value="' . $coursegroup . '" />' .
+        '<input type="hidden" name="cegepcoursetrimester" value="' . $courseterm. '" />' .
         '<input type="submit" value="create" name="submit" style="margin-right: 5px;" />'.
-        $course_number.'</div><div class="coursename">'. $course_title .'</div></form>';
-        $prevsession = $cursession;
+        $coursecode.'</div><div class="coursename">'. $coursetitle .'</div></form>';
+        $prevterm = $curterm;
 
         $sisdb_rs->moveNext();
     }
@@ -202,11 +201,11 @@ function cegep_local_get_create_course_buttons() {
 /**
  * Create course
  */
-function cegep_local_create_course($coursecode = '', $coursetitle = '', $course_section = '', $session = '', $meta = false) {
+function cegep_local_create_course($coursecode = '', $coursetitle = '', $coursegroup = '', $term = '', $meta = false) {
 
     global $CFG;
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_create_course')) {
-        return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_course', $coursecode, $coursetitle, $course_section, $session, $meta);
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_course', $coursecode, $coursetitle, $coursegroup, $term, $meta);
     } else {
         global $USER, $CFG;
 
@@ -219,12 +218,12 @@ function cegep_local_create_course($coursecode = '', $coursetitle = '', $course_
             $seqnum = $coursemaxid->num + 1;
         }
 
-        $cursession = cegep_local_term_to_string($session);
+        $curterm = cegep_local_term_to_string($term);
 
         $site = get_site();
         $sisdb = sisdb_connect();
 
-        if (!($courseid = _cegep_local_create_course($coursecode, $seqnum, $meta, $coursetitle, $coursedescription, $cursession))) {
+        if (!($courseid = _cegep_local_create_course($coursecode, $seqnum, $meta, $coursetitle, $coursedescription, $curterm))) {
             print_error("An error occurred when trying to create the course.");
             break;
         }
@@ -247,8 +246,8 @@ function cegep_local_create_course($coursecode = '', $coursetitle = '', $course_
             debugging("Problem calling role_assign", DEBUG_DEVELOPER);
         }
 
-        /* Enroll all teachers that are in this section */
-        if (!empty($course_section) && strlen($course_section) > 0) {
+        /* Enroll all teachers that are in this coursegroup */
+        if (!empty($coursegroup) && strlen($coursegroup) > 0) {
 
             if ($sisdb = sisdb_connect()) {
                 // do nothing
@@ -260,17 +259,14 @@ function cegep_local_create_course($coursecode = '', $coursetitle = '', $course_
 
             $select = "
                 SELECT
-                    te.idnumber AS Instructor,
-                    cg.coursecode AS CourseNumber,
-                    cg.group AS SectionId,
-                    cg.term AS session
+                    te.idnumber
                 FROM teacher_enrolment te
                 LEFT JOIN coursegroup cg ON cg.id = te.coursegroup_id
                 LEFT JOIN course c ON c.coursecode = cg.coursecode
                 WHERE 
                     cg.coursecode = '" . $coursecode . "' AND
-                    cg.group = '$course_section' AND
-                    cg.term >= '$session'
+                    cg.group = '$coursegroup' AND
+                    cg.term >= '$term'
             ";
 
             $sisdb_rs = $sisdb->Execute($select); 
@@ -279,14 +275,14 @@ function cegep_local_create_course($coursecode = '', $coursetitle = '', $course_
             $first_teacher = true;
 
             while ($sisdb_rs && !$sisdb_rs->EOF) {
-                $tmp_usr = get_record('user', 'idnumber', $sisdb_rs->fields['Instructor']);
+                $tmp_usr = get_record('user', 'idnumber', $sisdb_rs->fields['idnumber']);
 
                 if (!$tmp_usr) {
                     $sisdb_rs->moveNext();
                     continue;
                 }
 
-                if ($USER->idnumber != $sisdb_rs->fields['Instructor']) {
+                if ($USER->idnumber != $sisdb_rs->fields['idnumber']) {
                     if(!role_assign($role->id, $tmp_usr->id, 0, $context->id, 0, 0, 0, 'manual')) { 
                         debugging("Problem calling role_assign", DEBUG_DEVELOPER);
                     }
@@ -619,10 +615,10 @@ function cegep_local_date_to_datecode($date = null) {
             case '02':
             case '03':
             case '04':
+            case '05':
                 $code .= '1';
                 break;
 
-            case '05':
             case '06':
             case '07':
             case '08':
@@ -662,20 +658,22 @@ function cegep_local_get_enrolled_sections() {
     } 
 
     $coursegroup_id = '';
+    $terms_coursegroups = array();
+
     while (!$coursegroups_rs->EOF) {
         $coursegroup_id = $coursegroups_rs->fields['coursegroup_id'];
         $coursegroup_num = $coursegroups_rs->fields['num'];
         $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
         $coursegroup = $sisdb->Execute($select)->fields;
 
-        if (!is_array($terms_sections[$coursegroup['semester']])) {
-            $terms_sections[$coursegroup['semester']] = array();
+        if (!is_array($terms_coursegroups[$coursegroup['term']])) {
+            $terms_coursegroups[$coursegroup['term']] = array();
         }
-        $terms_sections[$coursegroup['semester']][] = $coursegroup['group'];
+        $terms_coursegroups[$coursegroup['term']][] = $coursegroup['group'];
 
         $coursegroups_rs->MoveNext();
     }
-    return $terms_sections;
+    return $terms_coursegroups;
 }
 
 ?>
