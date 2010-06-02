@@ -122,10 +122,10 @@ else {
         $student = cegep_local_sisdbsource_decode('studentnumber',$sisdbsource_rs->fields['StudentNumber']);
         $course = cegep_local_sisdbsource_decode('coursenumber',$sisdbsource_rs->fields['CourseNumber']);
         $course_title = cegep_local_sisdbsource_decode('coursetitle',$sisdbsource_rs->fields['CourseTitle']);
+        $course_unit = cegep_local_sisdbsource_decode('courseunit',$sisdbsource_rs->fields['CourseUnit']);
         $coursegroup = cegep_local_sisdbsource_decode('coursegroup',$sisdbsource_rs->fields['CourseGroup']);
         $student_firstname = cegep_local_sisdbsource_decode('studentfirstname',$sisdbsource_rs->fields['StudentFirstName']);
         $student_lastname = cegep_local_sisdbsource_decode('studentlastname',$sisdbsource_rs->fields['StudentLastName']);
-        $campus = cegep_local_sisdbsource_decode('coursecampus',$sisdbsource_rs->fields['CourseCampus']);
         $program = cegep_local_sisdbsource_decode('studentprogram',$sisdbsource_rs->fields['StudentProgram']);
         $programyear = cegep_local_sisdbsource_decode('studentprogramyear',$sisdbsource_rs->fields['StudentProgramYear']);
         $programtitle = cegep_local_sisdbsource_decode('studentprogramname',$sisdbsource_rs->fields['StudentProgramName']);
@@ -228,7 +228,7 @@ else {
             $select = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = '$course'";
             $result = $sisdb->Execute($select);
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `$CFG->sisdb_name`.`course` (`coursecode` , `title`, `service`) VALUES ('$course', \"$course_title\", '$campus'); ";
+                $insert = "INSERT INTO `$CFG->sisdb_name`.`course` (`coursecode` , `title`, `unit`) VALUES ('$course', \"$course_title\", '$course_unit'); ";
                 
                 $result = $sisdb->Execute($insert);
                 if (!$result) {
@@ -237,8 +237,8 @@ else {
                     break;
                 } else { $count['courses_added']++; }
             }
-            elseif ($result && ($result->fields['title'] != $course_title || $result->fields['service'] != $campus)) {
-                $update = "UPDATE `$CFG->sisdb_name`.`course` SET `title` = \"$course_title\", `service` = \"$campus\" WHERE `coursecode` = '$course'; ";
+            elseif ($result && ($result->fields['title'] != $course_title || $result->fields['unit'] != $course_unit)) {
+                $update = "UPDATE `$CFG->sisdb_name`.`course` SET `title` = \"$course_title\", `unit` = \"$course_unit\" WHERE `coursecode` = '$course'; ";
                 $result = $sisdb->Execute($update);
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $update);

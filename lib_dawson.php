@@ -3,7 +3,7 @@
 
 function cegep_dawson_sisdbsource_select_students($trimester) {
     $select = "SELECT 
-                  uo.Numero AS CourseCampus,
+                uo.Numero AS CourseUnit,
                 c.Numero AS CourseNumber,
                 ISNULL(c.TitreMoyenTraduit,c.TitreMoyen)  As CourseTitle,
                 g.Numero AS CourseGroup,
@@ -92,7 +92,7 @@ function cegep_dawson_sisdbsource_decode($field, $data) {
             break;
 
         case 'program':
-        case 'coursecampus':
+        case 'courseunit':
             // no need for these
             return '';
             break;

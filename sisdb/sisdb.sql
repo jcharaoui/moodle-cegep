@@ -22,7 +22,7 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 CREATE TABLE `course` (
   `coursecode` varchar(32) NOT NULL,
   `title` varchar(254) NOT NULL,
-  `service` tinyint(1) default NULL,
+  `unit` tinyint(1) default NULL,
   PRIMARY KEY  (`coursecode`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

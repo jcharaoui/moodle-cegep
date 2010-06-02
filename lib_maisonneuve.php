@@ -5,7 +5,7 @@ function cegep_maisonneuve_sisdbsource_select_students($trimester) {
     $select = "
         DECLARE @AnSession_IN smallint;
         SET @AnSession_IN = $trimester;
-        SELECT uo.Numero AS CourseCampus
+        SELECT uo.Numero AS CourseUnit
             ,c.Numero AS CourseNumber
             ,c.TitreMoyen AS CourseTitle
             ,g.Numero AS CourseGroup
