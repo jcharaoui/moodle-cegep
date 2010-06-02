@@ -1,6 +1,8 @@
 <?php
 
-$start_time = (float) array_sum(explode(' ',microtime())); 
+$start_time = (float) array_sum(explode(' ',microtime()));
+$timestamp = time();
+$mysqltimestamp = date('Y-m-d H:i:s', $timestamp);
 
 // as seen in /auth/ldap/auth_ldap_sync_users.php
 require_once(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
@@ -48,6 +50,12 @@ else {
 // Prepare external SIS database connection
 if ($sisdb = sisdb_connect()) {
     $sisdb->Execute("SET NAMES 'utf8'");
+    if ($CFG->sisdb_logging) {
+        $sisdb->Execute('SET @LOGGING = 1');
+        $sisdb->Execute("SET @TIMESTAMP = '$mysqltimestamp'");
+    } else {
+        $sisdb->Execute('SET @LOGGING = 0');
+    }
 }
 else {
     error_log('[SIS_DB] Could not make a connection');
@@ -434,11 +442,12 @@ else {
     $msg .= sprintf("<strong>Students</strong> : %d added; %d updated; %d processed<br /><br />", $count['students_added'], $count['students_updated'], count($students));
     $msg .= sprintf("<strong>Programs</strong> : %d added; %d updated; %d processed<br /><br />", $count['programs_added'], $count['programs_updated'], count($programs));
     $msg .= sprintf("<strong>Courses</strong> : %d added; %d updated; %d processed<br /><br />", $count['courses_added'], $count['courses_updated'], count($courses));
-    $msg .= sprintf("<strong>Coursegroups</strong> : %d added; %d processed<br /><br />", $count['coursegroups_added'], $count['coursegroups_added'], count($coursegroups));
+    $msg .= sprintf("<strong>Coursegroups</strong> : %d added; %d processed<br /><br />", $count['coursegroups_added'], count($coursegroups));
     $msg .= sprintf("<strong>Student course enrolments</strong> : %d added; %d removed; %d skipped; %d processed<br /><br />", $count['student_enrolments_added'], $count['student_enrolments_removed'], $count['records_skipped'], count($student_enrol_remotedb));
     $msg .= sprintf("<strong>Student program enrolments</strong> : %d added; %d removed<br /><br />", $count['student_program_enrolments_added'], $count['student_program_enrolments_removed']);
     $msg .= sprintf("<strong>Teacher course enrolments</strong> : %d added; %d removed; %d processed<br /><br />", $count['teacher_enrolments_added'], $count['teacher_enrolments_removed'], count($teacher_enrol_remotedb));
-    $msg .= "Execution time : ". sprintf("%.4f", ($end_time-$start_time))." seconds"; 
+    $msg .= "Started at : $mysqltimestamp<br />";
+    $msg .= "Execution time : ". sprintf("%.4f", ($end_time-$start_time))." seconds";
 
     notice($msg,$CFG->wwwroot);
     print_footer();
