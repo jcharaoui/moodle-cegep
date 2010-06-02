@@ -10,7 +10,7 @@ $password = optional_param('password', null, PARAM_ALPHANUM);
 $in_cron = false;
 
 if (!empty($CFG->block_cegep_cron_password) && $password == $CFG->block_cegep_cron_password) {
-    $start_term = cegep_local_current_trimester();
+    $start_term = cegep_local_current_term();
     $in_cron = true;
 } else {
     global $CFG, $USER;
@@ -68,7 +68,7 @@ $msg = '';
 if (empty($start_term)) {
     print_box('Please input the term at which you would like to start the synchronization');
     $form = '<center><form enctype="multipart/form-data" action="sync_db.php" method="post">';
-    $form .= 'Term (eg. '. cegep_local_current_trimester() .'): <input name="start_term" type="text" size="5" maxlength="5" />';
+    $form .= 'Term (eg. '. cegep_local_current_term() .'): <input name="start_term" type="text" size="5" maxlength="5" />';
     $form .= '<br /><br /><input type="submit" value="start synchronization" /></form></center>';
     print_box($form);
     print_footer();
