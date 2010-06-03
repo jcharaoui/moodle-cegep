@@ -138,5 +138,9 @@ $string['errormustbeteacher'] = '';
 $string['errorimportingstudentlist'] = '';
 $string['errordeletingenrolment'] = '';
 
+// SIS DB maintenance
+$string['sisdb_maintenance'] = 'SIS DB maintenance';
+$string['sisdb_sync'] = 'Synchronize';
+$string['sisdb_prune'] = 'Prune';
 
 ?>

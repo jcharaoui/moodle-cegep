@@ -133,4 +133,8 @@ $string['errormustbeadmin'] = 'Cette page est disponible uniquement pour les adm
 $string['errorimportingstudentlist'] = 'Une erreur s\'est produite lors de l\'importation de la liste d\'étudiants!';
 $string['errordeletingenrolment'] = 'Une erreur s\'est produite lors de la suppression des inscriptions au cours!';
 
+// SIS DB maintenance
+$string['sisdb_maintenance'] = 'Entretient de la BD SIS';
+$string['sisdb_sync'] = 'Synchroniser';
+$string['sisdb_prune'] = 'Élaguer';
 ?>

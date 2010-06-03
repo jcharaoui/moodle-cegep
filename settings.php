@@ -65,8 +65,7 @@ $settings->add(new admin_setting_configpasswordunmask('sisdbsource_pass', get_st
 
 
 $linklist = '<ul>';
-$linklist .='<li><a href="'.$CFG->wwwroot.'/blocks/cegep/sisdb/sync_db.php">'.get_string('sisdb_sync_db', 'block_cegep').'</a></li>';
-$linklist .='<li><a href="'.$CFG->wwwroot.'/blocks/cegep/sisdb/sync_csv.php">'.get_string('sisdb_sync_csv', 'block_cegep').'</a></li>';
+$linklist .='<li><a href="'.$CFG->wwwroot.'/blocks/cegep/sisdb/sisdb.php?op=sync">'.get_string('sisdb_maintenance', 'block_cegep').'</a></li>';
 $linklist .= '</ul>';
 
 

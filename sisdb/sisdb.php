@@ -1,36 +1,29 @@
 <?php
 
-$start_time = (float) array_sum(explode(' ',microtime()));
-$timestamp = time();
-$mysqltimestamp = date('Y-m-d H:i:s', $timestamp);
-
 // as seen in /auth/ldap/auth_ldap_sync_users.php
 require_once(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
 require_once($CFG->dirroot .'/blocks/cegep/lib.php');
 
-$password = optional_param('password', null, PARAM_ALPHANUM);
-$in_cron = false;
+global $CFG, $USER;
 
+// Get parameters
+$op = optional_param('op', null, PARAM_ACTION);
+$start_term  = optional_param('start_term', null, PARAM_INT);
+$keep_terms  = optional_param('keep_terms', null, PARAM_INT);
+
+set_time_limit(600);
+
+// Check access permissions
 if (!empty($CFG->block_cegep_cron_password) && $password == $CFG->block_cegep_cron_password) {
     $start_term = cegep_local_current_term();
     $in_cron = true;
 } else {
-    global $CFG, $USER;
     require_login();
-
     if (!is_siteadmin($USER->id)) {
         print_error("Désolé, cette page n'est accessible qu'aux administrateurs du système.");
     }
-
-    $start_term  = optional_param('start_term', null, PARAM_ALPHANUM);
-    echo "<!-- $start_term -->";
-}
-
-set_time_limit(6000);
-
-$strtitle = 'Synchronize from database';
-if (!$in_cron) {
-    print_header($strtitle,$strtitle,build_navigation(array(array('name'=>'Synchronization','link'=>'','type'=>'misc'))));
+    $strtitle = 'SIS DB maintenance';
+    print_header($strtitle,$strtitle,build_navigation(array(array('name'=>get_string('admincegep','block_cegep'),'link'=>'','type'=>'misc'),array('name'=>get_string('sisdb_maintenance','block_cegep'),'link'=>'','type'=>'misc'))));
 }
 
 // Verify if external database enrolment is enabled
@@ -50,12 +43,6 @@ else {
 // Prepare external SIS database connection
 if ($sisdb = sisdb_connect()) {
     $sisdb->Execute("SET NAMES 'utf8'");
-    if ($CFG->sisdb_logging) {
-        $sisdb->Execute('SET @LOGGING = 1');
-        $sisdb->Execute("SET @TIMESTAMP = '$mysqltimestamp'");
-    } else {
-        $sisdb->Execute('SET @LOGGING = 0');
-    }
 }
 else {
     error_log('[SIS_DB] Could not make a connection');
@@ -71,36 +58,75 @@ else {
     print_error('dbconnectionfailed','error');
 }
 
-$msg = '';
+// Main switch
+switch ($op) {
+    case 'prune' :
+        (empty($keep_terms)) ? (cegep_sisdb_prune_form()) : (cegep_sisdb_prune($keep_terms));
+        break;
+    case 'sync' :
+        (empty($start_term)) ? (cegep_sisdb_sync_form()) : (cegep_sisdb_sync($start_term));
+        break;
+    default :
+        cegep_sisdb_sync_form();
+        break;
+}
 
-if (empty($start_term)) {
-    print_box('Please input the term at which you would like to start the synchronization');
-    $form = '<center><form enctype="multipart/form-data" action="sync_db.php" method="post">';
+function cegep_sisdb_sync_form() {
+
+    $currenttab = 'sync';
+    require('sisdb_tabs.php');
+
+    print_box('Please input the term at which you would like to start the synchronization.');
+    $form = '<center><form enctype="multipart/form-data" action="sisdb.php" method="post">';
     $form .= 'Term (eg. '. cegep_local_current_term() .'): <input name="start_term" type="text" size="5" maxlength="5" />';
-    $form .= '<br /><br /><input type="submit" value="start synchronization" /></form></center>';
+    $form .= '<input type="hidden" name="op" value="sync" />';
+    $form .= '<br /><br /><input type="submit" value="Start" /></form></center>';
     print_box($form);
     print_footer();
-}
-else {
 
+}
+
+function cegep_sisdb_sync($start_term) {
+    global $CFG, $enroldb, $sisdb, $sisdbsource;
+
+    // Keep track of time
+    $start_time = (float) array_sum(explode(' ',microtime()));
+    $timestamp = time();
+    $mysqltimestamp = date('Y-m-d H:i:s', $timestamp);
+
+    // Set up SQL variables for triggers
+    if ($CFG->sisdb_logging) {
+        $sisdb->Execute('SET @LOGGING = 1');
+        $sisdb->Execute("SET @TIMESTAMP = '$mysqltimestamp'");
+    } else {
+        $sisdb->Execute('SET @LOGGING = 0');
+    }
+
+    // Get data from external SIS database (ie, Clara)
     $select = cegep_local_sisdbsource_select_students($start_term);
     $sisdbsource_rs = $sisdbsource->Execute($select); 
 
+    // Don't proceed any further if no data is returned
     if (!$sisdbsource_rs || $sisdbsource_rs->EOF || $sisdbsource_rs->RowCount() == 0) {
         die("Database query returned no results!");
     }
 
+    // Initialize variables
+    
+    // Keep track of processed objects
     $terms = array();
     $students = array();
     $programs = array();
     $courses = array();
     $coursegroups = array();
 
+    // These arrays are used for comparison (determine additions and removals)
     $student_enrol_localdb = array();  // Student enrolments in moodle-sis
     $student_enrol_remotedb = array(); // Student enrolments in sisdbsource (ex. Clara)
     $teacher_enrol_localdb = array();  // Teacher enrolments in moodle-sis
     $teacher_enrol_remotedb = array(); // Teacher enrolments in sisdbsource (ex. Clara)
 
+    // Counters for report
     $count = array();
     $count['records_skipped'] = 0;
     $count['students_added'] = 0;
@@ -426,32 +452,193 @@ else {
         }
         $count['teacher_enrolments_removed']++;
     }
-
-    // Nettoyage
-
-    // À faire ...
-
-    $enroldb->Close();
-    $sisdb->Close();
-    $sisdbsource->Close();
     
-    $end_time = (float) array_sum(explode(' ',microtime())); 
+    // Stop counting time
+    $end_time = (float) array_sum(explode(' ',microtime()));
 
-    $msg .= "<strong><u>Operation completed</u></strong><br /><br />";
-    $msg .= sprintf("<strong>Terms</strong> : %s<br /><br />", implode($terms,', '));
+    // Display report
+    $msg = '';
+    $msg .= "<strong><u>Synchronization completed</u></strong><br /><br />";
+    $msg .= sprintf("<strong>Terms</strong> : %s<br /><br />", implode(', ', $terms));
     $msg .= sprintf("<strong>Students</strong> : %d added; %d updated; %d processed<br /><br />", $count['students_added'], $count['students_updated'], count($students));
     $msg .= sprintf("<strong>Programs</strong> : %d added; %d updated; %d processed<br /><br />", $count['programs_added'], $count['programs_updated'], count($programs));
     $msg .= sprintf("<strong>Courses</strong> : %d added; %d updated; %d processed<br /><br />", $count['courses_added'], $count['courses_updated'], count($courses));
     $msg .= sprintf("<strong>Coursegroups</strong> : %d added; %d processed<br /><br />", $count['coursegroups_added'], count($coursegroups));
     $msg .= sprintf("<strong>Student course enrolments</strong> : %d added; %d removed; %d skipped; %d processed<br /><br />", $count['student_enrolments_added'], $count['student_enrolments_removed'], $count['records_skipped'], count($student_enrol_remotedb));
     $msg .= sprintf("<strong>Student program enrolments</strong> : %d added; %d removed<br /><br />", $count['student_program_enrolments_added'], $count['student_program_enrolments_removed']);
-    $msg .= sprintf("<strong>Teacher course enrolments</strong> : %d added; %d removed; %d processed<br /><br />", $count['teacher_enrolments_added'], $count['teacher_enrolments_removed'], count($teacher_enrol_remotedb));
+    $msg .= sprintf("<strong>Teacher course enrolments</strong> : %d removed; %d processed<br /><br />", $count['teacher_enrolments_added'], $count['teacher_enrolments_removed'], count($teacher_enrol_remotedb));
+    
     $msg .= "Started at : $mysqltimestamp<br />";
     $msg .= "Execution time : ". sprintf("%.4f", ($end_time-$start_time))." seconds";
+
+    $currenttab = 'sync';
+    require('sisdb_tabs.php');
 
     notice($msg,$CFG->wwwroot);
     print_footer();
 }
+
+function cegep_sisdb_prune_form() {
+
+    $currenttab = 'prune';
+    require('sisdb_tabs.php');
+
+    print_box('Please indicate the number of back terms (other than the most current term) to keep in the database.<br /><br />For example, if the latest term in the database is 20102 and you indicate 3, then all terms older that 20102, 20101, 20093 and 20092 will be pruned from the database.<br /><br />Older coursegroups that have active enrolments in Moodle courses will not be affected.');
+    $form = '<center><form enctype="multipart/form-data" action="sisdb.php" method="post">';
+    $form .= 'Number of terms to keep : <input name="keep_terms" type="text" size="5" maxlength="1" value="3" />';
+    $form .= '<input type="hidden" name="op" value="prune" />';
+    $form .= '<br /><br /><input type="submit" value="Start" /></form></center>';
+    print_box($form);
+    print_footer();
+
+}
+
+function cegep_sisdb_prune($keep_terms) {
+    global $CFG, $enroldb, $sisdb;
+
+    // Keep track of time
+    $start_time = (float) array_sum(explode(' ',microtime()));
+    $timestamp = time();
+    $mysqltimestamp = date('Y-m-d H:i:s', $timestamp);
+
+    // Set up SQL variables for triggers
+    if ($CFG->sisdb_logging) {
+        $sisdb->Execute('SET @LOGGING = 1');
+        $sisdb->Execute("SET @TIMESTAMP = '$mysqltimestamp'");
+    } else {
+        $sisdb->Execute('SET @LOGGING = 0');
+    }
+
+    // Set up counters
+    $pruned_terms = array();
+    $count['courses_pruned'] = 0;
+    $count['students_pruned'] = 0;
+    $count['programs_pruned'] = 0;
+    $count['coursegroups_pruned'] = 0;
+    $count['student_enrolments_pruned'] = 0;
+    $count['teacher_enrolments_pruned'] = 0;
+
+    // Get most recent term
+    $select = "SELECT MAX(term) as latest_term FROM `$CFG->sisdb_name`.`coursegroup`;";
+    $result = $sisdb->Execute($select);
+    $latest_term = $result->fields['latest_term'];
+
+    if (!empty($latest_term)) {
+
+        // Get old coursegroups
+        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `term` < " . cegep_local_decrement_term($latest_term, $keep_terms) . ";";
+        $coursegroups_rs = $sisdb->Execute($select);
+
+        while ($coursegroups_rs && !$coursegroups_rs->EOF) {
+
+            $coursegroup_id = $coursegroups_rs->fields['id'];
+
+            // Check if coursegroup has any active enrolments
+            $select = "SELECT COUNT(*) as count FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE coursegroup_id = $coursegroup_id";
+            $result = $sisdb->Execute($select);
+            if ($result && $result->fields['count'] > 0) {
+                // Don't remove it, skip to next coursegroup
+                $coursegroups_rs->MoveNext();
+                continue;
+            }
+
+            // Keep track of pruned terms
+            if (!in_array($coursegroups_rs->fields['term'], $pruned_terms)) {
+                array_push($pruned_terms, $coursegroups_rs->fields['term']);
+            }
+
+            // Prune old and inactive student and enrolment records
+            $delete = "DELETE FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` = $coursegroup_id;";
+            if (!$result = $sisdb->Execute($delete)) {
+                trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $delete);
+                if (!$in_cron) echo "Error pruning old student enrolment records.";
+            } else {
+                $count['student_enrolments_pruned'] += $sisdb->Affected_Rows();
+            }
+
+            // Prune old and inactive teacher enrolment records
+            $delete = "DELETE FROM `$CFG->sisdb_name`.`teacher_enrolment` WHERE `coursegroup_id` = $coursegroup_id;";
+            if (!$result = $sisdb->Execute($delete)) {
+                trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $delete);
+                if (!$in_cron) echo "Error pruning old teacher enrolment records.";
+            } else {
+                $count['teacher_enrolments_pruned'] += $sisdb->Affected_Rows();
+            }
+
+            // Prune coursegroup record
+            $delete = "DELETE FROM `$CFG->sisdb_name`.`coursegroup` WHERE `id` = $coursegroup_id;";
+            if (!$result = $sisdb->Execute($delete)) {
+                trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $delete);
+                if (!$in_cron) echo "Error pruning old coursegroup records.";
+            } else {
+                $count['coursegroups_pruned'] += $sisdb->Affected_Rows();
+            }
+
+            $coursegroups_rs->MoveNext();
+        }
+
+        // Prune courses with no coursegroups
+        $delete = "DELETE FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` NOT IN (SELECT DISTINCT `coursecode` FROM `$CFG->sisdb_name`.`coursegroup`);";
+        if (!$result = $sisdb->Execute($delete)) {
+            trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $delete);
+            if (!$in_cron) echo "Error pruning old course records.";
+        } else {
+            $count['courses_pruned'] += $sisdb->Affected_Rows();
+        }
+
+        // Prune students with no enrolments
+        $delete = "DELETE FROM `$CFG->sisdb_name`.`student` WHERE `username` NOT IN (SELECT DISTINCT `username` FROM `$CFG->sisdb_name`.`student_enrolment`);";
+        if (!$result = $sisdb->Execute($delete)) {
+            trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $delete);
+            if (!$in_cron) echo "Error pruning old student records.";$coursegroup_id = $coursegroups->fields['coursegroup_id'];
+        } else {
+            $count['students_pruned'] += $sisdb->Affected_Rows();
+        }
+
+        // Prune programs with no students
+        $delete = "DELETE FROM `$CFG->sisdb_name`.`program` WHERE `id` NOT IN (SELECT DISTINCT `program_id` FROM `$CFG->sisdb_name`.`student`);";
+        if (!$result = $sisdb->Execute($delete)) {
+            trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $delete);
+            if (!$in_cron) echo "Error pruning old program records.";
+        } else {
+            $count['programs_pruned'] += $sisdb->Affected_Rows();
+        }
+
+        // Optimize tables
+        $optimize = 'OPTIMIZE TABLE `course` , `coursegroup` , `program` , `student` , `student_enrolment` , `teacher_enrolment`;';
+        if (!$result = $sisdb->Execute($optimize)) {
+            trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $optimize);
+            if (!$in_cron) echo "Error optimizing tables.";
+        }
+    }
+
+    // Stop counting time
+    $end_time = (float) array_sum(explode(' ',microtime()));
+
+    // Display report
+    $msg = '';
+    $msg .= "<strong><u>Pruning completed</u></strong><br /><br />";
+    $msg .= sprintf("<strong>Terms</strong> : %s<br /><br />", implode(', ', $pruned_terms));
+    $msg .= sprintf("<strong>Students</strong> : %d removed<br /><br />", $count['students_pruned']);
+    $msg .= sprintf("<strong>Programs</strong> : %d removed<br /><br />", $count['programs_pruned']);
+    $msg .= sprintf("<strong>Courses</strong> : %d removed<br /><br />", $count['courses_pruned']);
+    $msg .= sprintf("<strong>Coursegroups</strong> : %d removed<br /><br />", $count['coursegroups_pruned']);
+    $msg .= sprintf("<strong>Student enrolments</strong> : %d removed<br /><br />", $count['student_enrolments_pruned']);
+    $msg .= sprintf("<strong>Teacher course enrolments</strong> : %d removed<br /><br />", $count['teacher_enrolments_pruned']);
+    
+    $msg .= "Started at : $mysqltimestamp<br />";
+    $msg .= "Execution time : ". sprintf("%.4f", ($end_time-$start_time))." seconds";
+
+    $currenttab = 'prune';
+    require('sisdb_tabs.php');
+
+    notice($msg,$CFG->wwwroot);
+    print_footer();
+}
+
+$enroldb->Close();
+$sisdb->Close();
+$sisdbsource->Close();
 
 exit(0);
 

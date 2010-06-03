@@ -467,20 +467,23 @@ function cegep_local_term_to_string($code) {
     }
 }
 
-/* Decrements a session, in the form of YYYYT. */
-function cegep_local_decrement_session($code) {
+/* Decrements a term, in the form of YYYYS. */
+function cegep_local_decrement_term($term, $number = 1) {
     global $CFG;
-    if (function_exists('cegep_' . $CFG->block_cegep_name . '_decrement_session')) {
-        return call_user_func('cegep_' . $CFG->block_cegep_name . '_decrement_session', $code);
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_decrement_term')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_decrement_term', $code);
     } else {
-        $year = substr($code, 0, 4);
-        $semester = substr($code, 4, 1);
-        if ($semester == 1) {
-            $semester = 3;
-            $year--;
-        }
-        else {
-            $semester--;
+        $year = substr($term, 0, 4);
+        $semester = substr($term, 4, 1);
+        while ($number > 0) {
+            if ($semester == 1) {
+                $semester = 3;
+                $year--;
+            }
+            else {
+                $semester--;
+            }
+            $number--;
         }
         return $year . $semester;
     }
