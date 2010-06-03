@@ -79,7 +79,7 @@ CREATE TABLE `coursegroup` (
   `id` bigint(10) unsigned NOT NULL auto_increment,
   `coursecode` varchar(8) NOT NULL,
   `group` varchar(6) NOT NULL,
-  `term` varchar(5) NOT NULL,
+  `term` smallint(5) unsigned NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `coursecode` (`coursecode`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
