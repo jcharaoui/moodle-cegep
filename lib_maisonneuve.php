@@ -49,7 +49,7 @@ return <<< EOD
         JOIN Groupes.Groupe g ON g.IDGroupe = ge.IDGroupe
         JOIN BanqueCours.Cours c ON g.IDCours = c.IDCours
     WHERE
-        g.AnSession = @AnSession_IN
+        g.AnSession >= @AnSession_IN
     ORDER BY
         g.AnSession, e.Numero, c.Numero, g.Numero;
 EOD;
