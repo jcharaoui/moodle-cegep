@@ -466,7 +466,7 @@ function cegep_sisdb_sync($start_term) {
     $msg .= sprintf("<strong>Coursegroups</strong> : %d added; %d processed<br /><br />", $count['coursegroups_added'], count($coursegroups));
     $msg .= sprintf("<strong>Student course enrolments</strong> : %d added; %d removed; %d skipped; %d processed<br /><br />", $count['student_enrolments_added'], $count['student_enrolments_removed'], $count['records_skipped'], count($student_enrol_remotedb));
     $msg .= sprintf("<strong>Student program enrolments</strong> : %d added; %d removed<br /><br />", $count['student_program_enrolments_added'], $count['student_program_enrolments_removed']);
-    $msg .= sprintf("<strong>Teacher course enrolments</strong> : %d removed; %d processed<br /><br />", $count['teacher_enrolments_added'], $count['teacher_enrolments_removed'], count($teacher_enrol_remotedb));
+    $msg .= sprintf("<strong>Teacher course enrolments</strong> : %d added; %d removed; %d processed<br /><br />", $count['teacher_enrolments_added'], $count['teacher_enrolments_removed'], count($teacher_enrol_remotedb));
     
     $msg .= "Started at : $mysqltimestamp<br />";
     $msg .= "Execution time : ". sprintf("%.4f", ($end_time-$start_time))." seconds";

@@ -36,23 +36,21 @@ EOD;
 
 function cegep_maisonneuve_sisdbsource_select_teachers($term) {
 return <<< EOD
-   DECLARE @AnSession_IN smallint;
-   SET @AnSession_IN = $term;
-   SELECT DISTINCT
-       g.AnSession CourseTerm,
-       e.Numero TeacherNumber,
-       c.Numero CourseNumber,
-       g.Numero CourseGroup
+    DECLARE @AnSession_IN smallint;
+    SET @AnSession_IN = $term;
+    SELECT
+        g.AnSession CourseTerm,
+        e.Numero TeacherNumber,
+        c.Numero CourseNumber, 
+        g.Numero CourseGroup
     FROM
         Employes.Employe e
-        JOIN Horaires.RencontreEmploye hre ON hre.IDEmploye = e.IDEmploye
-        JOIN Horaires.RencontreGroupe hrg ON hrg.IDRencontre = hre.IDRencontre
-        JOIN Groupes.Groupe g ON g.IDGroupe = hrg.IDGroupe
+        JOIN Groupes.EmployeGroupe ge ON e.IDEmploye = ge.IDEmploye
+        JOIN Groupes.Groupe g ON g.IDGroupe = ge.IDGroupe
         JOIN BanqueCours.Cours c ON g.IDCours = c.IDCours
     WHERE
-        e.IDTypeEmploye = 1 AND
-        g.AnSession >= @AnSession_IN
-   ORDER BY
+        g.AnSession = @AnSession_IN
+    ORDER BY
         g.AnSession, e.Numero, c.Numero, g.Numero;
 EOD;
 }
