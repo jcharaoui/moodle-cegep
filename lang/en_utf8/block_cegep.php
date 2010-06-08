@@ -9,15 +9,19 @@ $tring['delete'] = 'Destroy';
 $string['studentlist'] = 'Student list';
 $string['enrol'] = 'Enrol coursegroup';
 $string['unenrol'] = 'Unenrol coursegroup';
+$string['enrolprogram'] = 'Enrol program';
+$string['unenrolprogram'] = 'Unenrol program';
 
 // Common
 $string['summer'] = 'Summer';
-$string['autumn'] = 'Fall';
-$string['fall'] = 'Fall';
+$string['autumn'] = $string['fall'] = 'Fall';
 $string['winter'] = 'Winter';
 $string['year'] = 'Year';
-$string['semester'] = 'Semester';
-$string['coursegroup'] = 'Coursegroup';
+$string['semester'] = $string['term'] = 'Semester';
+$string['coursegroup'] = $string['section'] = 'Section';
+$string['number'] = 'Number';
+$string['comments'] = "Comments";
+$string['create'] = "Create";
 
 // My moodle page
 $string['cegepsection'] = 'Section';
@@ -41,33 +45,40 @@ $string['accessuserprofile'] = 'Access user\'s profile';
 // Enrol form
 $string['coursegroupenrolled'] = '<strong>Enrolment sucessfully completed.</strong><br /><br />These are the students that were enrolled into this course :<br /><br />$a[0]<br />Have a nice semester!<br /><br />';
 $string['enrolanother'] = 'Enrol another coursegroup';
-$string['enrolprogram'] = 'Enrol program';
-$string['programyear'] = 'Program year';
-$string['programyear1'] = '1st';
-$string['programyear2'] = '2nd';
-$string['programyear3'] = '3rd';
-$string['programenrolled'] = 'The program was enrolled successfully.';
-$string['programunenrolled'] = 'The program was unenrolled successfully.';
-$string['unenrolprogram'] = 'Unenrol program';
+$string['make_visible'] = 'Make this course available to students';
 $string['enrolhelp'] = 'You can choose which section(s) you want to enrol in this course. Please take note: if you want to have <b>separate courses for each section</b>, you must enrol <b>only one section here</b> and create a course for each section you have.';
-$string['enrolsection'] = 'Enrol this section';
+$string['enrolcoursegroup'] = 'Enrol this section';
 
 // Unenrol form
 $string['students'] = 'students';
 $string['unenrolbutton'] = 'Unenrol';
 $string['coursegroupunenrolled'] = '<strong>Unenrolment successfully completed.</strong></br /><br />$a[0] students removed from the course.<br /><br />';
 
+// Program enrol form
+$string['programenrolled'] = 'The program was enrolled successfully.';
+$string['programyear'] = 'Program year';
+$string['programyear1'] = '1st';
+$string['programyear2'] = '2nd';
+$string['programyear3'] = '3rd';
+
+// Program unenrol form
+$string['unenrolprogrambutton'] = 'Unenrol';
+$string['programunenrolled'] = 'The program was unenrolled successfully.';
+
 // Validation
 $string['specifyyear'] = 'Please specify the year.';
 $string['specifysemester'] = 'Please specify the semester.';
 $string['specifycoursegroup'] = 'Please specify a section.';
+$string['specifyprogram'] = 'Please specify a program.';
+$string['specifyprogramyear'] = 'Please specify a program year.';
 $string['semesterunavailable'] = 'The specified semester is not available in the system.';
 $string['coursegroupsixnumbersonly'] = 'The section number must contain six numbers.';
 $string['coursegroupalreadyenrolled'] = 'The section specified is already enroled in this course.';
 $string['coursegroupnotenrolled'] = 'The section specified is not enrolled in this course.';
 $string['coursegroupunavailable'] = 'The section specified is not available in the system.';
 $string['coursegroupinvalid'] = 'The section specified is invalid.';
-$string['sectionalreadyenrolled'] = 'Section already enrolled';
+$string['programinvalid'] = 'The program specified is invalid.';
+$string['programalreadyenrolled'] = 'The program specified is already enrolled in this course.';
 
 // Settings
 $string['studentrole'] = 'Student role';

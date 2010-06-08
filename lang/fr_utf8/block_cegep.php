@@ -1,9 +1,12 @@
 <?php
 
-// Block menu
+// Block menu (course)
 $string['admincegep'] = 'Admin CEGEP';
 $string['enrolment'] = 'Inscriptions';
 $tring['delete'] = 'Détruire';
+
+// Block menu (MyMoodle)
+$string['missingcoursetitle'] = 'Le titre du cours n\'est encore pas disponible dans banque de cours du registraire.';
 
 // Tabs
 $string['studentlist'] = 'Liste d\'étudiants';
@@ -14,13 +17,24 @@ $string['unenrolprogram'] = 'Désinscrire un programme';
 
 // Common
 $string['summer'] = 'Été';
-$string['autumn'] = 'Automne';
+$string['autumn'] = $string['fall'] = 'Automne';
 $string['winter'] = 'Hiver';
 $string['year'] = 'Année';
-$string['semester'] = 'Session';
-$string['coursegroup'] = 'Groupe-cours';
+$string['semester'] = $string['term'] = 'Session';
+$string['coursegroup'] = $string['section'] = 'Groupe-cours';
 $string['number'] = 'Nombre';
 $string['comments'] = "Commentaires";
+$string['create'] = "Créer";
+
+// My moodle page
+$string['cegepsection'] = 'Section';
+$string['cegepenrolled'] = 'Enrolled Sections:';
+$string['cegepenrolledstud'] = 'Section(s):';
+$string['cegepvisible'] = 'Visible to students:';
+$string['cegepnosections'] = 'None';
+$string['cegepvisibleyes'] = 'Yes';
+$string['cegepvisibleno'] = 'No';
+$string['cegepeditsettings'] = 'Edit settings';
 
 // Student list page
 $string['studentlisttitle'] = 'Liste d\'étudiants inscrits dans ce cours';
@@ -35,6 +49,8 @@ $string['accessuserprofile'] = 'Accéder au profil de l\'utilisateur';
 $string['coursegroupenrolled'] = '<strong>Inscription complétée avec succès.</strong><br /><br />Voici les étudiants ajoutés au cours :<br /><br />$a[0]<br />Bonne session!<br /><br />';
 $string['enrolanother'] = 'Inscrire un autre groupe-cours';
 $string['make_visible'] = 'Rendre ce cours disponible aux étudiants';
+$string['enrolhelp'] = "Choisissez les groupes-cours à inscrire dans ce cours. Notez que si vous désirez avoir <b>un cours distinct pour chaque groupe-cours</b>, vous devez n'inscrire qu'un seul groupe-cours ici et créer un cours pour vos autres groupes-cours.";
+$string['enrolcoursegroup'] = 'Inscrire un groupe-cours';
 
 // Unenrol form
 $string['students'] = 'étudiants';
@@ -52,7 +68,7 @@ $string['programyear3'] = '3e année';
 $string['unenrolprogrambutton'] = 'Désinscrire';
 $string['programunenrolled'] = '<strong>Désinscription complétée avec succès.</strong><br /><br />$a[0] étudiants enlevés du cours.<br /><br />';
 
-// Enrolment validation
+// Validation
 $string['specifyyear'] = 'Veuillez spécifier l\'année.';
 $string['specifysemester'] = 'Veuillez spécifier la session.';
 $string['specifycoursegroup'] = 'Veuillez spécifier le groupe-cours.';
@@ -90,6 +106,12 @@ $string['sisdbsource_user'] = 'Nom d\'utilisateur';
 $string['sisdbsource_pass'] = 'Mot de passe';
 $string['sisdb_sync_csv'] = 'Synchroniser la BD avec un fichier CSV';
 $string['sisdb_sync_db'] = 'Synchroniser la BD avec la BD source';
+
+$string['autotopic'] = "Thème 0 automatique";
+$string['autotopic_help'] = "Inscrit automatiquement le titre du cours et la liste d'enseignants dans le thème 0 du cours.";
+
+$string['autogroups'] = "Créer les groupes";
+$string['autogroups_help'] = "Crée automatiquement des groupes dans le cours Moodle correspondant à chaque groupecours inscrit.";
 
 // Course request
 $string['courserequest'] = 'Demande de cours';
