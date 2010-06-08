@@ -293,10 +293,10 @@ function cegep_sisdb_sync($start_term) {
         }
 
         if (empty($coursegroup_id)) {
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$course' AND `group` = '$coursegroup' AND `term` = '$term'";
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$course' AND `group` = '$coursegroup' AND `term` = $term";
             $result = $sisdb->Execute($select);
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `term`) VALUES ('$course', '$coursegroup', '$term'); ";
+                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `term`) VALUES ('$course', '$coursegroup', $term); ";
                 $result = $sisdb->Execute($insert);
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
@@ -318,7 +318,7 @@ function cegep_sisdb_sync($start_term) {
     // Get enrolments from local database
 
     $student_enrol_localdb = array();
-    $select = "SELECT * FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` IN (SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `term` >= '$start_term')";
+    $select = "SELECT * FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` IN (SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `term` >= $start_term)";
 
     $result = $sisdb->Execute($select);
     while ($result && !$result->EOF) {
@@ -394,24 +394,46 @@ function cegep_sisdb_sync($start_term) {
     // Get enrolments from remote database (ie, Clara)
 
     $select = cegep_local_sisdbsource_select_teachers($start_term);
-    $sisdbsource_rs = $sisdbsource->Execute($select); 
-
-    if (!$sisdbsource_rs || $sisdbsource_rs->EOF || $sisdbsource_rs->RowCount() == 0) {
-        //die("Database query returned no results!");
-    }
+    $sisdbsource_rs = $sisdbsource->Execute($select);
 
     while ($sisdbsource_rs && !$sisdbsource_rs->EOF) {
+
+        if (!in_array($term,$terms)) {
+            $terms[] = $term;
+        }
+
         $term = implode(cegep_local_sisdbsource_decode('courseterm',$sisdbsource_rs->fields['CourseTerm']));
         $teacher = cegep_local_sisdbsource_decode('teachernumber',$sisdbsource_rs->fields['TeacherNumber']);
         $course = cegep_local_sisdbsource_decode('coursenumber',$sisdbsource_rs->fields['CourseNumber']);
         $coursegroup = cegep_local_sisdbsource_decode('coursegroup',$sisdbsource_rs->fields['CourseGroup']);
+        $coursegroup_id = '';
+
         foreach ($coursegroups as $cg) {
           if ($cg['coursecode'] == $course && $cg['group'] == $coursegroup && $cg['term'] == $term) {
-            array_push($teacher_enrol_remotedb, serialize(array($cg['id'], $teacher)));
+            $coursegroup_id = $cg['id'];
             break;
           }
         }
-        $sisdbsource_rs->moveNext();
+
+        // Add coursegroup if not found (no students enrolled yet)
+        if (empty($coursegroup_id)) {
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$course' AND `group` = '$coursegroup' AND `term` = $term";
+            $result = $sisdb->Execute($select);
+            if ($result && $result->RecordCount() == 0) {
+                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `term`) VALUES ('$course', '$coursegroup', $term); ";
+                $result = $sisdb->Execute($insert);
+                if (!$result) {
+                    trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
+                    print($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
+                    break;
+                } else { $coursegroup_id = $sisdb->Insert_ID(); $count['coursegroups_added']++; }
+            } else { $coursegroup_id = $result->fields['id']; }
+            array_push($coursegroups, array('coursecode' => $course, 'group' => $coursegroup, 'term' => $term, 'id' => $coursegroup_id));
+        }
+
+        array_push($teacher_enrol_remotedb, serialize(array($cg['id'], $teacher)));
+
+        $sisdbsource_rs->MoveNext();
     }
 
     // Get enrolments from local database
