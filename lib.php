@@ -120,94 +120,97 @@ function cegep_local_sisdbsource_select_teachers($term) {
     }
 }
 
+/**
+ * Return course creation buttons for the MyMoodle block variant.
+ * Allows teacher to easily create courses.
+ */
 function cegep_local_get_create_course_buttons() {
-    global $CFG, $USER, $ME;
+    global $CFG, $USER;
 
-    $items = array();
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_get_create_course_buttons')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_get_create_course_buttons', $term);
+    } else {
 
+        $items = array();
+        $previous_term_str = '';
+        $enrolments = cegep_local_get_teacher_enrolments($USER->idnumber, cegep_local_current_term());
+
+        foreach ($enrolments as $enrolment) {
+
+            // Check if course title is empty
+            if (!empty($enrolment['coursetitle'])) {
+                $coursetitle = $enrolment['coursetitle'];
+            } else {
+                $coursetitle = get_string('cousetitlemissing','block_cegep');
+            }
+
+            // Display term string
+            $current_term_str = cegep_local_term_to_string($enrolment['term']);
+            if ($current_term_str != $previous_term_str) {
+                $items[] = '<div style="font-weight: bold; font-size: 1.2em;">' . $current_term_str . '</div>';
+            }
+            $previous_term_str = $current_term_str;
+
+            $items[] = '<form action="block_cegep_coursecreate.php" method="post" class="form_create">'.
+            '<div class="coursenumber create_button">'.
+            '<input type="hidden" name="cegepcoursenumber" value="'. $enrolment['coursecode'] .'" />'.
+            '<input type="hidden" name="coursegroup" value="' . $enrolment['coursegroup'] . '" />' .
+            '<input type="hidden" name="term" value="' . $enrolment['term']. '" />' .
+            '<input type="submit" value="'.get_string('create','block_cegep').'" name="submit" style="margin-right: 5px;" />'.
+            $enrolment['coursecode'].'</div><div class="coursetitle">'. $enrolment['coursetitle'] .'</div></form>';
+
+        }
+
+        return $items;
+    }
+}
+
+/**
+ * Return enrolment data for a specified teacher idnumber and term
+ */
+function cegep_local_get_teacher_enrolments($idnumber, $term) {
+    global $CFG;
+
+    $enrolments = array();
+
+    // Prepare external SIS database connection
     if ($sisdb = sisdb_connect()) {
-        // do nothing
+        $sisdb->Execute("SET NAMES 'utf8'");
     }
     else {
-        error_log('[SIS_DB_SOURCE] Could not make a connection');
+        error_log('[SIS_DB] Could not make a connection');
         print_error('dbconnectionfailed','error');
     }
 
-    $term = cegep_local_current_term();
+    $select = "SELECT cg.coursecode AS coursecode, cg.group AS coursegroup, c.title AS coursetitle, cg.term AS term FROM `$CFG->sisdb_name`.teacher_enrolment te LEFT JOIN `$CFG->sisdb_name`.coursegroup cg ON cg.id = te.coursegroup_id LEFT JOIN `$CFG->sisdb_name`.course c ON c.coursecode = cg.coursecode WHERE te.idnumber = '$idnumber' AND cg.term >= $term ORDER BY term, coursecode, coursegroup;";
 
-    $select = "
-        SELECT
-            cg.coursecode,
-            cg.group AS coursegroup,
-            c.title AS coursetitle,
-            cg.term
-        FROM teacher_enrolment te
-        LEFT JOIN coursegroup cg ON cg.id = te.coursegroup_id
-        LEFT JOIN course c ON c.coursecode = cg.coursecode
-        WHERE 
-            te.idnumber = '$USER->idnumber' AND
-            cg.term >= '$term'
-    ";
-
-    $sisdb_rs = $sisdb->Execute($select); 
-
-      // Some courses have many different "CourseTitle" for the same course 
-      // code. Need to use the coursegroup to have a key to fetch it later, so
-      // looping to remove duplicate course names
-    $already_displayed_courses = array();
-
-    $prevterm = '';
+    $sisdb_rs = $sisdb->Execute($select);
 
     while ($sisdb_rs && !$sisdb_rs->EOF) {
-        //$row = $sisdbsource_rs->fields;
-        if (strlen($sisdb_rs->fields['coursetitle']) > 0) {
-            $coursetitle = $sisdb_rs->fields['coursetitle'];
-        }
-        else {
-            $coursetitle = "Course name not yet entered by registrar.";
-        }
-
-        $coursegroup = $sisdb_rs->fields['coursegroup'];
-        $coursecode = $sisdb_rs->fields['coursecode'];
-        $courseterm = $sisdb_rs->fields['term'];
-
-        if(in_array($coursecode, $already_displayed_courses)) {
-            $sisdb_rs->moveNext();
-            continue;
-        }
-
-        $already_displayed_courses[] = $coursecode;
-
-        $curterm= cegep_local_term_to_string($courseterm);
-
-        if ($curterm != $prevterm) {
-            $items[] = '<div style="font-weight: bold; font-size: 1.2em;">' . $curterm . '</div>';
-        }
-
-      $items[] = '<form action="'. $ME .'" method="post" class="form_create">'.
-        '<div class="coursenumber create_button"><input type="hidden" name="cegepcoursetitle" value="' . $coursetitle . '" /><input type="hidden" name="cegepcoursenumber" value="'. $coursecode .'" />'.
-        '<input type="hidden" name="cegepcoursesection" value="' . $coursegroup . '" />' .
-        '<input type="hidden" name="cegepcoursetrimester" value="' . $courseterm. '" />' .
-        '<input type="submit" value="create" name="submit" style="margin-right: 5px;" />'.
-        $coursecode.'</div><div class="coursename">'. $coursetitle .'</div></form>';
-        $prevterm = $curterm;
-
+        $enrolment = array();
+        $enrolment['coursecode'] = $sisdb_rs->fields['coursecode'];
+        $enrolment['coursetitle'] = $sisdb_rs->fields['coursetitle'];
+        $enrolment['coursegroup'] = $sisdb_rs->fields['coursegroup'];
+        $enrolment['term'] = $sisdb_rs->fields['term'];
+        array_push($enrolments, $enrolment);
         $sisdb_rs->moveNext();
     }
+
     $sisdb->Close();
-    return $items;
+
+    return $enrolments;
 }
+
 
 /**
  * Create course
  */
 function cegep_local_create_course($coursecode = '', $coursetitle = '', $coursegroup = '', $term = '', $meta = false) {
 
-    global $CFG;
+    global $USER, $CFG;
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_create_course')) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_course', $coursecode, $coursetitle, $coursegroup, $term, $meta);
     } else {
-        global $USER, $CFG;
 
         $coursemaxid = get_record_sql("SELECT MAX(CONVERT(SUBSTRING_INDEX(`idnumber`, '_', -1), UNSIGNED)) as num FROM `mdl_course` WHERE idnumber LIKE '$coursecode%'");
 
