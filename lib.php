@@ -121,7 +121,7 @@ function cegep_local_sisdbsource_select_teachers($term) {
 }
 
 function cegep_local_get_create_course_buttons() {
-    global $USER, $ME;
+    global $CFG, $USER, $ME;
 
     $items = array();
 
@@ -425,6 +425,7 @@ function _cegep_local_create_course($coursecode, $seqnum, $meta, $coursetitle = 
  * Prepare a select query for execution. Most Cegeps won't need this.
  */
 function cegep_local_prepare_select_query($query) {
+    global $CFG;
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_prepare_select_query')) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_prepare_select_query', $query);
     } 
@@ -438,6 +439,7 @@ function cegep_local_prepare_select_query($query) {
  * like 'Fall 2009' or 'Winter 2010'.
  */
 function cegep_local_term_to_string($code) {
+    global $CFG;
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_term_to_string')) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_term_to_string', $code);
     } 
