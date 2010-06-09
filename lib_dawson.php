@@ -2,7 +2,9 @@
 /* New lib_dawson.php */
 
 function cegep_dawson_sisdbsource_select_students($term) {
-    $select = "SELECT 
+    $select = "DECLARE @AnSession_IN smallint;
+             SET @AnSession_IN = $term;
+             SELECT 
                 uo.Numero AS CourseUnit,
                 c.Numero AS CourseNumber,
                 ISNULL(c.TitreMoyenTraduit,c.TitreMoyen)  As CourseTitle,
@@ -24,18 +26,19 @@ function cegep_dawson_sisdbsource_select_students($term) {
             WHERE es.Etat > 0
                 AND i.Etat > 0
                 AND uo.IndicateurLocal = 1
-                AND es.AnSession >= '$term'
+                AND es.AnSession >= @AnSession_IN
             ORDER BY e.Numero, c.Numero";
     return cegep_dawson_prepare_select_query($select);
 }
 
 function cegep_dawson_sisdbsource_select_teachers($term) {
-
-   $select = "
+   $select = "DECLARE @AnSession_IN smallint;
+       SET @AnSession_IN = $term;
        SELECT DISTINCT
            g.AnSession CourseTerm,
            e.Numero TeacherNumber,
            c.Numero CourseNumber,
+           ISNULL(c.TitreMoyenTraduit,c.TitreMoyen) As CourseTitle,
            g.Numero CourseGroup
         FROM
             Employes.Employe e
@@ -45,7 +48,7 @@ function cegep_dawson_sisdbsource_select_teachers($term) {
             JOIN BanqueCours.Cours c ON g.IDCours = c.IDCours
         WHERE
             e.IDTypeEmploye = 1 AND
-            g.AnSession >= '$term'
+            g.AnSession >= @AnSession_IN
        ORDER BY
             g.AnSession, e.Numero, c.Numero, g.Numero;";
 

@@ -406,7 +406,9 @@ function cegep_sisdb_sync($start_term) {
         $teacher = cegep_local_sisdbsource_decode('teachernumber',$sisdbsource_rs->fields['TeacherNumber']);
         $course = cegep_local_sisdbsource_decode('coursenumber',$sisdbsource_rs->fields['CourseNumber']);
         $coursegroup = cegep_local_sisdbsource_decode('coursegroup',$sisdbsource_rs->fields['CourseGroup']);
+        $course_title = cegep_local_sisdbsource_decode('coursetitle',$sisdbsource_rs->fields['CourseTitle']);
         $coursegroup_id = '';
+        $course_unit = 0;
 
         foreach ($coursegroups as $cg) {
           if ($cg['coursecode'] == $course && $cg['group'] == $coursegroup && $cg['term'] == $term) {
@@ -430,6 +432,35 @@ function cegep_sisdb_sync($start_term) {
             } else { $coursegroup_id = $result->fields['id']; }
             array_push($coursegroups, array('coursecode' => $course, 'group' => $coursegroup, 'term' => $term, 'id' => $coursegroup_id));
         }
+
+        // Update courses data
+        if (!in_array($course, $courses)) {
+
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = '$course'";
+            $result = $sisdb->Execute($select);
+            if ($result && $result->RecordCount() == 0) {
+                $insert = "INSERT INTO `$CFG->sisdb_name`.`course` (`coursecode` , `title`, `unit`) VALUES ('$course', \"$course_title\", '$course_unit'); ";
+                
+                $result = $sisdb->Execute($insert);
+                if (!$result) {
+                    trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
+                    if (!$in_cron) echo "Sync error : course process";
+                    break;
+                } else { $count['courses_added']++; }
+            }
+            elseif ($result && $result->fields['title'] != $course_title) {
+                $update = "UPDATE `$CFG->sisdb_name`.`course` SET `title` = \"$course_title\" WHERE `coursecode` = '$course'; ";
+                $result = $sisdb->Execute($update);
+                if (!$result) {
+                    trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $update);
+                    if (!$in_cron) echo "Sync error : student process";
+                    break;
+                } else { $count['courses_updated']++; }
+            }
+
+            array_push($courses, $course);
+        }
+
 
         array_push($teacher_enrol_remotedb, serialize(array($cg['id'], $teacher)));
 
