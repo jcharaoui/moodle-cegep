@@ -462,7 +462,7 @@ function cegep_sisdb_sync($start_term) {
         }
 
 
-        array_push($teacher_enrol_remotedb, serialize(array($cg['id'], $teacher)));
+        array_push($teacher_enrol_remotedb, serialize(array($coursegroup_id, $teacher)));
 
         $sisdbsource_rs->MoveNext();
     }
