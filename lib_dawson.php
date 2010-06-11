@@ -1,7 +1,7 @@
 <?php
-/* New lib_dawson.php */
 
 function cegep_dawson_sisdbsource_select_students($term) {
+    
     $select = "DECLARE @AnSession_IN smallint;
              SET @AnSession_IN = $term;
              SELECT 
@@ -32,25 +32,20 @@ function cegep_dawson_sisdbsource_select_students($term) {
 }
 
 function cegep_dawson_sisdbsource_select_teachers($term) {
-   $select = "DECLARE @AnSession_IN smallint;
-       SET @AnSession_IN = $term;
-       SELECT DISTINCT
-           g.AnSession CourseTerm,
-           e.Numero TeacherNumber,
-           c.Numero CourseNumber,
-           ISNULL(c.TitreMoyenTraduit,c.TitreMoyen) As CourseTitle,
-           g.Numero CourseGroup
-        FROM
-            Employes.Employe e
-            JOIN Horaires.RencontreEmploye hre ON hre.IDEmploye = e.IDEmploye
-            JOIN Horaires.RencontreGroupe hrg ON hrg.IDRencontre = hre.IDRencontre
-            JOIN Groupes.Groupe g ON g.IDGroupe = hrg.IDGroupe
-            JOIN BanqueCours.Cours c ON g.IDCours = c.IDCours
-        WHERE
-            e.IDTypeEmploye = 1 AND
-            g.AnSession >= @AnSession_IN
-       ORDER BY
-            g.AnSession, e.Numero, c.Numero, g.Numero;";
+    $select = "DECLARE @AnSession_IN smallint;
+                SET @AnSession_IN = $term; 
+            SELECT DISTINCT 
+                g.AnSession CourseTerm, 
+                e.Numero TeacherNumber, 
+                c.Numero CourseNumber, 
+                g.Numero CourseGroup 
+            FROM 
+                Employes.Employe e 
+            JOIN Groupes.EmployeGroupe ge ON e.IDEmploye = ge.IDEmploye 
+            JOIN Groupes.Groupe g ON g.IDGroupe = ge.IDGroupe 
+            JOIN BanqueCours.Cours c ON g.IDCours = c.IDCours 
+            WHERE g.AnSession >= @AnSession_IN 
+            ORDER BY g.AnSession, e.Numero, c.Numero, g.Numero;";
 
     return cegep_dawson_prepare_select_query($select);
 }
@@ -58,8 +53,17 @@ function cegep_dawson_sisdbsource_select_teachers($term) {
 function cegep_dawson_sisdbsource_decode($field, $data) {
     switch ($field) {
         case 'studentnumber':
-            // Replace two leading numbers by 'e'
-            return cegep_dawson_convert_longstudentno_to_dawno($data);
+            /* Check LDAP if the numeric student number exists. If it does, return it.
+             * Otherwise, return the alphanumeric. */
+
+            $studno = cegep_dawson_convert_longstudentno_to_dawno($data);
+
+            if (cegep_dawson_search_ldap_student_number($studno)) {
+                return $studno;
+            }
+            else {
+                return cegep_dawson_convert_dawno_to_studentno($studno); 
+            }
             break;
 
         case 'courseterm':
@@ -769,5 +773,26 @@ function cegep_dawson_convert_dawno_to_studentno($studentno) {
             break;
     }
     return $newno;
+}
+
+/* 'cegep_dawson_search_ldap_student_number'
+ *
+ * Does an anonymous bind to LDAP, returns true if
+ * the username / student number was found, false otherwise.
+ */
+function cegep_dawson_search_ldap_student_number($search) {
+    $filter = "(&(objectclass=person)(cn=$search))";
+    $attributes = array("cn");
+    $context = "o=ds";
+    $conn = ldap_connect("dc1.dawsoncollege.qc.ca", 389);
+    ldap_bind($conn);
+    $search = ldap_search($conn, $context, $filter, $attributes);
+    $results = ldap_get_entries($conn, $search);
+    if ($results['count'] == 0) {
+        return false;
+    }   
+    else {
+        return true;
+    }   
 }
 
