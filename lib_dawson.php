@@ -38,7 +38,8 @@ function cegep_dawson_sisdbsource_select_teachers($term) {
                 g.AnSession CourseTerm, 
                 e.Numero TeacherNumber, 
                 c.Numero CourseNumber, 
-                g.Numero CourseGroup 
+                g.Numero CourseGroup,
+                ISNULL(c.TitreMoyenTraduit,c.TitreMoyen)  As CourseTitle
             FROM 
                 Employes.Employe e 
             JOIN Groupes.EmployeGroupe ge ON e.IDEmploye = ge.IDEmploye 
