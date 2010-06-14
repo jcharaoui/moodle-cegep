@@ -54,6 +54,10 @@ $string['students'] = 'students';
 $string['unenrolbutton'] = 'Unenrol';
 $string['coursegroupunenrolled'] = '<strong>Unenrolment successfully completed.</strong></br /><br />$a[0] students removed from the course.<br /><br />';
 
+// Course Creation
+$string['coursecreatesuccess'] = 'The course was created successfully. Click \"Continue\" to go to your new course.';
+$string['coursecreate'] = 'Create course';
+
 // Program enrol form
 $string['programenrolled'] = 'The program was enrolled successfully.';
 $string['programyear'] = 'Program year';

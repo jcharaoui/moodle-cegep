@@ -151,13 +151,13 @@ function cegep_local_get_create_course_buttons() {
             }
             $previous_term_str = $current_term_str;
 
-            $items[] = '<form action="block_cegep_coursecreate.php" method="post" class="form_create">'.
+            $items[] = '<form action="' . $CFG->wwwroot . '/blocks/cegep/block_cegep_coursecreate.php" method="post" class="form_create">'.
             '<div class="coursenumber create_button">'.
             '<input type="hidden" name="cegepcoursenumber" value="'. $enrolment['coursecode'] .'" />'.
-            '<input type="hidden" name="coursegroup" value="' . $enrolment['coursegroup'] . '" />' .
             '<input type="hidden" name="term" value="' . $enrolment['term']. '" />' .
+            (!empty($enrolment['coursetitle']) ? '<input type="hidden" name="coursetitle" value="' . $coursetitle . '" />' : '') . 
             '<input type="submit" value="'.get_string('create','block_cegep').'" name="submit" style="margin-right: 5px;" />'.
-            $enrolment['coursecode'].'</div><div class="coursetitle">'. $enrolment['coursetitle'] .'</div></form>';
+            $enrolment['coursecode'].'</div><div class="coursetitle">'. $coursetitle .'</div></form>';
 
         }
 
@@ -182,7 +182,18 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
         print_error('dbconnectionfailed','error');
     }
 
-    $select = "SELECT cg.coursecode AS coursecode, cg.group AS coursegroup, c.title AS coursetitle, cg.term AS term FROM `$CFG->sisdb_name`.teacher_enrolment te LEFT JOIN `$CFG->sisdb_name`.coursegroup cg ON cg.id = te.coursegroup_id LEFT JOIN `$CFG->sisdb_name`.course c ON c.coursecode = cg.coursecode WHERE te.idnumber = '$idnumber' AND cg.term >= $term ORDER BY term, coursecode, coursegroup;";
+    $select = "
+            SELECT DISTINCT
+                cg.coursecode AS coursecode, 
+                c.title AS coursetitle, 
+                cg.term AS term 
+            FROM `$CFG->sisdb_name`.teacher_enrolment te 
+            LEFT JOIN `$CFG->sisdb_name`.coursegroup cg ON cg.id = te.coursegroup_id 
+            LEFT JOIN `$CFG->sisdb_name`.course c ON c.coursecode = cg.coursecode 
+            WHERE 
+                te.idnumber = '$idnumber' AND 
+                cg.term >= $term 
+            ORDER BY term, coursecode;";
 
     $sisdb_rs = $sisdb->Execute($select);
 
@@ -190,7 +201,6 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
         $enrolment = array();
         $enrolment['coursecode'] = $sisdb_rs->fields['coursecode'];
         $enrolment['coursetitle'] = $sisdb_rs->fields['coursetitle'];
-        $enrolment['coursegroup'] = $sisdb_rs->fields['coursegroup'];
         $enrolment['term'] = $sisdb_rs->fields['term'];
         array_push($enrolments, $enrolment);
         $sisdb_rs->moveNext();
@@ -205,11 +215,11 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
 /**
  * Create course
  */
-function cegep_local_create_course($coursecode = '', $coursetitle = '', $coursegroup = '', $term = '', $meta = false) {
+function cegep_local_create_course($coursecode = '', $term = '', $coursetitle = '', $coursegroup = '', $meta = false) {
 
     global $USER, $CFG;
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_create_course')) {
-        return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_course', $coursecode, $coursetitle, $coursegroup, $term, $meta);
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_course', $coursecode, $term, $coursetitle, $coursegroup, $meta);
     } else {
 
         $coursemaxid = get_record_sql("SELECT MAX(CONVERT(SUBSTRING_INDEX(`idnumber`, '_', -1), UNSIGNED)) as num FROM `mdl_course` WHERE idnumber LIKE '$coursecode%'");
@@ -228,18 +238,6 @@ function cegep_local_create_course($coursecode = '', $coursetitle = '', $courseg
 
         if (!($courseid = _cegep_local_create_course($coursecode, $seqnum, $meta, $coursetitle, $coursedescription, $curterm))) {
             print_error("An error occurred when trying to create the course.");
-            break;
-        }
-
-        // enrol teacher into it's course
-        $enroldb = enroldb_connect();
-
-        // TODO: This might be useless. Teachers get enrolled when the course is created, so...
-        $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`) VALUES ('". $coursecode ."_". $seqnum ."', '$USER->idnumber', 'editingteacher', '0'); ";
-
-        if (!$resultat = $enroldb->Execute($insert)) {
-            trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert);
-            echo "Erreur : inscription process";
             break;
         }
 
@@ -317,7 +315,14 @@ function cegep_local_create_course($coursecode = '', $coursetitle = '', $courseg
                 set_field("course_sections", "summary", $topic_summary, "id", $section->id);
             }
         }
-        return 1;
+        else {
+            if ($CFG->block_cegep_autotopic == true && $section = get_record('course_sections', 'course', $courseid, 'section', 0)) {
+                $teacher_list = '<h3 style="text-align: center;">Teacher: ' . $USER->firstname . ' ' . $USER->lastname . '</h3>';
+                $topic_summary = '<h1 style="text-align: center;">' . $coursetitle . '</h1>' . $teacher_list;
+                set_field("course_sections", "summary", $topic_summary, "id", $section->id);
+            }
+        }
+        return $courseid;
     }
 }
 

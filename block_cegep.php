@@ -23,10 +23,6 @@ class block_cegep extends block_list {
         $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
 
         if (strpos($_SERVER['PHP_SELF'], '/my') !== false) {
-
-            if (isset($_POST['cegepcoursenumber'])) {
-                cegep_local_create_course($_POST['cegepcoursenumber'], $_POST['cegepcoursetitle'], $_POST['cegepcoursesection'], $_POST['cegepcoursetrimester']);
-            }
             $this->content->items = cegep_local_get_create_course_buttons();
             $this->content->icons[] = null; // don't show any bullet
         }
