@@ -3,7 +3,7 @@
 // Block menu (course)
 $string['admincegep'] = 'Admin CEGEP';
 $string['enrolment'] = 'Inscriptions';
-$tring['delete'] = 'Détruire';
+$string['delete'] = 'Détruire';
 
 // Block menu (MyMoodle)
 $string['missingcoursetitle'] = 'Le titre du cours n\'est encore pas disponible dans banque de cours du registraire.';
@@ -25,6 +25,8 @@ $string['coursegroup'] = $string['section'] = 'Groupe-cours';
 $string['number'] = 'Nombre';
 $string['comments'] = "Commentaires";
 $string['create'] = "Créer";
+$string['teacher'] = 'Enseignant';
+$string['teachers'] = 'Enseignants';
 
 // My moodle page
 $string['cegepsection'] = 'Section';
@@ -113,6 +115,10 @@ $string['autotopic_help'] = "Inscrit automatiquement le titre du cours et la lis
 $string['autogroups'] = "Créer les groupes";
 $string['autogroups_help'] = "Crée automatiquement des groupes dans le cours Moodle correspondant à chaque groupecours inscrit.";
 
+// Course creation
+$string['coursecreatesuccess'] = "Le cours a été créé avec succès. Cliquez sur 'Continuer' pour accéder à page d'inscription de groupes.";
+$string['coursecreate'] = 'Créer un cours';
+
 // Course request
 $string['courserequest'] = 'Demande de cours';
 $string['courserequest_instructions'] = "Utilisez ce formulaire pour effectuer une demande de création de cours dans Moodle.<br /><br />Pour le code de cours, entrez seulement le code programme-cours de trois chiffres er trois lettres, sans le groupe.<br />Exemple : ABC123<br /><br />Ensuite choisissez le nombre de cours Moodle voulus pour le même code de cours. Un cours dans Moodle peut être associé à plusieurs groupe-cours.<br /><br />Enfin, vous pouvez utiliser la boîte de commentaires afin de communiquer avec l'administrateur de Moodle.";
@@ -152,6 +158,7 @@ $string['errorenroldbnotavailable'] = 'Le module d\'inscription base de données
 $string['erroractionnotavailable'] = 'Cette action n\'est pas disponible pour ce cours.';
 $string['errormustbeteacher'] = 'Cette page est disponible uniquement pour les enseignants.';
 $string['errormustbeadmin'] = 'Cette page est disponible uniquement pour les administraeurs du système.';
+$string['errorcreatingcourse'] = "Une erreur s'est produite lors de la création du cours!";
 $string['errorimportingstudentlist'] = 'Une erreur s\'est produite lors de l\'importation de la liste d\'étudiants!';
 $string['errordeletingenrolment'] = 'Une erreur s\'est produite lors de la suppression des inscriptions au cours!';
 

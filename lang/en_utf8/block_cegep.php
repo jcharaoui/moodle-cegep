@@ -3,7 +3,7 @@
 // Block menu
 $string['admincegep'] = 'Admin CEGEP';
 $string['enrolment'] = 'Enrolments';
-$tring['delete'] = 'Destroy';
+$string['delete'] = 'Destroy';
 
 // Tabs
 $string['studentlist'] = 'Student list';
@@ -22,6 +22,8 @@ $string['coursegroup'] = $string['section'] = 'Section';
 $string['number'] = 'Number';
 $string['comments'] = "Comments";
 $string['create'] = "Create";
+$string['teacher'] = 'Teacher';
+$string['teachers'] = 'Teachers';
 
 // My moodle page
 $string['cegepsection'] = 'Section';
@@ -108,6 +110,10 @@ $string['autotopic_help'] = "Answering yes will automatically fill courses' topi
 $string['autogroups'] = "Create groups";
 $string['autogroups_help'] = "Answering yes will automatically create and add students to groups, which are named according to course sections.";
 
+// Course creation
+$string['coursecreatesuccess'] = "Le cours a été créé avec succès. Cliquez sur 'Continuer' pour accéder à page d'inscription de groupes.";
+$string['coursecreate'] = 'Créer un cours';
+
 // Course request
 $string['courserequest'] = '';
 $string['courserequest_instructions'] = '';
@@ -146,6 +152,7 @@ $string['specifycoursenumber'] = '';
 $string['errorenroldbnotavailable'] = 'The external database enrolment plugin is not activated. Please activate it and retry this operation.';
 $string['erroractionnotavailable'] = '';
 $string['errormustbeteacher'] = '';
+$string['errorcreatingcourse'] = 'Error: could not create course';
 $string['errorimportingstudentlist'] = '';
 $string['errordeletingenrolment'] = '';
 
