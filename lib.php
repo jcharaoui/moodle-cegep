@@ -180,7 +180,18 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
         print_error('dbconnectionfailed','error');
     }
 
-    $select = "SELECT cg.coursecode AS coursecode, cg.group AS coursegroup, c.title AS coursetitle, cg.term AS term FROM `$CFG->sisdb_name`.teacher_enrolment te LEFT JOIN `$CFG->sisdb_name`.coursegroup cg ON cg.id = te.coursegroup_id LEFT JOIN `$CFG->sisdb_name`.course c ON c.coursecode = cg.coursecode WHERE te.idnumber = '$idnumber' AND cg.term >= $term ORDER BY term, coursecode, coursegroup;";
+    $select = "
+            SELECT DISTINCT
+                cg.coursecode AS coursecode, 
+                c.title AS coursetitle, 
+                cg.term AS term 
+            FROM `$CFG->sisdb_name`.teacher_enrolment te 
+            LEFT JOIN `$CFG->sisdb_name`.coursegroup cg ON cg.id = te.coursegroup_id 
+            LEFT JOIN `$CFG->sisdb_name`.course c ON c.coursecode = cg.coursecode 
+            WHERE 
+                te.idnumber = '$idnumber' AND 
+                cg.term >= $term 
+            ORDER BY term, coursecode;";
 
     $sisdb_rs = $sisdb->Execute($select);
 
@@ -188,7 +199,6 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
         $enrolment = array();
         $enrolment['coursecode'] = $sisdb_rs->fields['coursecode'];
         $enrolment['coursetitle'] = $sisdb_rs->fields['coursetitle'];
-        $enrolment['coursegroup'] = $sisdb_rs->fields['coursegroup'];
         $enrolment['term'] = $sisdb_rs->fields['term'];
         array_push($enrolments, $enrolment);
         $sisdb_rs->moveNext();
