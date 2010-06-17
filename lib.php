@@ -132,9 +132,16 @@ function cegep_local_get_create_course_buttons() {
 
         $items = array();
         $previous_term_str = '';
+
+        $courseterms = array();
         $enrolments = cegep_local_get_teacher_enrolments($USER->idnumber, cegep_local_current_term());
 
         foreach ($enrolments as $enrolment) {
+        
+            // Skip already displayed courses
+            if (in_array($enrolment['coursecode'] . $enrolment['term'], $courseterms)) {
+                continue;
+            }
 
             // Check if course title is empty
             if (!empty($enrolment['coursetitle'])) {
@@ -156,7 +163,8 @@ function cegep_local_get_create_course_buttons() {
             '<input type="hidden" name="term" value="' . $enrolment['term']. '" />' .
             '<input type="submit" value="'.get_string('create','block_cegep').'" name="submit" style="margin-right: 5px;" />'.
             $enrolment['coursecode'].'</div><div class="coursetitle">'. $coursetitle .'</div></form>';
-
+            
+            array_push($courseterms, $enrolment['coursecode'] . $enrolment['term']);
         }
 
         return $items;
@@ -182,7 +190,8 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
 
     $select = "
             SELECT DISTINCT
-                cg.coursecode AS coursecode, 
+                cg.coursecode AS coursecode,
+                cg.group AS coursegroup, 
                 c.title AS coursetitle, 
                 cg.term AS term 
             FROM `$CFG->sisdb_name`.teacher_enrolment te 
@@ -198,43 +207,8 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
     while ($sisdb_rs && !$sisdb_rs->EOF) {
         $enrolment = array();
         $enrolment['coursecode'] = $sisdb_rs->fields['coursecode'];
-        $enrolment['coursetitle'] = $sisdb_rs->fields['coursetitle'];
-        $enrolment['term'] = $sisdb_rs->fields['term'];
-        array_push($enrolments, $enrolment);
-        $sisdb_rs->moveNext();
-    }
-
-    $sisdb->Close();
-
-    return $enrolments;
-}
-
-/**
- * Return teachers enrolled into a course
- */
-function cegep_local_get_course_teacher_enrolments($cousecode, $term) {
-    global $CFG;
-
-    $enrolments = array();
-
-    // Prepare external SIS database connection
-    if ($sisdb = sisdb_connect()) {
-        $sisdb->Execute("SET NAMES 'utf8'");
-    }
-    else {
-        error_log('[SIS_DB] Could not make a connection');
-        print_error('dbconnectionfailed','error');
-    }
-
-    $select = "SELECT cg.coursecode AS coursecode, cg.group AS coursegroup, c.title AS coursetitle, cg.term AS term FROM `$CFG->sisdb_name`.teacher_enrolment te LEFT JOIN `$CFG->sisdb_name`.coursegroup cg ON cg.id = te.coursegroup_id LEFT JOIN `$CFG->sisdb_name`.course c ON c.coursecode = cg.coursecode WHERE te.idnumber = '$idnumber' AND cg.term >= $term ORDER BY term, coursecode, coursegroup;";
-
-    $sisdb_rs = $sisdb->Execute($select);
-
-    while ($sisdb_rs && !$sisdb_rs->EOF) {
-        $enrolment = array();
-        $enrolment['coursecode'] = $sisdb_rs->fields['coursecode'];
-        $enrolment['coursetitle'] = $sisdb_rs->fields['coursetitle'];
         $enrolment['coursegroup'] = $sisdb_rs->fields['coursegroup'];
+        $enrolment['coursetitle'] = $sisdb_rs->fields['coursetitle'];
         $enrolment['term'] = $sisdb_rs->fields['term'];
         array_push($enrolments, $enrolment);
         $sisdb_rs->moveNext();
@@ -244,7 +218,6 @@ function cegep_local_get_course_teacher_enrolments($cousecode, $term) {
 
     return $enrolments;
 }
-
 
 /**
  * Create course
@@ -641,42 +614,182 @@ function cegep_local_date_to_datecode($date = null) {
     }
 }
 
-/* Get an array of sections that have been enrolled in a given
- * course. Use the global $COURSE.
+/* Get an array of coursegroups/sections for any given course,
+ * optionally limited by teacher enrolment.
  */
-function cegep_local_get_enrolled_sections() {
-    global $CFG, $COURSE, $enroldb, $sisdb;
+function cegep_local_get_coursegroups($course_idnumber, $teacher_idnumber = '') {
+    global $CFG, $sisdb;
 
-    $course = $COURSE->idnumber;
+    $coursecode = substr($course_idnumber, 0, strpos($course_idnumber, '_'));
+    $term = cegep_local_date_to_datecode();
 
-    $coursecode = substr($course, 0, 8);
+    $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `term` >= $term;";
+    $coursegroups_rs = $sisdb->Execute($select); 
 
-    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` like '". $coursecode ."_%' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`";
+    if (!$coursegroups_rs) {
+        trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
+        return false;
+    }
+
+    $coursegroups = array();
+    $teacher_enrolments = array();
+    if (!empty($teacher_idnumber)) {
+        $teacher_enrolments = cegep_local_get_teacher_enrolments($teacher_idnumber, $term);
+    }
+
+    while (!$coursegroups_rs->EOF) {
+        $coursegroup = array();
+        $coursegroup['id'] = $coursegroups_rs->fields['id'];
+        $coursegroup['coursecode'] = $coursegroups_rs->fields['coursecode'];
+        $coursegroup['group'] = $coursegroups_rs->fields['group'];
+        $coursegroup['term'] = $coursegroups_rs->fields['term'];
+
+        // Count student enrolments in SIS
+        $select = "SELECT COUNT(`username`) AS numberofstudents FROM `$CFG->sisdb_name`.`student_enrolment` WHERE coursegroup_id = $coursegroup[id];";
+        $coursegroup['numberofstudents'] = $sisdb->Execute($select)->fields['numberofstudents'];
+
+        // If teacher_idnumber is specified, return only coursegroups/sections in which that teacher is enrolled in SIS
+        if (!empty($teacher_idnumber)) {
+            foreach ($teacher_enrolments as $teacher_enrolment) {
+                if ($teacher_enrolment['coursecode'] == $coursegroup['coursecode'] && $teacher_enrolment['coursegroup'] == $coursegroup['group']) {
+                    array_push($coursegroups, $coursegroup);
+                    break;
+                }
+            }
+        } else {
+            array_push($coursegroups, $coursegroup);
+        }
+        $coursegroups_rs->MoveNext();
+    }
+    return $coursegroups;
+}
+
+/* Get an array of coursegroups/sections that have been
+ * enrolled in a given Moodle course. Use the global $COURSE.
+ */
+function cegep_local_get_enrolled_coursegroups($course_idnumber) {
+    global $CFG, $enroldb, $sisdb;
+
+    $coursecode = substr($course_idnumber, 0, strpos($course_idnumber, '_'));
+
+    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS numberofstudents FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` like '". $coursecode ."_%' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`;";
 
     $coursegroups_rs = $enroldb->Execute($select);
 
     if (!$coursegroups_rs) {
         trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
         return false;
-    } 
+    }
 
-    $coursegroup_id = '';
-    $terms_coursegroups = array();
+    $coursegroups = array();
 
     while (!$coursegroups_rs->EOF) {
-        $coursegroup_id = $coursegroups_rs->fields['coursegroup_id'];
-        $coursegroup_num = $coursegroups_rs->fields['num'];
-        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
-        $coursegroup = $sisdb->Execute($select)->fields;
+        $coursegroup = array();
+        $coursegroup['id'] = $coursegroups_rs->fields['coursegroup_id'];
+        $coursegroup['numberofstudents'] = $coursegroups_rs->fields['numberofstudents'];
 
-        if (!is_array($terms_coursegroups[$coursegroup['term']])) {
-            $terms_coursegroups[$coursegroup['term']] = array();
-        }
-        $terms_coursegroups[$coursegroup['term']][] = $coursegroup['group'];
+        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = $coursegroup[id];";
+        $coursegroup_sis = $sisdb->Execute($select)->fields;
+        $coursegroup['coursecode'] = $coursegroup_sis['coursecode'];
+        $coursegroup['group'] = $coursegroup_sis['group'];
+        $coursegroup['term'] = $coursegroup_sis['term'];
 
+        array_push($coursegroups, $coursegroup);
         $coursegroups_rs->MoveNext();
     }
-    return $terms_coursegroups;
+    return $coursegroups;
+}
+
+/**
+ * Get a coursegroup id.
+ */
+function cegep_local_get_coursegroup_id($coursecode, $coursegroup, $term) {
+    global $CFG, $sisdb;
+
+    // Fetch record of the coursegroup from SIS
+    $select_coursegroup = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `group` = '$coursegroup' AND `term` = '$term';";
+    return $sisdb->Execute($select_coursegroup)->fields['id'];
+}
+
+/**
+ * Enrol a coursegroup/section into a Moodle course.
+ * Accepts either the coursegroup id OR coursecode, coursegroup
+ * and term for the coursegroup/section to enrol.
+ */
+function cegep_local_enrol_coursegroup() {
+    global $CFG, $COURSE, $enroldb, $sisdb;
+
+    $args = func_get_args();    
+    if (count($args) == 1) {
+        $coursegroup_id = $args[0];
+    }
+    elseif (count($args) == 3) {
+        $coursegroup_id = cegep_local_get_coursegroup_id($arg[0], $arg[1], $arg[2]);
+    } else {
+        return FALSE;
+    }
+
+    // Fetch records of students enrolled into this course from SIS
+    $select_students = "SELECT * FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` = $coursegroup_id;";
+    $students_rs = $sisdb->Execute($select_students);
+    
+    // Fail if can't find coursegroup id or student list
+    if (!$coursegroup_id || !$students_rs) {
+        return FALSE;
+    }
+
+    $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+    $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
+
+    // Autogroups
+    if ($CFG->block_cegep_autogroups) {
+        // Check if a group already exists for this course
+        $groupname = get_string('coursegroup','block_cegep') . " $section";
+        $group = get_record("groups", "courseid", $COURSE->id, "name", $groupname);
+
+        if ($group) {
+            $groupid = $group->id;
+        }
+        else {
+            // Create new group
+            $groupdata = new stdClass();
+            $groupdata->name = $groupname;
+            $groupdata->description = '';
+            $groupdata->enrolmentkey = '';
+            $groupdata->hidepicture = 0;
+            $groupdata->id = 0;
+            $groupdata->courseid = $COURSE->id;
+            $groupdata->submitbutton = "Save changes";
+            $groupdata->timecreated = time();
+            $groupdata->timemodified = $groupdata->timecreated;
+            if (!$groupid = insert_record('groups', $groupdata)) {
+                return FALSE;
+            }
+        }
+    }
+
+    // Go through each student and insert Moodle external enrolment database record
+    $students_enrolled = array();
+    while ($students_rs && !$students_rs->EOF) {
+        $student = $students_rs->fields;
+        $insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`) VALUES ('$COURSE->idnumber', '$student[username]', '$CFG->block_cegep_studentrole', '$coursegroup_id');";
+        $result = $enroldb->Execute($insert);
+        if (!$result) {
+            return FALSE;
+        } else {
+            array_push($students_enrolled, $student['username']);
+        }
+        // If user exists in database, assign its role right away and add to group
+        if ($student_user = get_record('user', 'username', $student['username'])) {
+            role_assign($student_role->id, $student_user->id, 0, $context->id);
+            if ($CFG->block_cegep_autogroups && !empty($groupid)) {
+                groups_add_member($groupid, $student_user->id);
+            }
+        }
+        $students_rs->MoveNext();
+    }
+
+    return $students_enrolled;
 }
 
 ?>

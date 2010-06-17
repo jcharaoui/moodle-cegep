@@ -8,7 +8,7 @@ class cegep_unenrol_form extends moodleform {
         $mform =& $this->_form;
         
         // Extract enrolled coursegroups info
-        $coursegroups = self::get_enrolled_coursegroups(); 
+        $coursegroups = self::get_enrolled_coursegroups_list(); 
         
         $coursegroup_select = $mform->createElement('select', 'coursegroup', null, $coursegroups);
         $coursegroup_select->setMultiple(true);
@@ -39,35 +39,19 @@ class cegep_unenrol_form extends moodleform {
         return $errors;
     }
 
-    private function get_enrolled_coursegroups() {
+    private function get_enrolled_coursegroups_list() {
         global $CFG, $COURSE, $enroldb, $sisdb;
         
-        $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`";
+        $coursegroups_list = array();
 
-        $coursegroups_rs = $enroldb->Execute($select);
-
-        if (!$coursegroups_rs) {
-            trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
+        if (!$coursegroups = cegep_local_get_enrolled_coursegroups($COURSE->idnumber)) {
             return false;
         } 
 
-        $coursegroup_id = '';
-        $coursegroups = array();
-        while (!$coursegroups_rs->EOF) {
-            $coursegroup_id = $coursegroups_rs->fields['coursegroup_id'];
-            $coursegroup_num = $coursegroups_rs->fields['num'];
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
-            $coursegroup = $sisdb->Execute($select)->fields;
-            switch (substr($coursegroup['semester'],-1)) {
-                case '1' : $semester = get_string('winter', 'block_cegep'); break;
-                case '2' : $semester = get_string('summer', 'block_cegep'); break;
-                case '3' : $semester = get_string('autumn', 'block_cegep'); break;
-            }
-            $year = substr($coursegroup['semester'],0,4);
-            $coursegroups[$coursegroup_id] = "$coursegroup[coursecode] gr. $coursegroup[group] - $semester $year ($coursegroup_num ".get_string('students', 'block_cegep').')';
-            $coursegroups_rs->MoveNext();
+        foreach ($coursegroups as $coursegroup) {
+            $coursegroups_list[$coursegroup['id']] = "$coursegroup[coursecode] #$coursegroup[group] - " . cegep_local_term_to_string($coursegroup['term']) . " ($coursegroup[numberofstudents] ".get_string('students', 'block_cegep').')';
         }
-        return $coursegroups;
+        return $coursegroups_list;
 
     }
     

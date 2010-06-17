@@ -45,11 +45,13 @@ $string['nocoursegroupsenrolled'] = 'No coursegroups are enrolled in this course
 $string['accessuserprofile'] = 'Access user\'s profile';
 
 // Enrol form
-$string['coursegroupenrolled'] = '<strong>Enrolment sucessfully completed.</strong><br /><br />These are the students that were enrolled into this course :<br /><br />$a[0]<br />Have a nice semester!<br /><br />';
+$string['coursegroupenrolled'] = '<strong>Enrolment sucessfully completed.</strong><br /><br />These are the students that were enrolled into this course :<br /><br />$a[0]<br /<br />Have a nice semester!<br /><br />';
 $string['enrolanother'] = 'Enrol another coursegroup';
 $string['make_visible'] = 'Make this course available to students';
 $string['enrolhelp'] = 'You can choose which section(s) you want to enrol in this course. Please take note: if you want to have <b>separate courses for each section</b>, you must enrol <b>only one section here</b> and create a course for each section you have.';
 $string['enrolcoursegroup'] = 'Enrol this section';
+$string['nocoursegroupavailable'] = 'No sections are available for enrolment in this course.';
+$string['nocoursegroupselected'] = 'Please select a section to enrol.';
 
 // Unenrol form
 $string['students'] = 'students';
@@ -115,8 +117,8 @@ $string['autogroups'] = "Create groups";
 $string['autogroups_help'] = "Answering yes will automatically create and add students to groups, which are named according to course sections.";
 
 // Course creation
-$string['coursecreatesuccess'] = "Le cours a été créé avec succès. Cliquez sur 'Continuer' pour accéder à page d'inscription de groupes.";
-$string['coursecreate'] = 'Créer un cours';
+$string['coursecreatesuccess'] = "The course was successfully created. Click 'Continue' to access the enrolment page for your new course.";
+$string['coursecreate'] = 'Create course';
 
 // Course request
 $string['courserequest'] = '';
