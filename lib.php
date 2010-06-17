@@ -391,6 +391,7 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
         if ($CFG->block_cegep_autotopic && !has_capability('moodle/site:doanything', $context)) {
             $section->summary = '<h1 style="text-align: center;">' . $course->fullname . '</h1>';
             $section->summary .= '<h3 style="text-align: center;">' . get_string('teacher','block_cegep') . ': ' . $USER->firstname . ' ' . $USER->lastname . '</h3>';
+            $section->summary = addslashes($section->summary);
         }
         $section->id = insert_record("course_sections", $section);
 
