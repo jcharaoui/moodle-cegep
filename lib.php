@@ -21,36 +21,7 @@ function cegep_local_get_block_content() {
  * Return current term in yyyys (year/semester) format
  */
 function cegep_local_current_term() {
-
-    global $CFG;
-    if (function_exists('cegep_' . $CFG->block_cegep_name . '_current_term')) {
-        return call_user_func('cegep_' . $CFG->block_cegep_name . '_current_term');
-    } else {
-        // Year
-        $term = date('Y');
-        // Semester
-        switch (date('m')) {
-            case '01':
-            case '02':
-            case '03':
-            case '04':
-            case '05':
-                $term .= '1';
-                break;
-            case '06':
-            case '07':
-            case '08':
-                $term .= '2';
-                break;
-            case '09':
-            case '10':
-            case '11':
-            case '12':
-                $term .= '3';
-                break;
-        }
-        return $term;
-    }
+    return cegep_local_date_to_datecode();
 }
 
 /* Converts SISDBSOURCE (eg: Clara/Datamart) data format into SISDB standard format
