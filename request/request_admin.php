@@ -17,8 +17,9 @@ require_login();
 global $CFG, $USER;
 
 $authldap = new auth_plugin_ldap;
+$context = get_context_instance(CONTEXT_SYSTEM);
 
-if (isguest() or !$authldap->ldap_isgroupmember($USER->username, 'OU=IT,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=Dev_pedagogique,OU=Admin,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca')) {
+if (!has_capability('moodle/site:doanything', $context) && !$authldap->ldap_isgroupmember($USER->username, 'OU=IT,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=Dev_pedagogique,OU=Admin,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca')) {
     print_error(get_string('errormustbeadmin','block_cegep'));
 }
 
@@ -87,7 +88,7 @@ if ($requestform->is_cancelled()){
                     for ($i = 1; $i <= $c['num']; $i++) {
                         if ($courseid = cegep_local_create_course($coursecode, $meta)) {
                             $courseidnumber = get_record('course','id',$courseid)->idnumber;
-                            if (!cegep_local_create_enrolment($courseidnumber, $request->username, $request->id)) {
+                            if (!cegep_local_enrol_user($courseidnumber, $request->username, 'editingteacher', NULL, NULL, $request->id)) {
                                 print_error("Une erreur s'est produite lors de l'inscription au cours!");
                                 break;
                             }

@@ -14,14 +14,14 @@ if (!has_capability('moodle/site:ddcrequest', get_context_instance(CONTEXT_SYSTE
 */
 
 $authldap = new auth_plugin_ldap;
+$context = get_context_instance(CONTEXT_SYSTEM);
 
-if (!isadmin() or !$authldap->ldap_isgroupmember($USER->username, 'CN=g_profs,OU=Groupes,OU=Pedagogie,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=IT,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=Dev_pedagogique,OU=Admin,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca')) {
+if (!has_capability('moodle/site:doanything', $context) && !$authldap->ldap_isgroupmember($USER->username, 'CN=g_profs,OU=Groupes,OU=Pedagogie,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=IT,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=Dev_pedagogique,OU=Admin,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca')) {
      print_error(get_string('errormustbeteacher','block_cegep'));
 }
 
 $requestform = new cegep_request_form();
 
-$context = get_context_instance(CONTEXT_SYSTEM);
 if (has_capability('moodle/site:doanything', $context)) {
     $requestform->_form->insertElementBefore($requestform->_form->createElement('text', 'username', get_string('username'), 'maxlength="16"'), 'request1');
     $requestform->_form->setType('username', PARAM_TEXT);

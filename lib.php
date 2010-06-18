@@ -445,21 +445,29 @@ function cegep_local_decrement_term($term, $number = 1) {
 /**
  * Create an enrolment in the external enrolments database
  */
-function cegep_local_create_enrolment($courseidnumber, $username, $request_id = '') {
+function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $coursegroup_id = NULL, $program_idyear = NULL, $request_id = NULL) {
     global $CFG;
 
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_create_enrolment')) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_enrolment', $courseidnumber, $username, $request_id);
     } else {
-    
+
         if (empty($courseidnumber) or empty($username)) {
             print_error("Le cours ou l'utilisateur spécifié est invalide!");
             return false;
         }
-        
+
+        if (empty($rolename)) {
+            $rolename = $CFG->block_cegep_studentrole;
+        }
+
+        (is_null($coursegroup_id)) ? ($coursegroup_id = 'NULL') : ($coursegroup_id = "'${coursegroup_id}'");
+        (is_null($program_idyear)) ? ($program_idyear = 'NULL') : ($program_idyear = "'${program_idyear}'");
+        (is_null($request_id)) ? ($request_id = 'NULL') : ($request_id = "'${request_id}'");
+
+        // Insert enrolment in external DB
         $enroldb = enroldb_connect();
-        $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` , `request_id`) VALUES ('${courseidnumber}', '$username', 'editingteacher', '$request_id');";    
-        
+        $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` ,  `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '$username', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
         $result = $enroldb->Execute($insert);
 
         if (!$result) {
@@ -467,11 +475,19 @@ function cegep_local_create_enrolment($courseidnumber, $username, $request_id = 
             $enroldb->Close();        
             return false;
         }
-        else {
-            $enroldb->Close();
-            return true;
+
+        // If user exists in database, assign its role right away and add to group
+        if ($user = get_record('user', 'username', $username)) {
+            $course = get_record('course', 'idnumber', $courseidnumber);
+            $role = get_record('role', 'shortname', $rolename);
+            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+            if ($course && $role) {
+                role_assign($role->id, $user->id, 0, $context->id, 0, 0, 0, 'database');
+            }
         }
 
+        $enroldb->Close();
+        return true;
     }
 }
 
@@ -772,16 +788,13 @@ function cegep_local_enrol_coursegroup() {
     $students_enrolled = array();
     while ($students_rs && !$students_rs->EOF) {
         $student = $students_rs->fields;
-        $insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`) VALUES ('$COURSE->idnumber', '$student[username]', '$CFG->block_cegep_studentrole', '$coursegroup_id');";
-        $result = $enroldb->Execute($insert);
-        if (!$result) {
+        if (!cegep_local_enrol_user($COURSE->idnumber, $student['username'], $CFG->block_cegep_studentrole, $coursegroup_id)) {
             return FALSE;
         } else {
             array_push($students_enrolled, $student['username']);
         }
-        // If user exists in database, assign its role right away and add to group
+        // Add group membership
         if ($student_user = get_record('user', 'username', $student['username'])) {
-            role_assign($student_role->id, $student_user->id, 0, $context->id);
             if ($CFG->block_cegep_autogroups && !empty($groupid)) {
                 groups_add_member($groupid, $student_user->id);
             }

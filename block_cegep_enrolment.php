@@ -289,25 +289,16 @@ function cegep_enrolprogram() {
             print_error('errorimportingstudentlist','block_cegep');
         }
 
-        $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-        $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
-
         // Go through each student and insert Moodle external enrolment database record
         $studentlist = '';
         while ($students_rs && !$students_rs->EOF) {
             $student = $students_rs->fields;
-            $insert = "INSERT INTO `$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`, `program_idyear`) VALUES ('$COURSE->idnumber', '$student[username]', '$CFG->block_cegep_studentrole', NULL, '$program_idyear');";
-            $result = $enroldb->Execute($insert);
-            if (!$result) {
-                echo $insert;
+            $program_idyear = $data->program_id . $data->program_year;
+            if (!cegep_local_enrol_user($COURSE->idnumber, $student['username'], $CFG->block_cegep_studentrole, NULL, $program_idyear)) {
                 trigger_error(get_string('errorimportingstudentlist','block_cegep'), E_USER_ERROR);
                 break;
             } else {
                 $studentlist .= $student['username'].'<br />';
-            }
-            // If user exists in database, assign its role right away
-            if ($student_user = get_record('user', 'username', $student['username'])) {
-                role_assign($student_role->id, $student_user->id, 0, $context->id);
             }
             $students_rs->MoveNext();
         }

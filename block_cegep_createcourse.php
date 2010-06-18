@@ -34,9 +34,10 @@ else {
 if ($access) {
     if ($newcourseid = cegep_local_create_course($coursecode, $term)) {
         // Enrol current user (teacher) into the new course (except if admin)
-        $role = get_record('role', 'shortname', 'editingteacher');
-        $context = get_context_instance(CONTEXT_COURSE, $newcourseid);
-        role_assign($role->id, $USER->id, 0, $context->id, 0, 0, 0, 'database');
+        $course = get_record('course', 'id', $newcourseid);
+        if (!$is_admin) {
+            cegep_local_enrol_user($course->idnumber, $USER->username, 'editingteacher');
+        }
         // Redirect to the enrolment form
         redirect($CFG->wwwroot.'/blocks/cegep/block_cegep_enrolment.php?a=enrol&id=' . $newcourseid, get_string('coursecreatesuccess','block_cegep'));
     } else {
