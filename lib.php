@@ -236,7 +236,7 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
         
         // Course fullname and shortname
         $select_course = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = '$coursecode' LIMIT 1";
-        $coursetitle = cegep_maisonneuve_sisdbsource_decode('coursetitle',$sisdb->execute($select_course)->fields['title']);
+        $coursetitle = cegep_local_sisdbsource_decode('coursetitle',$sisdb->execute($select_course)->fields['title']);
         if (!empty($coursetitle)) {
             if (!empty($term)) {
                 $course->fullname = $coursetitle . ' (' . $coursecode . ' - ' . cegep_local_term_to_string($term) . ')';
