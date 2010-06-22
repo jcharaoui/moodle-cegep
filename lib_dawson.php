@@ -321,14 +321,14 @@ function cegep_dawson_courses_get_sections($courseidnumber, $courseid = 0, &$has
     $coursegroup = $sisdb->Execute($select)->fields;
 
     if (!$on_first) {
-        $html .= ', ' . strtolower(get_string("cegepsection", "block_cegep")) . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['semester']) . ')';
+        $html .= ', ' . strtolower(get_string("cegepsection", "block_cegep")) . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['term']) . ')';
     }
     else {
-        $html .= get_string("cegepsection", "block_cegep") . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['semester']) . ')';
+        $html .= get_string("cegepsection", "block_cegep") . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['term']) . ')';
     }
 
     if (!empty($filter_term) && $filter_term != 'all') {
-        if ($coursegroup['semester'] == $filter_term) {
+        if ($coursegroup['term'] == $filter_term) {
             $echo_course = true;
         }
     }
@@ -483,7 +483,7 @@ function cegep_dawson_convert_longstudentno_to_dawno($studentno) {
 }
 
 /**
- * Convert a semester code (YYYYS) into a string,
+ * Convert a term code (YYYYS) into a string,
  * like 'Fall 2009' or 'Winter 2010'.
  */
 function cegep_dawson_term_to_string($code) {
@@ -734,10 +734,10 @@ function cegep_dawson_get_enrolled_sections() {
         $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
         $coursegroup = $sisdb->Execute($select)->fields;
 
-        if (!is_array($terms_sections[$coursegroup['semester']])) {
-            $terms_sections[$coursegroup['semester']] = array();
+        if (!is_array($terms_sections[$coursegroup['term']])) {
+            $terms_sections[$coursegroup['term']] = array();
         }
-        $terms_sections[$coursegroup['semester']][] = $coursegroup['group'];
+        $terms_sections[$coursegroup['term']][] = $coursegroup['group'];
 
         $coursegroups_rs->MoveNext();
     }
