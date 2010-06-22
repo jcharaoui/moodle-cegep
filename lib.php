@@ -436,28 +436,28 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
         (is_null($program_idyear)) ? ($program_idyear = 'NULL') : ($program_idyear = "'${program_idyear}'");
         (is_null($request_id)) ? ($request_id = 'NULL') : ($request_id = "'${request_id}'");
 
-        // Insert enrolment in external DB
-        $enroldb = enroldb_connect();
-        $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` ,  `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '$username', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
-        $result = $enroldb->Execute($insert);
-
-        if (!$result) {
-            trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert, E_USER_ERROR);
-            $enroldb->Close();        
-            return false;
-        }
-
+        
         // If user exists in database, assign its role right away and add to group
         if ($user = get_record('user', 'username', $username)) {
+            // Insert enrolment in external DB
+            $enroldb = enroldb_connect();
+            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` ,  `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '" . $user->{$CFG->enrol_localuserfield} . "', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
+            $result = $enroldb->Execute($insert);
+
+            if (!$result) {
+                trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert, E_USER_ERROR);
+                $enroldb->Close();        
+                return false;
+            }
+   
             $course = get_record('course', 'idnumber', $courseidnumber);
             $role = get_record('role', 'shortname', $rolename);
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
             if ($course && $role) {
                 role_assign($role->id, $user->id, 0, $context->id, 0, 0, 0, 'database');
             }
+            $enroldb->Close();
         }
-
-        $enroldb->Close();
         return true;
     }
 }
@@ -657,9 +657,7 @@ function cegep_local_get_coursegroups($course_idnumber, $teacher_idnumber = '') 
 function cegep_local_get_enrolled_coursegroups($course_idnumber) {
     global $CFG, $enroldb, $sisdb;
 
-    $coursecode = substr($course_idnumber, 0, strpos($course_idnumber, '_'));
-
-    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS numberofstudents FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` like '". $coursecode ."_%' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`;";
+    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS numberofstudents FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield`='". $course_idnumber . "' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`;";
 
     $coursegroups_rs = $enroldb->Execute($select);
 
@@ -711,7 +709,7 @@ function cegep_local_enrol_coursegroup() {
         $coursegroup_id = $args[0];
     }
     elseif (count($args) == 3) {
-        $coursegroup_id = cegep_local_get_coursegroup_id($arg[0], $arg[1], $arg[2]);
+        $coursegroup_id = cegep_local_get_coursegroup_id($args[0], $args[1], $args[2]);
     } else {
         return FALSE;
     }
