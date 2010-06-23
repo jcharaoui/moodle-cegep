@@ -692,7 +692,7 @@ function cegep_local_get_coursegroup_id($coursecode, $coursegroup, $term) {
     global $CFG, $sisdb;
 
     // Fetch record of the coursegroup from SIS
-    $select_coursegroup = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `group` = '$coursegroup' AND `term` = '$term';";
+    $select_coursegroup = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `group` = '" . abs($coursegroup) . "' AND `term` = '$term';";
     return $sisdb->Execute($select_coursegroup)->fields['id'];
 }
 
