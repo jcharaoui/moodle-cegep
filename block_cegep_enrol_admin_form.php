@@ -44,6 +44,7 @@ class cegep_enrol_admin_form extends moodleform {
     }
 
     function validation($data, $files) {
+        global $COURSE;
 
         $errors = parent::validation($data, $files);
 
@@ -51,31 +52,34 @@ class cegep_enrol_admin_form extends moodleform {
         if (empty($coursecode) || !has_capability('moodle/site:doanything', $context)) {
             $cc = explode('_', $COURSE->idnumber);
             $coursecode = $cc[0];
-        } else {
+        } 
+        else {
             $coursecode = $data['coursecode'];
         }
+        $coursegroup = $data['coursegroup'];
 
         if (empty($data['semester']) || empty($data['year'])) {
             $errors['semester'] = get_string('semesterinvalid','block_cegep');
         }
-        elseif ($coursegroup || !is_numeric($coursegroup)) {
+        elseif (empty($coursegroup) || !is_numeric($coursegroup)) {
             $errors['coursegroup'] = get_string('coursegroupinvalid','block_cegep');
         }
         
-        if (!empty($errors))
+        if (!empty($errors)) {
             return $errors;
-
+        }
         // Verify if the coursegroup is available in the system
-        elseif (!$coursegroup_id = cegep_local_get_coursegroup_id($coursecode, $data['coursegroup'], $term))  
+        elseif (!$coursegroup_id = cegep_local_get_coursegroup_id($coursecode, $data['coursegroup'], $term)) {
             $errors['coursegroup'] = get_string('coursegroupunavailable','block_cegep');
-            
+        }
         // Verify if the coursegroup is already enrolled into this course
-        elseif (self::validate_coursegroup_enrolled($coursegroup_id))
+        elseif (self::validate_coursegroup_enrolled($coursegroup_id)) {
             $errors['coursegroup'] = get_string('coursegroupalreadyenrolled','block_cegep');
-            
+        }
         // Verify if the coursegroup has students registered
-        elseif (!self::validate_coursegroup_students_registered($coursegroup_id))
+        elseif (!self::validate_coursegroup_students_registered($coursegroup_id)) {
             $errors['coursegroup'] = get_string('coursegrouphasnostudents','block_cegep');
+        }
         
         return $errors;
     }
@@ -96,10 +100,13 @@ class cegep_enrol_admin_form extends moodleform {
         if (!$result) {
             trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
             return false;
-        } elseif ($result->RecordCount() < 1)
+        } 
+        elseif ($result->RecordCount() < 1) {
             return false;
-        else
+        }
+        else {
             return $result->fields['id'];
+        }
     }
 
     private function validate_coursegroup_enrolled($coursegroup_id) {
@@ -113,25 +120,28 @@ class cegep_enrol_admin_form extends moodleform {
             trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
             return false;
         } 
-        else
+        else {
             return $result->fields['num'];
+        }
     }
     
     private function validate_coursegroup_students_registered($coursegroup_id) {
-        global $CFG, $COURSE, $enroldb;
+        global $CFG, $COURSE, $sisdb;
 
-        $select = "SELECT * AND count FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` = '$coursegroup_id';";
+        $select = "SELECT * FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` = '$coursegroup_id';";
         $result = $sisdb->Execute($select);
         
         if (!$result) {
             trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
             return false;
-        } elseif ($result->RecordCount() < 1)
+        } 
+        elseif ($result->RecordCount() < 1) {
             return false;
-        else
+        }
+        else {
             return true;
+        }
     }
-
 }
 
 ?>
