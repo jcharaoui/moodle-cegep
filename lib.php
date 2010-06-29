@@ -705,11 +705,20 @@ function cegep_local_enrol_coursegroup() {
     global $CFG, $COURSE, $enroldb, $sisdb;
 
     $args = func_get_args();    
+
     if (count($args) == 1) {
         $coursegroup_id = $args[0];
+
+        // Get the name of the section if autogroups is set
+        if ($CFG->block_cegep_autogroups) {
+            $select_coursegroup = "SELECT `group` FROM `$CFG->sisdb_name`.`coursegroup` WHERE `id` = $coursegroup_id;";
+            $coursegroup_rs = $sisdb->Execute($select_coursegroup);
+            $coursegroup = $coursegroup_rs->fields['group'];
+        }
     }
     elseif (count($args) == 3) {
         $coursegroup_id = cegep_local_get_coursegroup_id($args[0], $args[1], $args[2]);
+        $coursegroup = $args[1];
     } else {
         return FALSE;
     }
@@ -727,9 +736,9 @@ function cegep_local_enrol_coursegroup() {
     $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
 
     // Autogroups
-    if ($CFG->block_cegep_autogroups) {
+    if ($CFG->block_cegep_autogroups && !empty($coursegroup)) {
         // Check if a group already exists for this course
-        $groupname = get_string('coursegroup','block_cegep') . " $section";
+        $groupname = get_string('coursegroup','block_cegep') . " $coursegroup";
         $group = get_record("groups", "courseid", $COURSE->id, "name", $groupname);
 
         if ($group) {
