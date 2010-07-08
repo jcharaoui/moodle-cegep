@@ -50,7 +50,7 @@ $string['enrolanother'] = 'Enrol another coursegroup';
 $string['make_visible'] = 'Make this course available to students';
 $string['enrolhelp'] = 'You can choose which section(s) you want to enrol in this course. Please take note: if you want to have <b>separate courses for each section</b>, you must enrol <b>only one section here</b> and create a course for each section you have.';
 $string['enrolcoursegroup'] = 'Enrol this section';
-$string['nocoursegroupavailable'] = 'No sections are available for enrolment in this course.';
+$string['nocoursegroupsavailable'] = 'No sections are available for enrolment in this course.';
 $string['nocoursegroupselected'] = 'Please select a section to enrol.';
 
 // Unenrol form
