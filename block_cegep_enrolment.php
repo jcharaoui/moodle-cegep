@@ -474,7 +474,7 @@ function cegep_studentlist() {
                         $notice .= print_table($table,true);
                         $notice .= '<br /><strong>'.get_string('total').'</strong> : ' . count($table->data);
                     } 
-                    else if (is_null($coursegroup[id])) {
+                    else if (is_null($coursegroup['id'])) {
                         $coursegroups->MoveNext();
                         continue;
                     }
