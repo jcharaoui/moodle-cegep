@@ -28,7 +28,7 @@ function cegep_dawson_sisdbsource_select_students($term) {
                 AND uo.IndicateurLocal = 1
                 AND es.AnSession >= @AnSession_IN
             ORDER BY e.Numero, c.Numero";
-    return cegep_dawson_prepare_select_query($select);
+    return $select;
 }
 
 function cegep_dawson_sisdbsource_select_teachers($term) {
@@ -48,7 +48,7 @@ function cegep_dawson_sisdbsource_select_teachers($term) {
             WHERE g.AnSession >= @AnSession_IN 
             ORDER BY g.AnSession, e.Numero, c.Numero, g.Numero;";
 
-    return cegep_dawson_prepare_select_query($select);
+    return $select;
 }
 
 function cegep_dawson_sisdbsource_decode($field, $data) {
@@ -320,24 +320,29 @@ function cegep_dawson_courses_get_sections($courseidnumber, $courseid = 0, &$has
     $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE id = '$coursegroup_id'";
     $coursegroup = $sisdb->Execute($select)->fields;
 
-    if (!$on_first) {
-        $html .= ', ' . strtolower(get_string("cegepsection", "block_cegep")) . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['term']) . ')';
-    }
-    else {
-        $html .= get_string("cegepsection", "block_cegep") . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['term']) . ')';
-    }
+    if (!empty($coursegroup)) {
+        if (!$on_first) {
+            $html .= ', ' . strtolower(get_string("cegepsection", "block_cegep")) . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['term']) . ')';
+        }
+        else {
+            $html .= get_string("cegepsection", "block_cegep") . ' ' . $coursegroup['group'] .' (' . cegep_dawson_term_to_string($coursegroup['term']) . ')';
+        }
 
-    if (!empty($filter_term) && $filter_term != 'all') {
-        if ($coursegroup['term'] == $filter_term) {
-            $echo_course = true;
+        if (!empty($filter_term) && $filter_term != 'all') {
+            if ($coursegroup['term'] == $filter_term) {
+                $echo_course = true;
+            }
+        }
+
+        $has_sections = true;
+        $coursegroups_rs->MoveNext();
+
+        if ($on_first) {
+            $on_first = false;
         }
     }
-
-    $has_sections = true;
-    $coursegroups_rs->MoveNext();
-
-    if ($on_first) {
-        $on_first = false;
+    else {
+        $coursegroups_rs->MoveNext();
     }
   }
 
@@ -509,27 +514,6 @@ function cegep_dawson_term_to_string($code) {
 
     $str .= $year;
     return $str;
-}
-
-function cegep_dawson_prepare_select_query($query) {
-    $query = str_replace("'","''",$query);
-    $query = "SELECT * FROM OPENQUERY(CLARAREPROTPRODLINK, '$query')";
-    return $query;
-}
-
-function cegep_dawson_sisdbsource_connect($type, $host, $name, $user, $pass) {
-    // Try to connect to the external database (forcing new connection)
-    $db = &ADONewConnection($type);
-    if ($db->Connect($host, $user, $pass, $name, true)) {
-        $db->SetFetchMode(ADODB_FETCH_ASSOC); ///Set Assoc mode always after DB connection
-        $db->Execute("SET ANSI_WARNINGS ON");
-        $db->Execute("SET ANSI_NULLS ON");
-        return $db;
-    } else {
-        trigger_error("Error connecting to DB backend with: "
-                      . "$host, $user, $pass, $name");
-        return false;
-    }
 }
 
 function cegep_dawson_print_course_information($course, $view_filters = array(), &$echo_course = false) {
