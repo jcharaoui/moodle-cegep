@@ -46,6 +46,7 @@ $string['coursegroupnumber'] = 'Numéro du groupe-cours';
 $string['program'] = 'Programme';
 $string['nocoursegroupsenrolled'] = 'Aucun groupe-cours n\'est inscrit dans ce cours';
 $string['accessuserprofile'] = 'Accéder au profil de l\'utilisateur';
+$string['nostudentsenrolled'] = 'Il n\'y a aucun étudiant inscrit à ce cours.';
 
 // Enrol form
 $string['coursegroupenrolled'] = '<strong>Inscription complétée avec succès.</strong><br /><br />Voici les étudiants ajoutés au cours :<br /><br />$a[0]<br /><br />Bonne session!<br /><br />';
