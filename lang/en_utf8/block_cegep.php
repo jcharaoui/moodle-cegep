@@ -43,6 +43,7 @@ $string['coursegroupnumber'] = 'Coursegroup number';
 $string['program'] = 'Program';
 $string['nocoursegroupsenrolled'] = 'No coursegroups are enrolled in this course';
 $string['accessuserprofile'] = 'Access user\'s profile';
+$string['nostudentsenrolled'] = 'There are no students enrolled in this course.';
 
 // Enrol form
 $string['coursegroupenrolled'] = '<strong>Enrolment sucessfully completed.</strong><br /><br />These are the students that were enrolled into this course :<br /><br />$a[0]<br /<br />Have a nice semester!<br /><br />';
