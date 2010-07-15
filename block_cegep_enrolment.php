@@ -293,7 +293,7 @@ function cegep_enrolprogram() {
         $studentlist = '';
         while ($students_rs && !$students_rs->EOF) {
             $student = $students_rs->fields;
-            $program_idyear = $data->program_id . $data->program_year;
+            $program_idyear = $data->program_id . "_" . $data->program_year;
             if (!cegep_local_enrol_user($COURSE->idnumber, $student['username'], $CFG->block_cegep_studentrole, NULL, $program_idyear)) {
                 trigger_error(get_string('errorimportingstudentlist','block_cegep'), E_USER_ERROR);
                 break;
@@ -426,7 +426,7 @@ function cegep_studentlist() {
                     $notice = '';
 
                     $notice .= '<strong>'.get_string('program','block_cegep').'</strong> : ' . $program_id . ' - ' . $program['title'] . '<br />';
-                    $notice .= '<strong>'.get_string('programyear','block_cegep').'</strong> : ' . get_string('programyear'.$program_year,'block_cegep');
+                    $notice .= '<strong>'.get_string('programyear','block_cegep').'</strong> : ' . ($program_year ? get_string('programyear'.$program_year,'block_cegep') : '');
 
                     $select = "SELECT * FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `program_idyear` = '".$program_id."_".$program_year."' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' ORDER BY `$CFG->enrol_remoteuserfield` ASC";
                    
@@ -435,7 +435,7 @@ function cegep_studentlist() {
                     if (count($table->data) > 0) {
                         $notice .= print_table($table,true);
                         $notice .= '<br /><strong>'.get_string('total').'</strong> : ' . count($table->data);
-                    } else { ($notice .= "Il n'y a aucun étudiant inscrit à ce cours.<br /><br />"); }
+                    } else { ($notice .= get_string('nostudentsenrolled', 'block_cegep') . "<br /><br />"); }
  
                     $body .= print_simple_box($notice, 'center', '700px', '', 5, 'generalbox', '', true);
 
@@ -522,10 +522,17 @@ function cegep_studentlist_enrolmenttable($select) {
             $student_sisdb = $student_rs->fields;
             $student_moodle = get_record('user', 'username', $student_sisdb['username']);
             if ($student_moodle) {
-                $table->data[] = array('<a href="'.$CFG->wwwroot.'/user/view.php?id='.$student_moodle->id.'" title="'.get_string('accessuserprofile','block_cegep').'">'.$student_sisdb['username'].'</a>', $student_sisdb['firstname'], $student_sisdb['lastname'], $student_sisdb['program_id']);
+
+                $select = "SELECT `title` FROM `$CFG->sisdb_name`.`program` WHERE `id` = '" . $student_sisdb['program_id'] . "'";
+                $program = $sisdb->Execute($select)->fields;
+
+                $table->data[] = array('<a href="'.$CFG->wwwroot.'/user/view.php?id='.$student_moodle->id.'" title="'.get_string('accessuserprofile','block_cegep').'">'.$student_sisdb['username'].'</a>', $student_sisdb['firstname'], $student_sisdb['lastname'], $program['title'] . " (" . $student_sisdb['program_id'] . ")");
                 $lastnames[] = $student_sisdb['lastname'];
             } else {
-                $table->data[] = array($student_sisdb['username'], $student_sisdb['firstname'], $student_sisdb['lastname'], $student_sisdb['program_id']);
+                $select = "SELECT `title` FROM `$CFG->sisdb_name`.`program` WHERE `id` = '" . $student_sisdb['program_id'] . "'";
+                $program = $sisdb->Execute($select)->fields;
+
+                $table->data[] = array($student_sisdb['username'], $student_sisdb['firstname'], $student_sisdb['lastname'], $program['title'] . " (" . $student_sisdb['program_id'] . ")");
                 $lastnames[] = $student_sisdb['lastname'];
             }
         }
