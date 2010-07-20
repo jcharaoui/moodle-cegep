@@ -7,7 +7,7 @@ function cegep_dawson_sisdbsource_select_students($term) {
              SELECT 
                 uo.Numero AS CourseUnit,
                 c.Numero AS CourseNumber,
-                ISNULL(c.TitreMoyenTraduit,c.TitreMoyen)  As CourseTitle,
+                ISNULL(g.TitrePublie, ISNULL(c.TitreMoyenTraduit,c.TitreMoyen))  As CourseTitle,
                 g.Numero AS CourseGroup,
                 e.Numero AS StudentNumber,
                 e.Nom AS StudentLastName,
@@ -39,7 +39,7 @@ function cegep_dawson_sisdbsource_select_teachers($term) {
                 e.Numero TeacherNumber, 
                 c.Numero CourseNumber, 
                 g.Numero CourseGroup, 
-                ISNULL(c.TitreMoyenTraduit,c.TitreMoyen)  As CourseTitle
+                ISNULL(g.TitrePublie, ISNULL(c.TitreMoyenTraduit,c.TitreMoyen))  As CourseTitle
             FROM 
                 Employes.Employe e 
             JOIN Groupes.EmployeGroupe ge ON e.IDEmploye = ge.IDEmploye 
