@@ -7,7 +7,7 @@ function cegep_dawson_sisdbsource_select_students($term) {
              SELECT 
                 uo.Numero AS CourseUnit,
                 c.Numero AS CourseNumber,
-                ISNULL(g.TitrePublie, ISNULL(c.TitreMoyenTraduit,c.TitreMoyen))  As CourseTitle,
+				ISNULL(c.TitreMoyenTraduit,c.TitreMoyen) As CourseTitle,
                 g.Numero AS CourseGroup,
                 e.Numero AS StudentNumber,
                 e.Nom AS StudentLastName,
@@ -39,7 +39,7 @@ function cegep_dawson_sisdbsource_select_teachers($term) {
                 e.Numero TeacherNumber, 
                 c.Numero CourseNumber, 
                 g.Numero CourseGroup, 
-                ISNULL(g.TitrePublie, ISNULL(c.TitreMoyenTraduit,c.TitreMoyen))  As CourseTitle
+				ISNULL(c.TitreMoyenTraduit,c.TitreMoyen) As CourseTitle
             FROM 
                 Employes.Employe e 
             JOIN Groupes.EmployeGroupe ge ON e.IDEmploye = ge.IDEmploye 
@@ -80,6 +80,52 @@ function cegep_dawson_sisdbsource_decode($field, $data) {
             return $data;
             break;
     }
+}
+
+function cegep_dawson_get_create_course_buttons() {
+    global $CFG, $USER;
+
+    $items = array();
+    $previous_term_str = '';
+
+    $courseterms = array();
+    $enrolments = cegep_local_get_teacher_enrolments($USER->idnumber, cegep_local_current_term());
+
+    foreach ($enrolments as $enrolment) {
+    
+        // Skip already displayed courses
+        if (in_array($enrolment['coursecode'] . $enrolment['term'], $courseterms)) {
+            continue;
+        }
+
+        // Check if course title is empty
+        if (!empty($enrolment['coursetitle'])) {
+            $coursetitle = $enrolment['coursetitle'];
+        } else {
+            $coursetitle = get_string('cousetitlemissing','block_cegep');
+        }
+
+        // Display term string
+        $current_term_str = cegep_local_term_to_string($enrolment['term']);
+        if ($current_term_str != $previous_term_str) {
+            $items[] = '<div style="font-weight: bold; font-size: 1.2em;">' . $current_term_str . '</div>';
+        }
+        $previous_term_str = $current_term_str;
+
+        $items[] = '<form action="' . $CFG->wwwroot . '/blocks/cegep/block_cegep_createcourse.php" method="post" class="form_create">'.
+        '<div class="coursenumber create_button">'.
+        '<input type="hidden" name="coursecode" value="'. $enrolment['coursecode'] .'" />'.
+        '<input type="hidden" name="term" value="' . $enrolment['term']. '" />' .
+        '<input type="submit" value="'.get_string('create','block_cegep').'" name="submit" style="margin-right: 5px;" />'.
+        $enrolment['coursecode'].'</div><div class="coursetitle">'. $coursetitle .'</div></form>';
+        
+        array_push($courseterms, $enrolment['coursecode'] . $enrolment['term']);
+    }
+	
+	if (count($enrolments) > 0) {
+		$items[] = '<li><a target="_blank" href="' . $CFG->wwwroot . '/help/missing.course.php">Can\'t find your course?</a></li>';
+	}
+    return $items;
 }
 
 /**
