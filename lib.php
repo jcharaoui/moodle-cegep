@@ -437,16 +437,17 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
         (is_null($request_id)) ? ($request_id = 'NULL') : ($request_id = "'${request_id}'");
 
         
-        // If user exists in database, assign its role right away and add to group
+
+		// If user exists in database, assign its role right away and add to group
         if ($user = get_record('user', 'username', $username)) {
             // Insert enrolment in external DB
             $enroldb = enroldb_connect();
-            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` ,  `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '" . $user->{$CFG->enrol_localuserfield} . "', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
+            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` , `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '" . $user->{$CFG->enrol_localuserfield} . "', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
             $result = $enroldb->Execute($insert);
 
             if (!$result) {
                 trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert, E_USER_ERROR);
-                $enroldb->Close();        
+                $enroldb->Close();
                 return false;
             }
    
@@ -458,6 +459,17 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
             }
             $enroldb->Close();
         }
+		else {
+			$enroldb = enroldb_connect();
+            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` , `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '" . $username . "', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
+            $result = $enroldb->Execute($insert);
+
+            if (!$result) {
+                trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert, E_USER_ERROR);
+                $enroldb->Close();
+                return false;
+            }
+		}
         return true;
     }
 }
@@ -638,7 +650,7 @@ function cegep_local_get_coursegroups($course_idnumber, $teacher_idnumber = '') 
         // If teacher_idnumber is specified, return only coursegroups/sections in which that teacher is enrolled in SIS
         if (!empty($teacher_idnumber)) {
             foreach ($teacher_enrolments as $teacher_enrolment) {
-                if ($teacher_enrolment['coursecode'] == $coursegroup['coursecode'] && $teacher_enrolment['coursegroup'] == $coursegroup['group']) {
+                if ($teacher_enrolment['coursecode'] === $coursegroup['coursecode'] && $teacher_enrolment['coursegroup'] === $coursegroup['group']) {
                     array_push($coursegroups, $coursegroup);
                     break;
                 }
