@@ -49,13 +49,14 @@ class cegep_enrol_admin_form extends moodleform {
         $errors = parent::validation($data, $files);
 
         $term = "$data[year]$data[semester]";
-        if (empty($coursecode) || !has_capability('moodle/site:doanything', $context)) {
+        if (empty($coursecode) && !has_capability('moodle/site:doanything', $context)) {
             $cc = explode('_', $COURSE->idnumber);
             $coursecode = $cc[0];
         } 
         else {
             $coursecode = $data['coursecode'];
         }
+
         $coursegroup = $data['coursegroup'];
 
         if (empty($data['semester']) || empty($data['year'])) {
@@ -73,7 +74,7 @@ class cegep_enrol_admin_form extends moodleform {
             $errors['coursegroup'] = get_string('coursegroupunavailable','block_cegep');
         }
         // Verify if the coursegroup is already enrolled into this course
-        elseif (self::validate_coursegroup_enrolled($coursegroup_id)) {
+        elseif (self::validate_coursegroup_enrolled($coursegroup_id, $coursecode)) {
             $errors['coursegroup'] = get_string('coursegroupalreadyenrolled','block_cegep');
         }
         // Verify if the coursegroup has students registered
@@ -109,10 +110,14 @@ class cegep_enrol_admin_form extends moodleform {
         }
     }
 
-    private function validate_coursegroup_enrolled($coursegroup_id) {
+    private function validate_coursegroup_enrolled($coursegroup_id, $coursecode = '') {
         global $CFG, $COURSE, $enroldb;
 
-        $select = "SELECT COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `coursegroup_id` = '$coursegroup_id' LIMIT 1";
+		if (strlen($coursecode) == 0) {
+			$coursecode = $COURSE->idnumber;
+		}
+
+        $select = "SELECT COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$coursecode' AND `coursegroup_id` = '$coursegroup_id' LIMIT 1";
 
         $result = $enroldb->Execute($select);
         
