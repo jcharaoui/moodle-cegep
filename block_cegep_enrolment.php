@@ -6,10 +6,10 @@ require('lib.php');
 $courseid = required_param('id', PARAM_INT);
 $action   = optional_param('a', null, PARAM_ACTION);
 
-global $CFG, $USER, $COURSE;
+global $CFG, $USER, $COURSE, $DB;
 
 // Module unavailable for course id 0 or 1
-if ($courseid == 1 || !$COURSE = get_record('course', 'id', $courseid))
+if ($courseid == 1 || !$COURSE = $DB->get_record('course', array('id' => $courseid)))
     print_error('invalidcourse');
 
 require_login($COURSE);
@@ -21,13 +21,9 @@ $navlinks[] = array('name' => $strtitle, 'link' => null, 'type' => 'misc');
 $navigation = build_navigation($navlinks);
 print_header("$COURSE->shortname: $strtitle", $COURSE->fullname, $navigation);
 
-// Enrol and unenrol actions not applicable to metacourses
-if ($COURSE->metacourse && !empty($action))
-    redirect($CFG->wwwroot.'/course/view.php?id='.$COURSE->id, get_string('erroractionnotavailable','block_cegep').'<br /><br />',10);
-
 // This module only available to teachers and admins
 $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-if (isguest() or !has_capability('moodle/course:update', $context)) {
+if (!has_capability('moodle/course:update', $context)) {
     print_error('mustbeteacher','block_cegep');
 }
 
@@ -54,17 +50,16 @@ else {
 }
 
 // Check how many coursegroups/programs are enrolled at the moment
-$select = "SELECT COUNT(DISTINCT `coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL LIMIT 1";
+$select = "SELECT COUNT(DISTINCT `coursegroup_id`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL LIMIT 1";
 $num_enrolments = $enroldb->Execute($select)->fields['num'];
-$select = "SELECT COUNT(DISTINCT `program_idyear`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IS NOT NULL LIMIT 1";
+$select = "SELECT COUNT(DISTINCT `program_idyear`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IS NOT NULL LIMIT 1";
 $num_programenrolments = $enroldb->Execute($select)->fields['num'];
 
 
 // Main switch
 switch ($action) {
     case 'enrol' :
-        $context = get_context_instance(CONTEXT_SYSTEM);
-        (has_capability('moodle/site:doanything', $context)) ? (cegep_enrol_admin()) : (cegep_enrol());
+        (is_siteadmin($USER)) ? (cegep_enrol_admin()) : (cegep_enrol());
         break;
    case 'unenrol' : 
         if ($num_enrolments > 0)
@@ -88,7 +83,7 @@ switch ($action) {
 
 // Enrol a coursegroup into a Moodle course (admin function)
 function cegep_enrol_admin() {
-    global $CFG, $COURSE, $enroldb, $sisdb;
+    global $CFG, $COURSE, $USER, $enroldb, $sisdb;
 
     $currenttab = 'enrol';
     require('block_cegep_tabs.php');
@@ -110,7 +105,7 @@ function cegep_enrol_admin() {
     elseif ($data = $enrolform->get_data()) {
    
         // Extract course code info
-        if (empty($data->coursecode) || !has_capability('moodle/site:doanything', $context)) { 
+        if (empty($data->coursecode) || !is_siteadmin($USER)) { 
             $coursecode = substr($COURSE->idnumber, 0, strripos($COURSE->idnumber, '_'));
         } else {
             $coursecode = $data->coursecode;
@@ -204,7 +199,7 @@ function cegep_enrol() {
 
 // Unenrol a coursegroup from a Moodle course
 function cegep_unenrol() {
-    global $CFG, $COURSE, $enroldb;
+    global $CFG, $COURSE, $DB, $enroldb;
     
     $currenttab = 'unenrol';
     require('block_cegep_tabs.php');
@@ -223,23 +218,26 @@ function cegep_unenrol() {
         $coursegroup_list = implode(', ', $data->coursegroup);
 
         // Get usernames before removing
-        $select = "SELECT `$CFG->enrol_remoteuserfield` FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IN ($coursegroup_list);";
+        $select = "SELECT `$CFG->enrol_remoteuserfield` FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IN ($coursegroup_list);";
 
-        $usernames = recordset_to_array($enroldb->Execute($select));
+        $usernames = $enroldb->Execute($select)->getRows();
 
         // If user exists, unassign role right away
         if ($usernames) {
             $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-            $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
+            $student_role = $DB->get_record('role', array('shortname' => $CFG->block_cegep_studentrole));
             foreach ($usernames as $username) {
-                if ($student_user = get_record('user', 'username', $username->username)) {
-                    role_unassign($student_role->id, $student_user->id, 0, $context->id);
+                if ($student_user = $DB->get_record('user', array('username' => $username->username))) {
+                    $enrol = enrol_get_plugin('database');
+                    if ($instance = $DB->get_record('enrol', array('courseid'=>$COURSE->id, 'enrol'=>'database'), '*', IGNORE_MULTIPLE)) {
+                        $enrol->unenrol_user($instance, $student_user->id);
+                    }
                 }
             }
         }
 
         // Go through each coursegroup and remove Moodle external enrolment database record
-        $delete = "DELETE FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IN ($coursegroup_list);";
+        $delete = "DELETE FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IN ($coursegroup_list);";
         
         $result = $enroldb->Execute($delete);
         
@@ -318,7 +316,7 @@ function cegep_enrolprogram() {
 
 // Unenrol a program from a Moodle course
 function cegep_unenrolprogram() {
-    global $CFG, $COURSE, $enroldb;
+    global $CFG, $COURSE, $DB, $enroldb;
     
     $currenttab = 'unenrolprogram';
     require('block_cegep_tabs.php');
@@ -340,23 +338,23 @@ function cegep_unenrolprogram() {
         $program_list = rtrim($program_list, ',');
 
         // Get usernames before removing
-        $select = "SELECT `$CFG->enrol_remoteuserfield` FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IN ($program_list);";
+        $select = "SELECT `$CFG->enrol_remoteuserfield` FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IN ($program_list);";
 
         $usernames = recordset_to_array($enroldb->Execute($select));
 
         // If user exists, unassign role right away
         if ($usernames) {
             $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-            $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
+            $student_role = $DB->get_record('role', array('shortname' => $CFG->block_cegep_studentrole));
             foreach ($usernames as $username) {
-                if ($student_user = get_record('user', 'username', $username->username)) {
-                    role_unassign($student_role->id, $student_user->id, 0, $context->id);
+                if ($student_user = $DB->get_record('user', array('username' => $username->username))) {
+                    role_unassign($student_role->id, $student_user->id, $context->id, 'enrol_database');
                 }
             }
         }
 
         // Go through each program/year and remove Moodle external enrolment database record
-        $delete = "DELETE FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IN ($program_list);";
+        $delete = "DELETE FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IN ($program_list);";
         
         $result = $enroldb->Execute($delete);
         
@@ -380,26 +378,28 @@ function cegep_unenrolprogram() {
 
 // List all coursegroups and students enrolled in this Moodle course
 function cegep_studentlist() {
-    global $CFG, $COURSE, $enroldb, $sisdb;
+    global $CFG, $COURSE, $DB, $enroldb, $sisdb;
 
     $currenttab = 'studentlist';
     require('block_cegep_tabs.php');
     
     $body = '';
 
-    ($COURSE->metacourse) ? ($courses = get_courses_in_metacourse($COURSE->id)) : ($courses = array($COURSE));
+    $courses = array($COURSE);
 
     if ($courses) {
         
         foreach ($courses as $c) {
     
-            if (empty($c->idnumber)) { $c = get_record('course', 'id', $c->id); }
+            if (empty($c->idnumber)) {
+                $c = $DB->get_record('course', array('id'=> $c->id));
+            }
     
-            $select = "SELECT DISTINCT `program_idyear` FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `program_idyear` IS NOT NULL";
+            $select = "SELECT DISTINCT `program_idyear` FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `program_idyear` IS NOT NULL";
 
             $program_idyears = $enroldb->Execute($select);
            
-            $select = "SELECT DISTINCT `coursegroup_id` FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `coursegroup_id` IS NOT NULL";
+            $select = "SELECT DISTINCT `coursegroup_id` FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `coursegroup_id` IS NOT NULL";
     
             $coursegroups = $enroldb->Execute($select);
             
@@ -426,9 +426,9 @@ function cegep_studentlist() {
                     $notice = '';
 
                     $notice .= '<strong>'.get_string('program','block_cegep').'</strong> : ' . $program_id . ' - ' . $program['title'] . '<br />';
-                    $notice .= '<strong>'.get_string('programyear','block_cegep').'</strong> : ' . ($program_year ? get_string('programyear'.$program_year,'block_cegep') : '');
+                    $notice .= '<strong>'.get_string('programyear','block_cegep').'</strong> : ' . get_string('programyear'.$program_year,'block_cegep');
 
-                    $select = "SELECT * FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `program_idyear` = '".$program_id."_".$program_year."' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' ORDER BY `$CFG->enrol_remoteuserfield` ASC";
+                    $select = "SELECT * FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `program_idyear` = '".$program_id."_".$program_year."' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' ORDER BY `$CFG->enrol_remoteuserfield` ASC";
                    
                     $table = cegep_studentlist_enrolmenttable($select);
 
@@ -461,12 +461,11 @@ function cegep_studentlist() {
             
                     $notice = '';
             
-                    if ($COURSE->metacourse) { $notice .= '<strong>'.get_string('childcoursetitle','block_cegep').'</strong> : ' . $c->fullname . ' ('. $c->idnumber .')<br />'; }
                     $notice .= '<strong>'.get_string('semester','block_cegep').'</strong> : ' . $term . '&nbsp;' . $year . '<br />';
                     $notice .= '<strong>'.get_string('coursecode','block_cegep').'</strong> : ' . $coursegroup['coursecode'] . '<br />';
                     $notice .= '<strong>'.get_string('coursegroupnumber','block_cegep').'</strong> : ' . $coursegroup['group'] . '<br /><br />';
 
-                    $select = "SELECT * FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `coursegroup_id` = '$coursegroup[id]' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' ORDER BY `$CFG->enrol_remoteuserfield` ASC";
+                    $select = "SELECT * FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$c->idnumber' AND `coursegroup_id` = '$coursegroup[id]' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' ORDER BY `$CFG->enrol_remoteuserfield` ASC";
                    
                     $table = cegep_studentlist_enrolmenttable($select);
            
@@ -499,7 +498,7 @@ function cegep_studentlist() {
 }
 
 function cegep_studentlist_enrolmenttable($select) {
-    global $CFG, $COURSE, $enroldb, $sisdb;
+    global $CFG, $COURSE, $DB, $enroldb, $sisdb;
 
     $table = new stdClass;
     $table->class = 'flexible';
@@ -520,7 +519,7 @@ function cegep_studentlist_enrolmenttable($select) {
         $student_rs = $sisdb->Execute($select);
         if ($student_rs && $student_rs->RecordCount() == 1) {
             $student_sisdb = $student_rs->fields;
-            $student_moodle = get_record('user', 'username', $student_sisdb['username']);
+            $student_moodle = $DB->get_record('user', array('username' => $student_sisdb['username']));
             if ($student_moodle) {
 
                 $select = "SELECT `title` FROM `$CFG->sisdb_name`.`program` WHERE `id` = '" . $student_sisdb['program_id'] . "'";

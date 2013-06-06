@@ -93,7 +93,7 @@ class cegep_enrol_form extends moodleform {
     private function validate_coursegroup_enrolled($coursegroup_id) {
         global $CFG, $COURSE, $enroldb;
 
-        $select = "SELECT COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `coursegroup_id` = '$coursegroup_id' LIMIT 1";
+        $select = "SELECT COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `coursegroup_id` = '$coursegroup_id' LIMIT 1";
 
         $result = $enroldb->Execute($select);
         

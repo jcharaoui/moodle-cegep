@@ -4,7 +4,7 @@
 require_once(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
 require_once($CFG->dirroot .'/blocks/cegep/lib.php');
 
-global $CFG, $USER;
+global $CFG, $DB, $USER;
 
 // Get parameters
 $op = optional_param('op', null, PARAM_ACTION);
@@ -19,7 +19,7 @@ if (!empty($CFG->block_cegep_cron_password) && $password == $CFG->block_cegep_cr
     $in_cron = true;
 } else {
     require_login();
-    if (!is_siteadmin($USER->id)) {
+    if (!is_siteadmin($USER)) {
         print_error("Désolé, cette page n'est accessible qu'aux administrateurs du système.");
     }
     $strtitle = 'SIS DB maintenance';
@@ -87,7 +87,7 @@ function cegep_sisdb_sync_form() {
 }
 
 function cegep_sisdb_sync($start_term) {
-    global $CFG, $enroldb, $sisdb, $sisdbsource;
+    global $CFG, $DB, $enroldb, $sisdb, $sisdbsource;
 
     // Keep track of time
     $start_time = (float) array_sum(explode(' ',microtime()));
@@ -143,7 +143,7 @@ function cegep_sisdb_sync($start_term) {
     $count['teacher_enrolments_added'] = 0;
     $count['teacher_enrolments_removed'] = 0;
 
-    $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
+    $student_role = $DB->get_record('role', array('shortname' => $CFG->block_cegep_studentrole));
 
     while ($sisdbsource_rs && !$sisdbsource_rs->EOF) {
 
@@ -203,7 +203,7 @@ function cegep_sisdb_sync($start_term) {
             $program_idyear = $program . '_' . $programyear;
 
             // Removals
-            $delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remoteuserfield` = '$student' AND `$CFG->enrol_db_remoterolefield` = '$student_role->shortname' AND `coursegroup_id` IS NULL AND program_idyear IS NOT NULL AND program_idyear != '$program_idyear'";
+            $delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remoteuserfield` = '$student' AND `$CFG->enrol_remoterolefield` = '$student_role->shortname' AND `coursegroup_id` IS NULL AND program_idyear IS NOT NULL AND program_idyear != '$program_idyear'";
             if (!$result = $enroldb->Execute($delete)) {
                 trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $delete);
                 if (!$in_cron) echo "Erreur : inscription process";
@@ -213,11 +213,11 @@ function cegep_sisdb_sync($start_term) {
             }
 
             // Additions
-            $select = "SELECT $CFG->enrol_remotecoursefield, (SELECT count(*) FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE $CFG->enrol_remoteuserfield = '$student' AND e1.$CFG->enrol_remotecoursefield = $CFG->enrol_remotecoursefield AND program_idyear IS NOT NULL AND `$CFG->enrol_db_remoterolefield` = '$student_role->shortname') AS c FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` e1 WHERE program_idyear = '$program_idyear' AND `$CFG->enrol_db_remoterolefield` = '$student_role->shortname' GROUP BY $CFG->enrol_remotecoursefield;";
+            $select = "SELECT $CFG->enrol_remotecoursefield, (SELECT count(*) FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE $CFG->enrol_remoteuserfield = '$student' AND e1.$CFG->enrol_remotecoursefield = $CFG->enrol_remotecoursefield AND program_idyear IS NOT NULL AND `$CFG->enrol_remoterolefield` = '$student_role->shortname') AS c FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` e1 WHERE program_idyear = '$program_idyear' AND `$CFG->enrol_remoterolefield` = '$student_role->shortname' GROUP BY $CFG->enrol_remotecoursefield;";
             $progadd_rs = $enroldb->Execute($select);
             while ($progadd_rs && !$progadd_rs->EOF && $progadd_rs->fields['c'] == 0) {
                 $course = $progadd_rs->fields[$CFG->enrol_remotecoursefield];
-                $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `program_idyear`) VALUES ('$course', '$student', '$student_role->shortname', '$program_idyear');";
+                $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_remoterolefield`, `program_idyear`) VALUES ('$course', '$student', '$student_role->shortname', '$program_idyear');";
                 if (!$result = $enroldb->Execute($insert)) {
                     trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert);
                     if (!$in_cron) echo "Erreur : inscription process";
@@ -342,20 +342,20 @@ function cegep_sisdb_sync($start_term) {
             break;
         }
         // Add student to courses to which this coursegroup is assigned
-        $coursegroup_enrolments_rs = get_recordset_sql("SELECT DISTINCT `$CFG->enrol_remotecoursefield` AS courseidnumber FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `coursegroup_id` = '$enrolment[0]'");
-        while ($coursegroup_enrolment = rs_fetch_next_record($coursegroup_enrolments_rs)) {
+        $coursegroup_enrolments_rs = $DB->get_recordset_sql("SELECT DISTINCT `$CFG->enrol_remotecoursefield` AS courseidnumber FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `coursegroup_id` = '$enrolment[0]'");
+        foreach ($coursegroup_enrolments_rs as $coursegroup_enrolment) {
             // Do external enrolments DB
-            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_db_remoterolefield`, `coursegroup_id`) VALUES ('$coursegroup_enrolment->courseidnumber', '$enrolment[1]', '$student_role->shortname', '$enrolment[0]'); ";
+            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_remoterolefield`, `coursegroup_id`) VALUES ('$coursegroup_enrolment->courseidnumber', '$enrolment[1]', '$student_role->shortname', '$enrolment[0]'); ";
             if (!$result = $enroldb->Execute($insert)) {
                 trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert);
                 if (!$in_cron) echo "Erreur : inscription process";
                 break;
             }
             // Do internal enrolments DB
-            $course = get_record('course', 'idnumber', $coursegroup_enrolment->courseidnumber);
+            $course = $DB->get_record('course', array('idnumber' =>  $coursegroup_enrolment->courseidnumber));
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
-            if ($student_user = get_record('user', 'username', $enrolment[1])) {
-                role_assign($student_role->id, $student_user->id, 0, $context->id);
+            if ($student_user = $DB->get_record('user', array('username' => $enrolment[1]))) {
+                role_assign($student_role->id, $student_user->id, $context->id, 'enrol_database');
             }
             $count['student_enrolments_added']++;
         }
@@ -370,25 +370,25 @@ function cegep_sisdb_sync($start_term) {
             break;
         }
         // Remove student from courses to which this coursegroup is assigned
-        $coursegroup_enrolments_rs = get_recordset_sql("SELECT DISTINCT `$CFG->enrol_remotecoursefield` AS courseidnumber FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `coursegroup_id` = '$enrolment[0]'");
-        while ($coursegroup_enrolment = rs_fetch_next_record($coursegroup_enrolments_rs)) {
+        $coursegroup_enrolments_rs = $DB->get_recordset_sql("SELECT DISTINCT `$CFG->enrol_remotecoursefield` AS courseidnumber FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `coursegroup_id` = '$enrolment[0]'");
+        foreach($coursegroup_enrolments_rs as $coursegroup_enrolment) {
             // Do external enrolments DB
-            $delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$coursegroup_enrolment->courseidnumber' AND `$CFG->enrol_remoteuserfield` = '$enrolment[1]' AND `$CFG->enrol_db_remoterolefield` = '$student_role->shortname'";
+            $delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$coursegroup_enrolment->courseidnumber' AND `$CFG->enrol_remoteuserfield` = '$enrolment[1]' AND `$CFG->enrol_remoterolefield` = '$student_role->shortname'";
             if (!$result = $enroldb->Execute($delete)) {
                 trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $delete);
                 if (!$in_cron) echo "Erreur : inscription process";
                 break;
             }
             // Do internal enrolments DB
-            $course = get_record('course', 'idnumber', $coursegroup_enrolment->courseidnumber);
+            $course = $DB->get_record('course', array('idnumber' => $coursegroup_enrolment->courseidnumber));
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
-            if ($student_user = get_record('user', 'username', $enrolment[1])) {
-                role_unassign($student_role->id, $student_user->id, 0, $context->id);
+            if ($student_user = $DB->get_record('user', array('username' =>  $enrolment[1]))) {
+                role_unassign($student_role->id, $student_user->id, $context->id, 'enrol_database');
             }
         }
         $count['student_enrolments_removed']++;
     }
-
+ 
     // Update teacher enrolments
 
     // Get enrolments from remote database (ie, Clara)
@@ -587,7 +587,7 @@ function cegep_sisdb_prune($keep_terms) {
             $coursegroup_id = $coursegroups_rs->fields['id'];
 
             // Check if coursegroup has any active enrolments
-            $select = "SELECT COUNT(*) as count FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE coursegroup_id = $coursegroup_id";
+            $select = "SELECT COUNT(*) as count FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE coursegroup_id = $coursegroup_id";
             $result = $sisdb->Execute($select);
             if ($result && $result->fields['count'] > 0) {
                 // Don't remove it, skip to next coursegroup

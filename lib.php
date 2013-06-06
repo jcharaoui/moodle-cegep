@@ -1,8 +1,21 @@
 <?php
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once $CFG->dirroot . '/lib/adodb/adodb.inc.php';
+require_once $CFG->dirroot . '/group/lib.php';
+
 if (file_exists($CFG->dirroot .'/blocks/cegep/lib_'. $CFG->block_cegep_name .'.php')) {
     require_once($CFG->dirroot .'/blocks/cegep/lib_'. $CFG->block_cegep_name .'.php');
 }
+
+$enrolsettings = get_config('enrol_database');
+foreach ($enrolsettings as $setting_key => $setting_value) {
+    $keyname = 'enrol_' . $setting_key;
+    $CFG->$keyname = $setting_value;
+//    echo "$keyname $setting_value" . '<br />';
+}
+unset($enrolsettings);
 
 /**
  * Get the content for the admin cegep block
@@ -194,13 +207,11 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
  * Create course
  */
 function cegep_local_create_course($coursecode, $term = '', $meta = false) {
-    global $CFG, $USER;
+    global $CFG, $USER, $DB;
 
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_create_course')) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_course', $coursecode, $term, $meta);
     } else {
-
-        $site = get_site();
 
         // Prepare external SIS database connection
         if ($sisdb = sisdb_connect()) {
@@ -227,7 +238,7 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
 
         // Course idnumber
         $coursecode = strtoupper($coursecode);
-        $coursemaxid = get_record_sql("SELECT MAX(CONVERT(SUBSTRING_INDEX(`idnumber`, '_', -1), UNSIGNED)) as num FROM `mdl_course` WHERE idnumber LIKE '$coursecode%'");
+        $coursemaxid = $DB->get_record_sql("SELECT MAX(CONVERT(SUBSTRING_INDEX(`idnumber`, '_', -1), UNSIGNED)) as num FROM `mdl_course` WHERE idnumber LIKE '$coursecode%'");
         if ($coursemaxid->num === null) {
             $course->idnumber = $coursecode . '_0';
         } else {
@@ -271,7 +282,7 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
        }
 
         // Course sortorder
-        $sort = get_field_sql('SELECT COALESCE(MAX(sortorder)+1, 100) AS max FROM ' . $CFG->prefix . 'course  WHERE category=' . $course->category);
+        $sort = $DB->get_field_sql('SELECT COALESCE(MAX(sortorder)+1, 100) AS max FROM ' . $CFG->prefix . 'course  WHERE category=' . $course->category);
         $course->sortorder = $sort;
 
         // Course times
@@ -300,10 +311,6 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
                 'showreports'    => $courseconfig->showreports,
                 'groupmode'      => 0,
                 'groupmodeforce' => 0,
-                'student'  => $site->student,
-                'students' => $site->students,
-                'teacher'  => $site->teacher,
-                'teachers' => $site->teachers,
                 );
 
         // Apply defaults to course object
@@ -315,11 +322,11 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
 
         // Course id (just in case)
         unset($course->id);
-        
+
         // Store new course in database
-        if ($newcourseid = insert_record("course", addslashes_object($course))) {        
-            $page = page_create_object(PAGE_COURSE_VIEW, $newcourseid);
-            blocks_repopulate_page($page); // Return value no
+        if ($newcourseid = insert_record("course", addslashes_recursive($course))) {        
+            $course->id = $newcourseid;
+            blocks_add_default_course_blocks($course);
             fix_course_sortorder();
             add_to_log($newcourseid, "course", "new", "view.php?id=$newcourseid", "block_cegep/request course created");
         } else {
@@ -331,13 +338,12 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
         $section->course = $newcourseid;
         $section->section = 0;
         // Autotopic (add course title & teacher name to topic 0) (skip if admin)
-        $context = get_context_instance(CONTEXT_SYSTEM);
-        if ($CFG->block_cegep_autotopic && !has_capability('moodle/site:doanything', $context)) {
+        if ($CFG->block_cegep_autotopic && !is_siteadmin($USER)) {
             $section->summary = '<h1 style="text-align: center;">' . $course->fullname . '</h1>';
             $section->summary .= '<h3 style="text-align: center;">' . get_string('teacher','block_cegep') . ': ' . $USER->firstname . ' ' . $USER->lastname . '</h3>';
             $section->summary = addslashes($section->summary);
         }
-        $section->id = insert_record("course_sections", $section);
+        $section->id = $DB->insert_record("course_sections", $section);
 
         return $newcourseid;
     }
@@ -417,7 +423,7 @@ function cegep_local_decrement_term($term, $number = 1) {
  * Create an enrolment in the external enrolments database
  */
 function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $coursegroup_id = NULL, $program_idyear = NULL, $request_id = NULL) {
-    global $CFG;
+    global $CFG, $DB;
 
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_create_enrolment')) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_enrolment', $courseidnumber, $username, $request_id);
@@ -439,10 +445,10 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
         
 
 		// If user exists in database, assign its role right away and add to group
-        if ($user = get_record('user', 'username', $username)) {
+        if ($user = $DB->get_record('user', array('username' => $username))) {
             // Insert enrolment in external DB
             $enroldb = enroldb_connect();
-            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` , `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '" . $user->{$CFG->enrol_localuserfield} . "', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
+            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_remoterolefield` , `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '" . $user->{$CFG->enrol_localuserfield} . "', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
             $result = $enroldb->Execute($insert);
 
             if (!$result) {
@@ -451,17 +457,23 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
                 return false;
             }
    
-            $course = get_record('course', 'idnumber', $courseidnumber);
-            $role = get_record('role', 'shortname', $rolename);
+            $course = $DB->get_record('course', array('idnumber' => $courseidnumber));
+            $role = $DB->get_record('role', array('shortname' => $rolename));
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
             if ($course && $role) {
-                role_assign($role->id, $user->id, 0, $context->id, 0, 0, 0, 'database');
+                $enrol = enrol_get_plugin('database');
+                $instance = $DB->get_record('enrol', array('courseid' => $course->id, 'enrol' => 'database'), '*', IGNORE_MULTIPLE);
+                if (!$instance) {
+                    $enrolid = $enrol->add_instance($course);
+                    $instance = $DB->get_record('enrol', array('id' => $enrolid));
+                }
+                    
             }
             $enroldb->Close();
         }
 		else {
 			$enroldb = enroldb_connect();
-            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_db_remoterolefield` , `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '" . $username . "', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
+            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield` , `$CFG->enrol_remoterolefield` , `coursegroup_id` , `program_idyear` , `request_id`) VALUES ('$courseidnumber', '" . $username . "', '$rolename', $coursegroup_id, $program_idyear, $request_id);";
             $result = $enroldb->Execute($insert);
 
             if (!$result) {
@@ -483,7 +495,7 @@ function cegep_delete_course_enrolments($course) {
     
     $enroldb = enroldb_connect();
 
-    $delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$course->idnumber';";
+    $delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$course->idnumber';";
 
     $result = $enroldb->Execute($delete);
     
@@ -521,7 +533,7 @@ function enroldb_connect() {
 function cegep_dbconnect($type, $host, $name, $user, $pass) {
 
     // Try to connect to the external database (forcing new connection)
-    $db = &ADONewConnection($type);
+    $db = ADONewConnection($type);
     if ($db->Connect($host, $user, $pass, $name, true)) {
         $db->SetFetchMode(ADODB_FETCH_ASSOC); ///Set Assoc mode always after DB connection
         return $db;
@@ -669,7 +681,7 @@ function cegep_local_get_coursegroups($course_idnumber, $teacher_idnumber = '') 
 function cegep_local_get_enrolled_coursegroups($course_idnumber) {
     global $CFG, $enroldb, $sisdb;
 
-    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS numberofstudents FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield`='". $course_idnumber . "' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`;";
+    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS numberofstudents FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield`='". $course_idnumber . "' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`;";
 
     $coursegroups_rs = $enroldb->Execute($select);
 
@@ -714,7 +726,7 @@ function cegep_local_get_coursegroup_id($coursecode, $coursegroup, $term) {
  * and term for the coursegroup/section to enrol.
  */
 function cegep_local_enrol_coursegroup() {
-    global $CFG, $COURSE, $enroldb, $sisdb;
+    global $CFG, $COURSE, $DB, $enroldb, $sisdb;
 
     $args = func_get_args();    
 
@@ -745,13 +757,13 @@ function cegep_local_enrol_coursegroup() {
     }
 
     $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-    $student_role = get_record('role','shortname',$CFG->block_cegep_studentrole);
+    $student_role = $DB->get_record('role', array('shortname' => $CFG->block_cegep_studentrole));
 
     // Autogroups
     if ($CFG->block_cegep_autogroups && !empty($coursegroup)) {
         // Check if a group already exists for this course
         $groupname = get_string('coursegroup','block_cegep') . " $coursegroup";
-        $group = get_record("groups", "courseid", $COURSE->id, "name", $groupname);
+        $group = $DB->get_record("groups", array("courseid" => $COURSE->id, "name" => $groupname));
 
         if ($group) {
             $groupid = $group->id;
@@ -768,7 +780,7 @@ function cegep_local_enrol_coursegroup() {
             $groupdata->submitbutton = "Save changes";
             $groupdata->timecreated = time();
             $groupdata->timemodified = $groupdata->timecreated;
-            if (!$groupid = insert_record('groups', $groupdata)) {
+            if (!$groupid = $DB->insert_record('groups', $groupdata)) {
                 return FALSE;
             }
         }
@@ -784,7 +796,7 @@ function cegep_local_enrol_coursegroup() {
             array_push($students_enrolled, $student['username']);
         }
         // Add group membership
-        if ($student_user = get_record('user', 'username', $student['username'])) {
+        if ($student_user = $DB->get_record('user', array('username' => $student['username']))) {
             if ($CFG->block_cegep_autogroups && !empty($groupid)) {
                 groups_add_member($groupid, $student_user->id);
             }

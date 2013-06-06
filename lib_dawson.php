@@ -339,7 +339,7 @@ function cegep_dawson_courses_get_sections($courseidnumber, $courseid = 0, &$has
   }
 
   $enroldb = enroldb_connect();
-  $select = "SELECT DISTINCT `coursegroup_id` FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$courseidnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL ORDER BY `coursegroup_id`";
+  $select = "SELECT DISTINCT `coursegroup_id` FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$courseidnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL ORDER BY `coursegroup_id`";
 
   $coursegroups_rs = $enroldb->Execute($select);
 
@@ -748,7 +748,7 @@ function cegep_dawson_get_enrolled_sections() {
 
     $coursecode = substr($course, 0, 8);
 
-    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` like '". $coursecode ."_%' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`";
+    $select = "SELECT DISTINCT `coursegroup_id`, COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` like '". $coursecode ."_%' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL GROUP BY `coursegroup_id` ORDER BY `coursegroup_id`";
 
     $coursegroups_rs = $enroldb->Execute($select);
 

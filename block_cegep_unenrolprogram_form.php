@@ -42,7 +42,7 @@ class cegep_unenrolprogram_form extends moodleform {
     private function get_enrolled_programs() {
         global $CFG, $COURSE, $enroldb, $sisdb;
         
-        $select = "SELECT DISTINCT `program_idyear`, COUNT(`program_idyear`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_db_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IS NOT NULL GROUP BY `program_idyear` ORDER BY `program_idyear`";
+        $select = "SELECT DISTINCT `program_idyear`, COUNT(`program_idyear`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IS NOT NULL GROUP BY `program_idyear` ORDER BY `program_idyear`";
 
         $programs_rs = $enroldb->Execute($select);
 
@@ -75,7 +75,7 @@ class cegep_unenrolprogram_form extends moodleform {
     private function validate_program_enrolled($program_idyear) {
         global $CFG, $COURSE, $enroldb;
 
-        $select = "SELECT COUNT(`program_idyear`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `program_idyear` = '$program_idyear' LIMIT 1";
+        $select = "SELECT COUNT(`program_idyear`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `program_idyear` = '$program_idyear' LIMIT 1";
 
         $result = $enroldb->Execute($select);
         

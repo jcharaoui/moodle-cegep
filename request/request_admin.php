@@ -7,19 +7,11 @@ require_once('request_form.php');
 
 require_login();
 
-// Check if capability exists, create it if not
-/*if (!get_record('capabilities', 'name', 'moodle/site:ddcmanage')) {
- update_capabilities('ddc');
- }
- require_capability('moodle/site:ddcmanage', get_context_instance(CONTEXT_SYSTEM));
- */
-
-global $CFG, $USER;
+global $CFG, $DB, $USER;
 
 $authldap = new auth_plugin_ldap;
-$context = get_context_instance(CONTEXT_SYSTEM);
 
-if (!has_capability('moodle/site:doanything', $context) && !$authldap->ldap_isgroupmember($USER->username, 'OU=IT,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=Dev_pedagogique,OU=Admin,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca')) {
+if (!is_siteadmin($USER) && !$authldap->ldap_isgroupmember($USER->username, 'OU=IT,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=Dev_pedagogique,OU=Admin,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca')) {
     print_error(get_string('errormustbeadmin','block_cegep'));
 }
 
@@ -29,9 +21,7 @@ $id      = optional_param('id', null, PARAM_INT);
 $state   = optional_param('state', null, PARAM_ALPHA);
 
 $requestform = new cegep_request_form();
-$requestform->_form->insertElementBefore($requestform->_form->createElement('text', 'username', get_string('username'), 'maxlength="16"'), 'request1');
-$requestform->_form->setType('username', PARAM_TEXT);
-        
+
 $strtitle = get_string('coursespending');
 $strheading = get_string(((!empty($reject)) ? 'coursereject' : 'coursespending'));
 print_header($strtitle,$strheading,build_navigation(array(array('name'=>$strheading,'link'=>'','type'=>'misc'))));
@@ -43,8 +33,8 @@ if ($requestform->is_cancelled()){
 } elseif ($requestform->is_submitted()) {
 
     if (!$requestform->is_validated()) {
-        $request = get_record('cegep_request', 'id', $requestform->get_submitted_data()->id);
-        $user = get_record('user','username',$request->username);
+        $request = $DB->get_record('cegep_request', array('id' => $requestform->get_submitted_data()->id));
+        $user = $DB->get_record('user', array('username' => $request->username));
         print("<fieldset style='width:80%;margin-left:auto;margin-right:auto;margin-top:16px;padding:12px;'><legend><strong>Modification de la demande de cours de : ".fullname($user)."</strong></legend>");
         $requestform->display();
         print("</fieldset><br /><br />");
@@ -65,7 +55,7 @@ if ($requestform->is_cancelled()){
         $upddata->coursecodes = serialize($courses);
         $upddata->comments = $data->comments;
 
-        if (update_record('cegep_request', $upddata)) {
+        if ($DB->update_record('cegep_request', $upddata)) {
             notify(get_string('courserequest_modsuccess','block_cegep').'<br />','notifysuccess');
             print_continue($CFG->wwwroot.'/blocks/cegep/request/request_admin.php');
         } else {
@@ -76,7 +66,7 @@ if ($requestform->is_cancelled()){
 
 } elseif (!empty($state)) {
 
-    if ($request = get_record('cegep_request', 'id', $id) AND in_array($state, unserialize(REQUEST_STATES))) {
+    if ($request = $DB->get_record('cegep_request', array('id' => $id)) AND in_array($state, unserialize(REQUEST_STATES))) {
 
         switch ($state) {
 
@@ -87,7 +77,7 @@ if ($requestform->is_cancelled()){
                     ($c['meta'] == 1) ? ($meta = 1) : ($meta = 0);
                     for ($i = 1; $i <= $c['num']; $i++) {
                         if ($courseid = cegep_local_create_course($coursecode, $meta)) {
-                            $courseidnumber = get_record('course','id',$courseid)->idnumber;
+                            $courseidnumber = $DB->get_record('course', array('id' => $courseid))->idnumber;
                             if (!cegep_local_enrol_user($courseidnumber, $request->username, 'editingteacher', NULL, NULL, $request->id)) {
                                 print_error("Une erreur s'est produite lors de l'inscription au cours!");
                                 break;
@@ -99,7 +89,7 @@ if ($requestform->is_cancelled()){
                     }
                 }
                 $request->state = $state;
-                if (update_record('cegep_request', $request)) {
+                if ($DB->update_record('cegep_request', $request)) {
                     notify(get_string('courserequest_createsuccess','block_cegep').'<br />','notifysuccess');
                     print_continue($CFG->wwwroot.'/blocks/cegep/request/request_admin.php');
                 } else {
@@ -114,7 +104,7 @@ if ($requestform->is_cancelled()){
                 break;
 
                     case 'modify' :
-                        $user = get_record('user','username',$request->username);
+                        $user = $DB->get_record('user', array('username' => $request->username));
                         if (is_object($user)) { $username = fullname($user); }
                         else { $username = $request->username; }
                         $courses = unserialize($request->coursecodes);
@@ -134,7 +124,7 @@ if ($requestform->is_cancelled()){
                         break;
 
                     case 'delete' :
-                        if (delete_records('cegep_request', 'id', $request->id)) {
+                        if ($DB->delete_records('cegep_request', array('id' => $request->id))) {
                             notify(get_string('courserequest_delsuccess','block_cegep').'<br />','notifysuccess');
                             print_continue($CFG->wwwroot.'/blocks/cegep/request/request_admin.php');
                         } else {
@@ -145,7 +135,7 @@ if ($requestform->is_cancelled()){
 
                     case 'denied'  :
                         $request->etat = $state;
-                        if (update_record('cegep_request', $request)) {
+                        if ($DB->update_record('cegep_request', $request)) {
                             notify(get_string('courserequest_modsuccess','block_cegep').'<br />','notifysuccess');
                             print_continue($CFG->wwwroot.'/blocks/cegep/request/request_admin.php');
                         } else {
@@ -162,7 +152,7 @@ if ($requestform->is_cancelled()){
                     case 'waiting' :
                     case 'new' :
                         $request->state = $state;
-                        if (update_record('cegep_request', $request)) {
+                        if ($DB->update_record('cegep_request', $request)) {
                             notify(get_string('courserequest_modsuccess','block_cegep').'<br />','notifysuccess');
                             print_continue($CFG->wwwroot.'/blocks/cegep/request/request_admin.php');
                         } else {
@@ -184,9 +174,9 @@ if ($requestform->is_cancelled()){
 
     function cegep_requestadmin_display() {
 
-        global $CFG;
+        global $CFG, $DB;
 
-        if ($requests = get_records_select('cegep_request', "`state` = 'new' OR `state` = 'waiting'", 'created DESC')) {
+        if ($requests = $DB->get_records_select('cegep_request', "`state` = 'new' OR `state` = 'waiting'", array('created DESC'))) {
 
             $table = new stdClass;
             $table->width = '100%';
@@ -201,7 +191,7 @@ if ($requestform->is_cancelled()){
 
             foreach ($requests as $request) {
 
-                $user = get_record('user','username',$request->username);
+                $user = $DB->get_record('user', array('username' => $request->username));
                 $strcourse = '';
                 foreach (unserialize($request->coursecodes) as $course) {
                     ($course['meta']) ? ($meta = 'm') : ($meta = '');

@@ -7,7 +7,14 @@ class cegep_request_form extends moodleform {
     const LIGNES = 8;
 
     function definition() {
+        global $USER;
+
         $mform =& $this->_form;
+
+        if (is_siteadmin($USER)) {
+            $mform->addElement('text', 'username', get_string('username'), null, 'maxlength="16"');
+            $mform->setType('username', PARAM_TEXT);
+        }
 
         for ($i = 1; $i <= self::LIGNES; $i++) {
             ${"request$i"} = array();
@@ -39,7 +46,7 @@ class cegep_request_form extends moodleform {
     }
 
     function validation($data, $files) {
-        global $USER;
+        global $DB, $USER;
         $errors = parent::validation($data, $files);
         
         for ($i = 1; $i <= self::LIGNES; $i++) {
@@ -56,7 +63,7 @@ class cegep_request_form extends moodleform {
                 $errors['request'.$i] = get_string('courserequest_exists','block_cegep');
             }
             $num = $data["num$i"];
-            $recordcount = count_records_select('cegep_request', "`username` = '$USER->username' AND `coursecodes` LIKE '%\"coursecode\";s:6:\"$coursecode\";%' AND (`state` = 'new' OR `state` = 'waiting')");
+            $recordcount = $DB->count_records_select('cegep_request', "`username` = '$USER->username' AND `coursecodes` LIKE '%\"coursecode\";s:6:\"$coursecode\";%' AND (`state` = 'new' OR `state` = 'waiting')");
             if ($recordcount > 0 AND empty($data['id'])) {
                 $errors['request'.$i] = get_string('courserequest_exists','block_cegep');
             }

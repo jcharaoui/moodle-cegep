@@ -1,6 +1,8 @@
 <?php 
 
-$roles=get_records('role');
+global $DB;
+
+$roles = $DB->get_records('role');
 $options = array();
 foreach($roles as $role){
     $options[$role->shortname]=$role->name;

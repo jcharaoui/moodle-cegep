@@ -6,13 +6,13 @@ require_once($CFG->dirroot . '/blocks/cegep/lib.php');
 class block_cegep extends block_list {
     function init() {
         $this->title = get_string('admincegep', 'block_cegep');
-        $this->version = 20100527;
+        $this->version = 20130605;
     }
     
     function has_config() {return true;}
 
     function get_content() {
-        global $USER, $COURSE;
+        global $DB, $COURSE;
 
         if ($this->content !== NULL) {
             return $this->content;
@@ -23,7 +23,7 @@ class block_cegep extends block_list {
         $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
 
         // Show MyMoodle block
-        if (strpos($_SERVER['PHP_SELF'], '/my') !== false) {
+        if (mb_strpos($_SERVER['PHP_SELF'], '/my') !== false) {
             $this->content->items = cegep_local_get_create_course_buttons();
             $this->content->icons = null; // don't show any bullet
         }

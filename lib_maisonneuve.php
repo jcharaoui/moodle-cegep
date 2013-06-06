@@ -40,7 +40,7 @@ return <<< EOD
     SET @AnSession_IN = $term;
     SELECT
         g.AnSession CourseTerm,
-        e.Numero TeacherNumber,
+        e.Courriel TeacherNumber,
         c.Numero CourseNumber, 
         g.Numero CourseGroup,
         c.TitreMoyen AS CourseTitle
@@ -83,6 +83,11 @@ function cegep_maisonneuve_sisdbsource_decode($field, $data) {
         // Remove hyphens
         return str_replace('.', '', $data);
         break;
+
+    case 'teachernumber':
+        // Email : use only user part
+        $parts = explode('@', $data);
+        return $parts[0];
 
     default:
         // Do nothing

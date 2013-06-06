@@ -44,12 +44,12 @@ class cegep_enrol_admin_form extends moodleform {
     }
 
     function validation($data, $files) {
-        global $COURSE;
+        global $COURSE, $USER;
 
         $errors = parent::validation($data, $files);
 
         $term = "$data[year]$data[semester]";
-        if (empty($coursecode) && !has_capability('moodle/site:doanything', $context)) {
+        if (empty($data['coursecode']) && !is_siteadmin($USER)) {
             $cc = explode('_', $COURSE->idnumber);
             $coursecode = $cc[0];
         } 
@@ -86,10 +86,9 @@ class cegep_enrol_admin_form extends moodleform {
     }
 
     private function validate_coursegroup_exists($coursecode, $coursegroup, $term) {
-        global $CFG, $COURSE, $sisdb;
+        global $CFG, $COURSE, $USER, $sisdb;
 
-        $context = get_context_instance(CONTEXT_SYSTEM);
-        if (empty($coursecode) || !has_capability('moodle/site:doanything', $context)) {
+        if (empty($coursecode) || !is_siteadmin($USER)) {
             $cc = explode('_', $COURSE->idnumber);
             $coursecode = $cc[0];
         }
@@ -117,7 +116,7 @@ class cegep_enrol_admin_form extends moodleform {
 			$coursecode = $COURSE->idnumber;
 		}
 
-        $select = "SELECT COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_dbtable` WHERE `$CFG->enrol_remotecoursefield` = '$coursecode' AND `coursegroup_id` = '$coursegroup_id' LIMIT 1";
+        $select = "SELECT COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$coursecode' AND `coursegroup_id` = '$coursegroup_id' LIMIT 1";
 
         $result = $enroldb->Execute($select);
         

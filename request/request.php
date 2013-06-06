@@ -4,28 +4,17 @@ require_once('../../../config.php');
 require_once('../../../auth/ldap/auth.php');
 require_once('request_form.php');
 
+global $DB, $USER;
+
 require_login();
 
-// Check if capability exists, create it if not
-/*if (!get_record('capabilities', 'name', 'moodle/site:ddcrequest')) {
- update_capabilities('ddc');
- }
-if (!has_capability('moodle/site:ddcrequest', get_context_instance(CONTEXT_SYSTEM))) {
-*/
-
 $authldap = new auth_plugin_ldap;
-$context = get_context_instance(CONTEXT_SYSTEM);
 
-if (!has_capability('moodle/site:doanything', $context) && !$authldap->ldap_isgroupmember($USER->username, 'CN=g_profs,OU=Groupes,OU=Pedagogie,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=IT,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=Dev_pedagogique,OU=Admin,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca')) {
+if (!is_siteadmin($USER) && !$authldap->ldap_isgroupmember($USER->username, 'CN=g_profs,OU=Groupes,OU=Pedagogie,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=IT,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca;OU=Users,OU=Dev_pedagogique,OU=Admin,OU=cmaisonneuve,DC=cmaisonneuve,DC=qc,DC=ca')) {
      print_error(get_string('errormustbeteacher','block_cegep'));
 }
 
 $requestform = new cegep_request_form();
-
-if (has_capability('moodle/site:doanything', $context)) {
-    $requestform->_form->insertElementBefore($requestform->_form->createElement('text', 'username', get_string('username'), 'maxlength="16"'), 'request1');
-    $requestform->_form->setType('username', PARAM_TEXT);
-}
 
 $strtitle = get_string('courserequest','block_cegep');
 $navlinks = array();
@@ -42,8 +31,7 @@ if ($requestform->is_cancelled()){
 
     $insdata = new stdClass();
     
-    $context = get_context_instance(CONTEXT_SYSTEM);
-    if (has_capability('moodle/site:doanything', $context) && !empty($data->username)) {
+    if (is_siteadmin($USER) && !empty($data->username)) {
         $insdata->username = $data->username;
     } else {
         $insdata->username = $USER->username;
@@ -59,7 +47,7 @@ if ($requestform->is_cancelled()){
     }
     $insdata->coursecodes = serialize($cours);
 
-    if (insert_record('cegep_request', $insdata)) {
+    if ($DB->insert_record('cegep_request', $insdata)) {
         notify(get_string('courserequest_success','block_cegep'),'notifysuccess');
         print_continue($CFG->wwwroot);
     } else {

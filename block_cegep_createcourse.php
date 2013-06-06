@@ -3,20 +3,19 @@
 require_once('../../config.php');
 require('lib.php');
 
-global $CFG, $USER;
+global $CFG, $DB, $USER;
 
-$coursecode = optional_param('coursecode', PARAM_ALPHANUM);
-$term = optional_param('term', PARAM_INT);
-$redirect = optional_param('redirect', PARAM_URL);
+$coursecode = optional_param('coursecode', null, PARAM_ALPHANUM);
+$term = optional_param('term', null, PARAM_INT);
+$redirect = optional_param('redirect', null, PARAM_URL);
 
 require_login();
 
 $access = FALSE;
 $is_admin = FALSE;
-$context = get_context_instance(CONTEXT_SYSTEM);
 
 // Admins and teachers can create courses
-if (has_capability('moodle/site:doanything', $context)) {
+if (is_siteadmin($USER))) {
     $access = TRUE;
     $is_admin = TRUE;
 }
@@ -34,7 +33,7 @@ else {
 if ($access) {
     if ($newcourseid = cegep_local_create_course($coursecode, $term)) {
         // Enrol current user (teacher) into the new course (except if admin)
-        $course = get_record('course', 'id', $newcourseid);
+        $course = $DB->get_record('course', 'id', $newcourseid);
         if (!$is_admin) {
             cegep_local_enrol_user($course->idnumber, $USER->username, 'editingteacher');
         }
