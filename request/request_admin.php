@@ -134,7 +134,7 @@ if ($requestform->is_cancelled()){
                         break;
 
                     case 'denied'  :
-                        $request->etat = $state;
+                        $request->state = $state;
                         if ($DB->update_record('cegep_request', $request)) {
                             notify(get_string('courserequest_modsuccess','block_cegep').'<br />','notifysuccess');
                             print_continue($CFG->wwwroot.'/blocks/cegep/request/request_admin.php');
