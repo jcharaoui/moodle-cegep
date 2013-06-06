@@ -227,6 +227,7 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
         $result = $sisdb->execute($select_course);
         if ($result->RecordCount() < 1) {
             $sisdb->close();
+            print_error("Le code de cours demandé n'existe pas!");
             return false;
         }
         
