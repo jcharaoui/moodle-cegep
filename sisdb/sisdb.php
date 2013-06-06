@@ -409,6 +409,11 @@ function cegep_sisdb_sync($start_term) {
         $coursegroup_id = '';
         $course_unit = 0;
 
+        if (empty($teacher)) {
+            $sisdbsource_rs->MoveNext();
+            continue;
+        }
+
         foreach ($coursegroups as $cg) {
           if ($cg['coursecode'] == $course && $cg['group'] == $coursegroup && $cg['term'] == $term) {
             $coursegroup_id = $cg['id'];
