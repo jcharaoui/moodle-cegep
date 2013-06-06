@@ -175,12 +175,12 @@ function cegep_sisdb_sync($start_term) {
         // Update student data
         if (!in_array($student, $students)) {
 
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`student` WHERE `username` = '$student'";
-            $result = $sisdb->Execute($select);
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`student` WHERE `username` = ?";
+            $result = $sisdb->Execute($select, array($student));
 
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `$CFG->sisdb_name`.`student` (`username` , `lastname`, `firstname`, `program_id`, `program_year`) VALUES ('$student', \"$student_lastname\", \"$student_firstname\", \"$program\", '$programyear'); ";
-                $result = $sisdb->Execute($insert);
+                $insert = "INSERT INTO `$CFG->sisdb_name`.`student` (`username` , `lastname`, `firstname`, `program_id`, `program_year`) VALUES (?, ?, ?, ?, ?); ";
+                $result = $sisdb->Execute($insert, array($student, $student_lastname, $student_firstname, $program, $programyear));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
                     if (!$in_cron) echo "Sync error : student process";
@@ -188,8 +188,8 @@ function cegep_sisdb_sync($start_term) {
                 } else { $count['students_added']++; }
             }
             elseif ($result && ($result->fields['lastname'] != $student_lastname || $result->fields['firstname'] != $student_firstname || $result->fields['program_id'] != $program || $result->fields['program_year'] != $programyear)) {
-                $update = "UPDATE `$CFG->sisdb_name`.`student` SET `lastname` = \"$student_lastname\", `firstname` = \"$student_firstname\", `program_id` = \"$program\", `program_year` = \"$programyear\" WHERE `username` = '$student'; ";
-                $result = $sisdb->Execute($update);
+                $update = "UPDATE `$CFG->sisdb_name`.`student` SET `lastname` = ?, `firstname` = ?, `program_id` = ?, `program_year` = ? WHERE `username` = ?; ";
+                $result = $sisdb->Execute($update, array($student_lastname, $student_firstname, $program, $programyear, $student));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $update);
                     if (!$in_cron) echo "Sync error : student process";
@@ -217,8 +217,8 @@ function cegep_sisdb_sync($start_term) {
             $progadd_rs = $enroldb->Execute($select);
             while ($progadd_rs && !$progadd_rs->EOF && $progadd_rs->fields['c'] == 0) {
                 $course = $progadd_rs->fields[$CFG->enrol_remotecoursefield];
-                $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_remoterolefield`, `program_idyear`) VALUES ('$course', '$student', '$student_role->shortname', '$program_idyear');";
-                if (!$result = $enroldb->Execute($insert)) {
+                $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_remoterolefield`, `program_idyear`) VALUES (?, ?, ?, ?);";
+                if (!$result = $enroldb->Execute($insert, array($course, $student, $student_role->shortname, $program_idyear))) {
                     trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert);
                     if (!$in_cron) echo "Erreur : inscription process";
                     break;
@@ -232,11 +232,11 @@ function cegep_sisdb_sync($start_term) {
         // Update programs data
         if (!in_array($program, $programs)) {
 
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`program` WHERE `id` = '$program'";
-            $result = $sisdb->Execute($select);
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`program` WHERE `id` = ?";
+            $result = $sisdb->Execute($select, array($program));
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `$CFG->sisdb_name`.`program` (`id` , `title`) VALUES ('$program', \"$programtitle\"); ";
-                $result = $sisdb->Execute($insert);
+                $insert = "INSERT INTO `$CFG->sisdb_name`.`program` (`id` , `title`) VALUES (?, ?); ";
+                $result = $sisdb->Execute($insert, array($program, $programtitle));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
                     if (!$in_cron) echo "Sync error : program process";
@@ -244,8 +244,8 @@ function cegep_sisdb_sync($start_term) {
                 } else { $count['programs_added']++; }
             }
             elseif ($result && ($result->fields['title'] != $programtitle) ) {
-                $update = "UPDATE `$CFG->sisdb_name`.`program` SET `title` = \"$programtitle\" WHERE `id` = '$program'; ";
-                $result = $sisdb->Execute($update);
+                $update = "UPDATE `$CFG->sisdb_name`.`program` SET `title` = ? WHERE `id` = ?; ";
+                $result = $sisdb->Execute($update, array($programtitle, $program));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $update);
                     if (!$in_cron) echo "Sync error : program process";
@@ -259,12 +259,11 @@ function cegep_sisdb_sync($start_term) {
         // Update courses data
         if (!in_array($course, $courses)) {
 
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = '$course'";
-            $result = $sisdb->Execute($select);
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = ?";
+            $result = $sisdb->Execute($select, array($course));
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `$CFG->sisdb_name`.`course` (`coursecode` , `title`, `unit`) VALUES ('$course', \"$course_title\", '$course_unit'); ";
-                
-                $result = $sisdb->Execute($insert);
+                $insert = "INSERT INTO `$CFG->sisdb_name`.`course` (`coursecode` , `title`, `unit`) VALUES (?, ?, ?); ";
+                $result = $sisdb->Execute($insert, array($course, $course_title, $course_unit));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
                     if (!$in_cron) echo "Sync error : course process";
@@ -272,8 +271,8 @@ function cegep_sisdb_sync($start_term) {
                 } else { $count['courses_added']++; }
             }
             elseif ($result && ($result->fields['title'] != $course_title || $result->fields['unit'] != $course_unit)) {
-                $update = "UPDATE `$CFG->sisdb_name`.`course` SET `title` = \"$course_title\", `unit` = \"$course_unit\" WHERE `coursecode` = '$course'; ";
-                $result = $sisdb->Execute($update);
+                $update = "UPDATE `$CFG->sisdb_name`.`course` SET `title` = ?, `unit` = ? WHERE `coursecode` = ?;";
+                $result = $sisdb->Execute($update, array($course_title, $course_unit, $course));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $update);
                     if (!$in_cron) echo "Sync error : student process";
@@ -293,11 +292,11 @@ function cegep_sisdb_sync($start_term) {
         }
 
         if (empty($coursegroup_id)) {
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$course' AND `group` = '$coursegroup' AND `term` = $term";
-            $result = $sisdb->Execute($select);
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = ? AND `group` = ? AND `term` = ?";
+            $result = $sisdb->Execute($select, array($course, $coursegroup, $term));
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `term`) VALUES ('$course', '$coursegroup', $term); ";
-                $result = $sisdb->Execute($insert);
+                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `term`) VALUES (?, ?, ?); ";
+                $result = $sisdb->Execute($insert, array($course, $coursegroup, $term));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
                     print($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
@@ -419,11 +418,11 @@ function cegep_sisdb_sync($start_term) {
 
         // Add coursegroup if not found (no students enrolled yet)
         if (empty($coursegroup_id)) {
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$course' AND `group` = '$coursegroup' AND `term` = $term";
-            $result = $sisdb->Execute($select);
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = ? AND `group` = ? AND `term` = ?";
+            $result = $sisdb->Execute($select, array($course, $coursegroup, $term));
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `term`) VALUES ('$course', '$coursegroup', $term); ";
-                $result = $sisdb->Execute($insert);
+                $insert = "INSERT INTO `coursegroup` (`coursecode`, `group`, `term`) VALUES (?, ?, ?);";
+                $result = $sisdb->Execute($insert, array($course, $coursegroup, $term));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
                     print($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
@@ -436,12 +435,11 @@ function cegep_sisdb_sync($start_term) {
         // Update courses data
         if (!in_array($course, $courses)) {
 
-            $select = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = '$course'";
-            $result = $sisdb->Execute($select);
+            $select = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = ?";
+            $result = $sisdb->Execute($select, array($course));
             if ($result && $result->RecordCount() == 0) {
-                $insert = "INSERT INTO `$CFG->sisdb_name`.`course` (`coursecode` , `title`, `unit`) VALUES ('$course', \"$course_title\", '$course_unit'); ";
-                
-                $result = $sisdb->Execute($insert);
+                $insert = "INSERT INTO `$CFG->sisdb_name`.`course` (`coursecode` , `title`, `unit`) VALUES (?, ?, ?); ";
+                $result = $sisdb->Execute($insert, array($course, $course_title, $course_unit));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $insert);
                     if (!$in_cron) echo "Sync error : course process";
@@ -449,11 +447,11 @@ function cegep_sisdb_sync($start_term) {
                 } else { $count['courses_added']++; }
             }
             elseif ($result && $result->fields['title'] != $course_title) {
-                $update = "UPDATE `$CFG->sisdb_name`.`course` SET `title` = \"$course_title\" WHERE `coursecode` = '$course'; ";
-                $result = $sisdb->Execute($update);
+                $update = "UPDATE `$CFG->sisdb_name`.`course` SET `title` = ? WHERE `coursecode` = ?; ";
+                $result = $sisdb->Execute($update, array($course_title, $course));
                 if (!$result) {
                     trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $update);
-                    if (!$in_cron) echo "Sync error : student process";
+                    if (!$in_cron) echo "Sync error : course process";
                     break;
                 } else { $count['courses_updated']++; }
             }
