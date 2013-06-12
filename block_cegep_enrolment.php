@@ -225,9 +225,9 @@ function cegep_unenrol() {
         // If user exists, unassign role right away
         if ($usernames) {
             $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-            $student_role = $DB->get_record('role', array('shortname' => $CFG->block_cegep_studentrole));
+            $student_role = $DB->get_record('role', array($CFG->enrol_localrolefield => $CFG->block_cegep_studentrole));
             foreach ($usernames as $username) {
-                if ($student_user = $DB->get_record('user', array('username' => $username->username))) {
+                if ($student_user = $DB->get_record('user', array($CFG->enrol_localuserfield => $username->username))) {
                     $enrol = enrol_get_plugin('database');
                     if ($instance = $DB->get_record('enrol', array('courseid'=>$COURSE->id, 'enrol'=>'database'), '*', IGNORE_MULTIPLE)) {
                         $enrol->unenrol_user($instance, $student_user->id);
@@ -345,9 +345,9 @@ function cegep_unenrolprogram() {
         // If user exists, unassign role right away
         if ($usernames) {
             $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-            $student_role = $DB->get_record('role', array('shortname' => $CFG->block_cegep_studentrole));
+            $student_role = $DB->get_record('role', array($CFG->enrol_localrolefield => $CFG->block_cegep_studentrole));
             foreach ($usernames as $username) {
-                if ($student_user = $DB->get_record('user', array('username' => $username->username))) {
+                if ($student_user = $DB->get_record('user', array($CFG->enrol_localuserfield => $username->username))) {
                     role_unassign($student_role->id, $student_user->id, $context->id, 'enrol_database');
                 }
             }
@@ -519,7 +519,7 @@ function cegep_studentlist_enrolmenttable($select) {
         $student_rs = $sisdb->Execute($select);
         if ($student_rs && $student_rs->RecordCount() == 1) {
             $student_sisdb = $student_rs->fields;
-            $student_moodle = $DB->get_record('user', array('username' => $student_sisdb['username']));
+            $student_moodle = $DB->get_record('user', array($CFG->enrol_localuserfield => $student_sisdb['username']));
             if ($student_moodle) {
 
                 $select = "SELECT `title` FROM `$CFG->sisdb_name`.`program` WHERE `id` = '" . $student_sisdb['program_id'] . "'";

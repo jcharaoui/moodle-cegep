@@ -353,7 +353,7 @@ function cegep_sisdb_sync($start_term) {
             // Do internal enrolments DB
             $course = $DB->get_record('course', array('idnumber' =>  $coursegroup_enrolment->courseidnumber));
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
-            if ($student_user = $DB->get_record('user', array('username' => $enrolment[1]))) {
+            if ($student_user = $DB->get_record('user', array($CFG->enrol_localuserfield => $enrolment[1]))) {
                 role_assign($student_role->id, $student_user->id, $context->id, 'enrol_database');
             }
             $count['student_enrolments_added']++;
@@ -381,7 +381,7 @@ function cegep_sisdb_sync($start_term) {
             // Do internal enrolments DB
             $course = $DB->get_record('course', array('idnumber' => $coursegroup_enrolment->courseidnumber));
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
-            if ($student_user = $DB->get_record('user', array('username' =>  $enrolment[1]))) {
+            if ($student_user = $DB->get_record('user', array($CFG->enrol_localuserfield => $enrolment[1]))) {
                 role_unassign($student_role->id, $student_user->id, $context->id, 'enrol_database');
             }
         }

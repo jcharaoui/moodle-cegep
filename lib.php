@@ -456,9 +456,9 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
         }
 
 		// If user exists in database, assign its role right away and add to group
-        if ($user = $DB->get_record('user', array('username' => $username))) {
-            $course = $DB->get_record('course', array('idnumber' => $courseidnumber));
-            $role = $DB->get_record('role', array('shortname' => $rolename));
+        if ($user = $DB->get_record('user', array($CFG->enrol_localuserfield => $username))) {
+            $course = $DB->get_record('course', array($CFG->enrol_localcoursefield => $courseidnumber));
+            $role = $DB->get_record('role', array($CFG->enrol_localrolefield => $rolename));
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
             if ($course && $role) {
                 $enrol = enrol_get_plugin('database');
@@ -755,7 +755,7 @@ function cegep_local_enrol_coursegroup() {
     }
 
     $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-    $student_role = $DB->get_record('role', array('shortname' => $CFG->block_cegep_studentrole));
+    $student_role = $DB->get_record('role', array($CFG->enrol_localrolefield => $CFG->block_cegep_studentrole));
 
     // Autogroups
     if ($CFG->block_cegep_autogroups && !empty($coursegroup)) {
@@ -794,7 +794,7 @@ function cegep_local_enrol_coursegroup() {
             array_push($students_enrolled, $student['username']);
         }
         // Add group membership
-        if ($student_user = $DB->get_record('user', array('username' => $student['username']))) {
+        if ($student_user = $DB->get_record('user', array($CFG->enrole_localuserfield => $student['username']))) {
             if ($CFG->block_cegep_autogroups && !empty($groupid)) {
                 groups_add_member($groupid, $student_user->id);
             }
