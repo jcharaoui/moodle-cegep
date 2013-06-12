@@ -703,9 +703,14 @@ function cegep_local_get_enrolled_coursegroups($course_idnumber) {
 function cegep_local_get_coursegroup_id($coursecode, $coursegroup, $term) {
     global $CFG, $sisdb;
 
-    // Fetch record of the coursegroup from SIS
-    $select_coursegroup = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `group` = '" . abs($coursegroup) . "' AND `term` = '$term';";
-    return $sisdb->Execute($select_coursegroup)->fields['id'];
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_get_coursegroup_id')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_get_coursegroup_id', $coursecode, $coursegroup, $term);
+    }
+    else {
+        // Fetch record of the coursegroup from SIS
+        $select_coursegroup = "SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = ? AND `group` = ? AND `term` = ?;";
+        return $sisdb->Execute($select_coursegroup, array($coursecode, $coursegroup, $term))->fields['id'];
+    }
 }
 
 /**

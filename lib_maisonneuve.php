@@ -185,3 +185,14 @@ function cegep_maisonneuve_course_category($category_code) {
 
     return $category;
 }
+
+/**
+ * Get a coursegroup id.
+ */
+function cegep_maisonneuve_get_coursegroup_id($coursecode, $coursegroup, $term) {
+    global $CFG, $sisdb;
+
+    // Fetch record of the coursegroup from SIS
+    $select_coursegroup = "SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = ? AND (`group` = ? OR `group` = ?) AND `term` = ?;";
+    return $sisdb->Execute($select_coursegroup, array($coursecode, $coursegroup, sprintf('%06d', $coursegroup), $term))->fields['id'];
+}
