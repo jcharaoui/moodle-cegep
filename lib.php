@@ -620,6 +620,10 @@ function cegep_local_get_coursegroups($course_idnumber, $teacher_idnumber = '') 
     global $CFG, $sisdb;
 
     $coursecode = substr($course_idnumber, 0, strpos($course_idnumber, '_'));
+    if (empty($coursecode)) {
+        $coursecode = $course_idnumber;
+    }
+
     $term = cegep_local_date_to_datecode();
 
     $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `term` >= $term;";
