@@ -105,7 +105,7 @@ function cegep_enrol_admin() {
     elseif ($data = $enrolform->get_data()) {
    
         // Extract course code info
-        if (empty($data->coursecode) || !is_siteadmin($USER)) { 
+        if (empty($data->coursecode)) { 
             $coursecode = substr($COURSE->idnumber, 0, strripos($COURSE->idnumber, '_'));
         } else {
             $coursecode = $data->coursecode;

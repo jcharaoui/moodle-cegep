@@ -49,7 +49,7 @@ class cegep_enrol_admin_form extends moodleform {
         $errors = parent::validation($data, $files);
 
         $term = "$data[year]$data[semester]";
-        if (empty($data['coursecode']) && !is_siteadmin($USER)) {
+        if (empty($data['coursecode'])) {
             $cc = explode('_', $COURSE->idnumber);
             $coursecode = $cc[0];
         } 
