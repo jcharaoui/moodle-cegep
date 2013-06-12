@@ -12,9 +12,22 @@ class cegep_enrol_form extends moodleform {
         if (!$coursegroups = cegep_local_get_coursegroups($COURSE->idnumber, $USER->idnumber)) {
             notify(get_string('nocoursegroupsavailable','block_cegep'));
         } else {
+            $enrolled_coursegroup_ids = array();
+            $enrolled_coursegroups = cegep_local_get_enrolled_coursegroups($COURSE->idnumber);
+            foreach ($enrolled_coursegroups as $enrolled_coursegroup) {
+                $enrolled_coursegroup_ids[] = $enrolled_coursegroup['id'];
+            }
             foreach ($coursegroups as $coursegroup) {
-                ($coursegroup['numberofstudents'] < 1) ? ($disabled = array( 'disabled' => 'disabled' )) : ($disabled = array());
-                $mform->addElement('checkbox', "coursegroup_$coursegroup[id]", null, "$coursegroup[coursecode] #$coursegroup[group] - " . cegep_local_term_to_string($coursegroup['term']) . " ($coursegroup[numberofstudents] ".get_string('students', 'block_cegep').')', $disabled);
+                $disabled = array();
+                $label = "$coursegroup[coursecode] #$coursegroup[group] - " . cegep_local_term_to_string($coursegroup['term']) . " ($coursegroup[numberofstudents] " . get_string('students', 'block_cegep') . ')';
+                if ($coursegroup['numberofstudents'] < 1) {
+                    $disabled = array('disabled' => 'disabled');
+                }
+                if (in_array($coursegroup['id'], $enrolled_coursegroup_ids)) {
+                    $disabled = array('disabled' => 'disabled');
+                    $label .= ' (' . get_string('alreadyenrolled', 'block_cegep') . ')';
+                }
+                $mform->addElement('checkbox', "coursegroup_$coursegroup[id]", null, $label, $disabled);
             }
             $this->add_action_buttons();
         }

@@ -53,6 +53,7 @@ $string['enrolhelp'] = 'You can choose which section(s) you want to enrol in thi
 $string['enrolcoursegroup'] = 'Enrol this section';
 $string['nocoursegroupsavailable'] = 'No sections are available for enrolment in this course.';
 $string['nocoursegroupselected'] = 'Please select a section to enrol.';
+$string['alreadyenrolled'] = 'already enrolled';
 
 // Unenrol form
 $string['students'] = 'students';

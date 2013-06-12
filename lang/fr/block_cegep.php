@@ -56,6 +56,7 @@ $string['enrolhelp'] = "Choisissez les groupes-cours à inscrire dans ce cours. 
 $string['enrolcoursegroup'] = 'Inscrire un groupe-cours';
 $string['nocoursegroupsavailable'] = "Aucun groupe-cours n'est disponible pour inscription à ce cours.";
 $string['nocoursegroupselected'] = 'Veuillez choisir un groupe à inscrire.';
+$string['alreadyenrolled'] = 'déjà inscrit';
 
 // Unenrol form
 $string['students'] = 'étudiants';
