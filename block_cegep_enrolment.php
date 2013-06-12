@@ -125,7 +125,7 @@ function cegep_enrol_admin() {
         }
         
         // Display nice confirmation with student list and buttons
-        notify(get_string('coursegroupenrolled','block_cegep',array(implode($students_enrolled,'<br />'))),'notifysuccess');
+        notify(get_string('coursegroupenrolled','block_cegep',implode($students_enrolled,'<br />')),'notifysuccess');
         echo "<div class='continuebutton'>";
         print_single_button('block_cegep_enrolment.php', array('a' => 'enrol', 'id' => $COURSE->id), get_string('enrolanother','block_cegep'));
         echo "</div><br />";
@@ -181,7 +181,7 @@ function cegep_enrol() {
         }
 
         // Display nice confirmation with student list and buttons
-        notify(get_string('coursegroupenrolled','block_cegep',array(implode($students_enrolled,'<br />'))),'notifysuccess');
+        notify(get_string('coursegroupenrolled','block_cegep',implode($students_enrolled,'<br />')),'notifysuccess');
         echo "<div class='continuebutton'>";
         print_single_button('block_cegep_enrolment.php', array('a' => 'enrol', 'id' => $COURSE->id), get_string('enrolanother','block_cegep'));
         echo "</div><br />";
@@ -246,7 +246,7 @@ function cegep_unenrol() {
             print_error('errordeletingenrolment','block_cegep');
             break;
         } else {
-            notify(get_string('coursegroupunenrolled','block_cegep',array($enroldb->Affected_Rows())),'notifysuccess');
+            notify(get_string('coursegroupunenrolled','block_cegep',$enroldb->Affected_Rows()),'notifysuccess');
             echo "<div class='continuebutton'>";
             print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
             echo "</div>";
@@ -363,7 +363,7 @@ function cegep_unenrolprogram() {
             print_error('errordeletingenrolment','block_cegep');
             break;
         } else {
-            notify(get_string('programunenrolled','block_cegep',array($enroldb->Affected_Rows())),'notifysuccess');
+            notify(get_string('programunenrolled','block_cegep',$enroldb->Affected_Rows()),'notifysuccess');
             echo "<div class='continuebutton'>";
             print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
             echo "</div>";

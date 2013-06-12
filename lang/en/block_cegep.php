@@ -46,7 +46,7 @@ $string['accessuserprofile'] = 'Access user\'s profile';
 $string['nostudentsenrolled'] = 'There are no students enrolled in this course.';
 
 // Enrol form
-$string['coursegroupenrolled'] = '<strong>Enrolment sucessfully completed.</strong><br /><br />These are the students that were enrolled into this course :<br /><br />$a[0]<br /<br />Have a nice semester!<br /><br />';
+$string['coursegroupenrolled'] = '<strong>Enrolment sucessfully completed.</strong><br /><br />These are the students that were enrolled into this course :<br /><br />{$a}<br /<br />Have a nice semester!<br /><br />';
 $string['enrolanother'] = 'Enrol another coursegroup';
 $string['make_visible'] = 'Make this course available to students';
 $string['enrolhelp'] = 'You can choose which section(s) you want to enrol in this course. Please take note: if you want to have <b>separate courses for each section</b>, you must enrol <b>only one section here</b> and create a course for each section you have.';
@@ -57,7 +57,7 @@ $string['nocoursegroupselected'] = 'Please select a section to enrol.';
 // Unenrol form
 $string['students'] = 'students';
 $string['unenrolbutton'] = 'Unenrol';
-$string['coursegroupunenrolled'] = '<strong>Unenrolment successfully completed.</strong></br /><br />$a[0] students removed from the course.<br /><br />';
+$string['coursegroupunenrolled'] = '<strong>Unenrolment successfully completed.</strong></br /><br />{$a} students removed from the course.<br /><br />';
 
 // Course Creation
 $string['coursecreatesuccess'] = 'The course was created successfully. Click \"Continue\" to go to your new course.';
