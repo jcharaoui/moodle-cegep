@@ -794,7 +794,7 @@ function cegep_local_enrol_coursegroup() {
             array_push($students_enrolled, $student['username']);
         }
         // Add group membership
-        if ($student_user = $DB->get_record('user', array($CFG->enrole_localuserfield => $student['username']))) {
+        if ($student_user = $DB->get_record('user', array($CFG->enrol_localuserfield => $student['username']))) {
             if ($CFG->block_cegep_autogroups && !empty($groupid)) {
                 groups_add_member($groupid, $student_user->id);
             }
