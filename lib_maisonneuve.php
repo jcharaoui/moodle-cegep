@@ -30,7 +30,7 @@ return <<< EOD
         AND uo.IndicateurLocal = 1
         AND es.AnSession >= @AnSession_IN
     ORDER BY
-        e.Numero, c.Numero;
+        e.Numero ASC, es.AnSession DESC, c.Numero ASC;
 EOD;
 }
 
