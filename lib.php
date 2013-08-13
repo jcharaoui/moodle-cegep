@@ -597,10 +597,10 @@ function cegep_local_date_to_datecode($date = null) {
 
             case '06':
             case '07':
-            case '08':
                 $code .= '2';
                 break;
 
+            case '08':
             case '09':
             case '10':
             case '11':
