@@ -11,6 +11,11 @@ class cegep_enrol_admin_form extends moodleform {
         $year = substr($current, 0, 4);
         $semester = substr($current, 4, 1);
 
+        // If course isn't visible, offer the option
+        if (!$COURSE->visible) {
+            $mform->addElement('checkbox', 'makevisible', null, get_string('make_visible','block_cegep'));
+        }
+
         $enrol = array();
         $enrol[] =& $mform->createElement('select', 'semester', null, array('1' => get_string('winter','block_cegep'), '2' => get_string('summer','block_cegep'), '3' => get_string('autumn','block_cegep')));
         $enrol[] =& $mform->createElement('select', 'year', null, array($year-1 => $year-1, $year => $year, $year+1 => $year+1));

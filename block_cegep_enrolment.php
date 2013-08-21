@@ -92,11 +92,6 @@ function cegep_enrol_admin() {
     require('block_cegep_enrol_admin_form.php');
     $enrolform = new cegep_enrol_admin_form('block_cegep_enrolment.php?a=enrol&id='.$COURSE->id.'');
 
-    // If course isn't visible, offer the option
-    if (!$COURSE->visible) {
-        $enrolform->_form->insertElementBefore($enrolform->_form->createElement('checkbox', 'makevisible', null, get_string('make_visible','block_cegep')),'buttonar');
-    }
-
     // Go back to course page if cancelled
     if ($enrolform->is_cancelled()) {
         redirect($CFG->wwwroot.'/course/view.php?id='.$COURSE->id);
