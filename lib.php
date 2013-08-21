@@ -326,7 +326,7 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
         unset($course->id);
 
         // Store new course in database
-        if ($newcourseid = insert_record("course", addslashes_recursive($course))) {        
+        if ($newcourseid = $DB->insert_record("course", $course)) {        
             $course->id = $newcourseid;
             blocks_add_default_course_blocks($course);
             fix_course_sortorder();
