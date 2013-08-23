@@ -5,6 +5,8 @@ require_once($CFG->libdir.'/formslib.php');
 class cegep_enrol_admin_form extends moodleform {
 
     function definition() {
+        global $COURSE;
+    
         $mform =& $this->_form;
 
         $current = cegep_local_current_term();

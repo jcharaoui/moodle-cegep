@@ -83,7 +83,7 @@ switch ($action) {
 
 // Enrol a coursegroup into a Moodle course (admin function)
 function cegep_enrol_admin() {
-    global $CFG, $COURSE, $USER, $enroldb, $sisdb;
+    global $CFG, $COURSE, $DB, $USER, $enroldb, $sisdb;
 
     $currenttab = 'enrol';
     require('block_cegep_tabs.php');
@@ -116,7 +116,7 @@ function cegep_enrol_admin() {
 
         if (!$COURSE->visible && isset($data->makevisible) && $data->makevisible) {
             $COURSE->visible = 1;
-            update_record('course',$COURSE);
+            $DB->update_record('course', $COURSE);
         }
         
         // Display nice confirmation with student list and buttons
