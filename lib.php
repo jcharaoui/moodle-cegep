@@ -472,10 +472,10 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
                     $enrolid = $enrol->add_instance($course);
                     $instance = $DB->get_record('enrol', array('id' => $enrolid));
                 }
-                    
+                $enrol->enrol_user($instance, $user->id, $role->id, 0, 0, ENROL_USER_ACTIVE);
             }
-            $enroldb->Close();
         }
+        $enroldb->Close();
         return true;
     }
 }

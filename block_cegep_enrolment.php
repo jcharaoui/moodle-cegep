@@ -221,10 +221,10 @@ function cegep_unenrol() {
         if ($usernames) {
             $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
             $student_role = $DB->get_record('role', array($CFG->enrol_localrolefield => $CFG->block_cegep_studentrole));
-            foreach ($usernames as $username) {
-                if ($student_user = $DB->get_record('user', array($CFG->enrol_localuserfield => $username->username))) {
-                    $enrol = enrol_get_plugin('database');
-                    if ($instance = $DB->get_record('enrol', array('courseid'=>$COURSE->id, 'enrol'=>'database'), '*', IGNORE_MULTIPLE)) {
+            $enrol = enrol_get_plugin('database');
+            if ($instance = $DB->get_record('enrol', array('courseid' => $COURSE->id, 'enrol' => 'database'), '*', IGNORE_MULTIPLE)) {
+                foreach ($usernames as $username) {
+                    if ($student_user = $DB->get_record('user', array($CFG->enrol_localuserfield => $username[$CFG->enrol_remoteuserfield]))) {
                         $enrol->unenrol_user($instance, $student_user->id);
                     }
                 }
