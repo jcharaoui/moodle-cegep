@@ -315,8 +315,8 @@ function cegep_sisdb_sync($start_term) {
                 echo "Erreur : inscription process";
                 break;
             }
-            $count['student_enrolments_added']++;
         }
+        $count['student_enrolments_added']++;
     }
 
     foreach ($student_enrolments_del as $enrolment) {
