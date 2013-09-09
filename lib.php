@@ -431,8 +431,13 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_create_enrolment', $courseidnumber, $username, $request_id);
     } else {
 
-        if (empty($courseidnumber) or empty($username)) {
-            print_error("Le cours ou l'utilisateur spécifié est invalide!");
+        if (empty($courseidnumber)) {
+            print_error("Le cours n'a pas de numéro d'identification!");
+            return false;
+        }
+
+        if (empty($username)) {
+            print_error("Le nom d'utilisateur à inscrire est vide!");
             return false;
         }
 
