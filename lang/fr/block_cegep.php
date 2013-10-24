@@ -1,5 +1,7 @@
 <?php
 
+$string['pluginname'] = 'Admin CEGEP';
+
 // Block menu (course)
 $string['admincegep'] = 'Admin CEGEP';
 $string['enrolment'] = 'Inscriptions';
@@ -170,4 +172,9 @@ $string['errordeletingenrolment'] = 'Une erreur s\'est produite lors de la suppr
 $string['sisdb_maintenance'] = 'Entretient de la BD SIS';
 $string['sisdb_sync'] = 'Synchroniser';
 $string['sisdb_prune'] = 'Élaguer';
+
+// Capabilities
+$string['cegep:enroladmin_course'] = "Assigner un groupe dans un cours Moodle sans contrainte";
+$string['cegep:enroladmin_program'] = "Assigner un programme à un cours Moodle";
+
 ?>

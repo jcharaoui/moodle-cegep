@@ -23,9 +23,7 @@ print_header("$COURSE->shortname: $strtitle", $COURSE->fullname, $navigation);
 
 // This module only available to teachers and admins
 $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-if (!has_capability('moodle/course:update', $context)) {
-    print_error('mustbeteacher','block_cegep');
-}
+require_capability('moodle/course:update', $context, null, true, 'errormustbeteacher', 'block_cegep');
 
 // Verify if external database enrolment is enabled
 if (!in_array('database',explode(',',$CFG->enrol_plugins_enabled)))
@@ -55,11 +53,16 @@ $num_enrolments = $enroldb->Execute($select)->fields['num'];
 $select = "SELECT COUNT(DISTINCT `program_idyear`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IS NOT NULL LIMIT 1";
 $num_programenrolments = $enroldb->Execute($select)->fields['num'];
 
+// Get system context for global Admin CEGEP permissions
+$syscontext = get_context_instance(CONTEXT_SYSTEM, 1);
 
 // Main switch
 switch ($action) {
     case 'enrol' :
-        (is_siteadmin($USER)) ? (cegep_enrol_admin()) : (cegep_enrol());
+        if (is_siteadmin() || has_capability('block/cegep:enroladmin_course', $syscontext))
+            cegep_enrol_admin();
+        else
+            cegep_enrol();
         break;
    case 'unenrol' : 
         if ($num_enrolments > 0)
@@ -68,9 +71,11 @@ switch ($action) {
             notify(get_string('nocoursegroupsenrolled','block_cegep'));
         break;
      case 'enrolprogram' :
+        require_capability('block/cegep:enroladmin_program', $syscontext);
         cegep_enrolprogram();
         break;
     case 'unenrolprogram' : 
+        require_capability('block/cegep:enroladmin_program', $syscontext);
         if ($num_programenrolments > 0)
             cegep_unenrolprogram();
         else

@@ -16,7 +16,8 @@
             get_string('unenrol','block_cegep'));
     }
 
-    if (is_siteadmin($USER)) {
+    $syscontext = get_context_instance(CONTEXT_SYSTEM, 1);
+    if (is_siteadmin() || has_capability('block/cegep:enroladmin_program', $syscontext)) {
         $row[] = new tabobject('enrolprogram',
             'block_cegep_enrolment.php?a=enrolprogram&id='.$COURSE->id,
             get_string('enrolprogram','block_cegep'));
