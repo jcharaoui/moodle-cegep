@@ -305,16 +305,19 @@ function cegep_sisdb_sync($start_term) {
             echo "Erreur : inscription process";
             break;
         }
+       echo 'new enrolment: ' . $enrolment[1] .' in '. $enrolment[0]. "\n";
         // Add student to courses to which this coursegroup is assigned
         $coursegroup_enrolments_rs = $DB->get_recordset_sql("SELECT DISTINCT `$CFG->enrol_remotecoursefield` AS courseidnumber FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `coursegroup_id` = '$enrolment[0]'");
-        foreach ($coursegroup_enrolments_rs as $coursegroup_enrolment) {
+       foreach ($coursegroup_enrolments_rs as $coursegroup_enrolment) {
             // Do external enrolments DB
-            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_remoterolefield`, `coursegroup_id`) VALUES ('$coursegroup_enrolment->courseidnumber', '$enrolment[1]', '$student_role->shortname', '$enrolment[0]'); ";
-            if (!$result = $enroldb->Execute($insert)) {
+            $insert = "INSERT INTO `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` (`$CFG->enrol_remotecoursefield` , `$CFG->enrol_remoteuserfield`, `$CFG->enrol_remoterolefield`, `coursegroup_id`) VALUES (?, ?, ?, ?); ";
+           $result = $enroldb->Execute($insert, array($coursegroup_enrolment->courseidnumber, $enrolment[1], $student_role->shortname, $enrolment[0]));
+            if (!$result) {
                 trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $insert, E_USER_WARNING);
                 echo "Erreur : inscription process";
                 break;
             }
+           echo 'added ' . $enrolment[1] . ' in ' . $coursegroup_enrolment->courseidnumber . "\n";
         }
         $count['student_enrolments_added']++;
     }
@@ -337,6 +340,7 @@ function cegep_sisdb_sync($start_term) {
                 echo "Erreur : inscription process";
                 break;
             }
+           echo 'deleted ' . $enrolment[1] . ' from ' . $coursegroup_enrolment->courseidnumber . "\n";
         }
         $count['student_enrolments_removed']++;
     }
