@@ -88,7 +88,7 @@ switch ($action) {
 
 // Enrol a coursegroup into a Moodle course (admin function)
 function cegep_enrol_admin() {
-    global $CFG, $COURSE, $DB, $USER, $enroldb, $sisdb;
+    global $CFG, $COURSE, $DB, $USER, $OUTPUT, $enroldb, $sisdb;
 
     $currenttab = 'enrol';
     require('block_cegep_tabs.php');
@@ -135,7 +135,7 @@ function cegep_enrol_admin() {
     }
     // Display the enrolment form
     else {
-        print_heading(get_string('enrol','block_cegep'), 'center', 3);
+        echo $OUTPUT->heading(get_string('enrol','block_cegep'), 3);
         $enrolform->display();
     }
 }
@@ -148,7 +148,7 @@ function cegep_enrol_admin() {
  *
  */
 function cegep_enrol() {
-    global $CFG, $USER, $COURSE, $enroldb, $sisdb;
+    global $CFG, $USER, $COURSE, $OUTPUT, $enroldb, $sisdb;
 
     $currenttab = 'enrol';
     require('block_cegep_tabs.php');
@@ -191,7 +191,7 @@ function cegep_enrol() {
     }
     // Display the enrolment form
     else {
-        print_heading(get_string('enrol','block_cegep'), 'center', 3);
+        echo $OUTPUT->heading(get_string('enrol','block_cegep'), 3);
         $enrolform->display();
     }
 
@@ -199,7 +199,7 @@ function cegep_enrol() {
 
 // Unenrol a coursegroup from a Moodle course
 function cegep_unenrol() {
-    global $CFG, $COURSE, $DB, $enroldb;
+    global $CFG, $COURSE, $DB, $OUTPUT, $enroldb;
     
     $currenttab = 'unenrol';
     require('block_cegep_tabs.php');
@@ -254,14 +254,14 @@ function cegep_unenrol() {
     }
     // Display the enrolment form
     else {
-        print_heading(get_string('unenrol','block_cegep'), 'center', 3);
+        echo $OUTPUT->heading(get_string('unenrol','block_cegep'), 3);
         $unenrolform->display();
     }
 }
 
 // Enrol a program into a Moodle course
 function cegep_enrolprogram() {
-    global $CFG, $COURSE, $enroldb, $sisdb;
+    global $CFG, $COURSE, $OUTPUT, $enroldb, $sisdb;
 
     $currenttab = 'enrolprogram';
     require('block_cegep_tabs.php');
@@ -309,14 +309,14 @@ function cegep_enrolprogram() {
     }
     // Display the enrolment form
     else {
-        print_heading(get_string('enrolprogram','block_cegep'), 'center', 3);
+        echo $OUTPUT->heading(get_string('enrolprogram','block_cegep'), 3);
         $enrolprogramform->display();
     }
 }
 
 // Unenrol a program from a Moodle course
 function cegep_unenrolprogram() {
-    global $CFG, $COURSE, $DB, $enroldb;
+    global $CFG, $COURSE, $DB, $OUTPUT, $enroldb;
     
     $currenttab = 'unenrolprogram';
     require('block_cegep_tabs.php');
@@ -371,14 +371,14 @@ function cegep_unenrolprogram() {
     }
     // Display the unenrolment form
     else {
-        print_heading(get_string('unenrolprogram','block_cegep'), 'center', 3);
+        echo $OUTPUT->heading(get_string('unenrolprogram','block_cegep'), 3);
         $unenrolprogramform->display();
     }
 }
 
 // List all coursegroups and students enrolled in this Moodle course
 function cegep_studentlist() {
-    global $CFG, $COURSE, $DB, $enroldb, $sisdb;
+    global $CFG, $COURSE, $DB, $OUTPUT, $enroldb, $sisdb;
 
     $currenttab = 'studentlist';
     require('block_cegep_tabs.php');
@@ -490,7 +490,7 @@ function cegep_studentlist() {
     }
     
     if (!empty($body)) {
-        print_heading(get_string('studentlisttitle','block_cegep'), 'center', 3);
+        echo $OUTPUT->heading(get_string('studentlisttitle','block_cegep'), 3);
         print($body);
     } else {
         notify(get_string('nocoursegroupsenrolled', 'block_cegep'));
