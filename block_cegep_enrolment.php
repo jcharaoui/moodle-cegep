@@ -433,7 +433,7 @@ function cegep_studentlist() {
                     $table = cegep_studentlist_enrolmenttable($select);
 
                     if (count($table->data) > 0) {
-                        $notice .= print_table($table,true);
+                        $notice .= html_writer::table($table);
                         $notice .= '<br /><strong>'.get_string('total').'</strong> : ' . count($table->data);
                     } else { ($notice .= get_string('nostudentsenrolled', 'block_cegep') . "<br /><br />"); }
  
@@ -470,7 +470,7 @@ function cegep_studentlist() {
                     $table = cegep_studentlist_enrolmenttable($select);
            
                     if (count($table->data) > 0) {
-                        $notice .= print_table($table,true);
+                        $notice .= html_writer::table($table);
                         $notice .= '<br /><strong>'.get_string('total').'</strong> : ' . count($table->data);
                     } 
                     else if (is_null($coursegroup['id'])) {
@@ -500,8 +500,8 @@ function cegep_studentlist() {
 function cegep_studentlist_enrolmenttable($select) {
     global $CFG, $COURSE, $DB, $enroldb, $sisdb;
 
-    $table = new stdClass;
-    $table->class = 'flexible';
+    $table = new html_table();
+    $table->class('flexible');
     $table->width = '100%';
     $table->cellpadding = 4;
     $table->cellspacing = 3;
