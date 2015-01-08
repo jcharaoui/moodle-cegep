@@ -503,7 +503,7 @@ function cegep_studentlist_enrolmenttable($select) {
     global $CFG, $COURSE, $DB, $enroldb, $sisdb;
 
     $table = new html_table();
-    $table->class('flexible');
+    $table->class = 'flexible';
     $table->width = '100%';
     $table->cellpadding = 4;
     $table->cellspacing = 3;
