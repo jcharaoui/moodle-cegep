@@ -437,7 +437,9 @@ function cegep_studentlist() {
                         $notice .= '<br /><strong>'.get_string('total').'</strong> : ' . count($table->data);
                     } else { ($notice .= get_string('nostudentsenrolled', 'block_cegep') . "<br /><br />"); }
  
-                    $body .= print_simple_box($notice, 'center', '700px', '', 5, 'generalbox', '', true);
+                    $body .= $OUTPUT->box_start();
+                    $body .= $OUTPUT->box($notice, 'coursebox');
+                    $body .= $OUTPUT->box_end(); 
 
                     $program_idyears->MoveNext();
                 }
