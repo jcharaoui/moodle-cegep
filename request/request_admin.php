@@ -7,7 +7,7 @@ require_once('request_form.php');
 
 require_login();
 
-global $CFG, $DB, $USER;
+global $CFG, $DB, $USER, $OUTPUT;
 
 $authldap = new auth_plugin_ldap;
 
@@ -174,11 +174,11 @@ if ($requestform->is_cancelled()){
 
     function cegep_requestadmin_display() {
 
-        global $CFG, $DB;
+        global $CFG, $DB, $OUTPUT;
 
         if ($requests = $DB->get_records_select('cegep_request', "`state` = 'new' OR `state` = 'waiting'", array('created DESC'))) {
 
-            $table = new stdClass;
+            $table = new html_table();
             $table->width = '100%';
             $table->cellpadding = 4;
             $table->cellspacing = 3;
@@ -211,10 +211,10 @@ if ($requestform->is_cancelled()){
         }
 
         print("<fieldset style='width:80%;margin-left:auto;margin-right:auto;margin-top:16px;padding:12px;'><legend><strong>".get_string('courserequest_new','block_cegep')."</strong></legend>");
-        (count($table_new->data) > 0) ? (print_table($table_new)) : (print_box(get_string('courserequest_nonew','block_cegep').'<br /><br />'));
+        (count($table_new->data) > 0) ? (print html_writer::table($table_new)) : (print $OUTPUT->box(get_string('courserequest_nonew','block_cegep').'<br /><br />'));
         print("</fieldset><br /><br />");
         print("<fieldset style='width:80%;margin-left:auto;margin-right:auto;margin-top:16px;padding:12px;'><legend><strong>".get_string('courserequest_waiting','block_cegep')."</strong></legend>");
-        (count($table_waiting->data) > 0) ? (print_table($table_waiting)) : (print_box(get_string('courserequest_nowaiting','block_cegep').'<br /><br />'));
+        (count($table_waiting->data) > 0) ? (print html_writer::table($table_waiting)) : (print $OUTPUT->box(get_string('courserequest_nowaiting','block_cegep').'<br /><br />'));
     }
 
     else {

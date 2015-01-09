@@ -4,7 +4,7 @@ require_once('../../../config.php');
 require_once('../../../auth/ldap/auth.php');
 require_once('request_form.php');
 
-global $DB, $USER;
+global $DB, $USER, $OUTPUT;
 
 require_login();
 
@@ -57,9 +57,9 @@ if ($requestform->is_cancelled()){
 
 } else {
 
-    print_box_start('informationbox boxaligncenter boxwidthnormal');
-    print(get_string('courserequest_instructions','block_cegep'));
-    print_box_end();
+    print $OUTPUT->box_start('informationbox boxaligncenter boxwidthnormal');
+    print $OUTPUT->box(get_string('courserequest_instructions','block_cegep'));
+    print $OUTPUT->box_end();
 
     $requestform->display();
 }
