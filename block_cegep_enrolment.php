@@ -6,7 +6,7 @@ require('lib.php');
 $courseid = required_param('id', PARAM_INT);
 $action   = optional_param('a', null, PARAM_ACTION);
 
-global $CFG, $USER, $COURSE, $DB;
+global $CFG, $USER, $COURSE, $DB, $OUTPUT;
 
 // Module unavailable for course id 0 or 1
 if ($courseid == 1 || !$COURSE = $DB->get_record('course', array('id' => $courseid)))
@@ -125,13 +125,10 @@ function cegep_enrol_admin() {
         }
         
         // Display nice confirmation with student list and buttons
-        notify(get_string('coursegroupenrolled','block_cegep',implode($students_enrolled,'<br />')),'notifysuccess');
-        echo "<div class='continuebutton'>";
-        print_single_button('block_cegep_enrolment.php', array('a' => 'enrol', 'id' => $COURSE->id), get_string('enrolanother','block_cegep'));
-        echo "</div><br />";
-        echo "<div class='continuebutton'>";
-        print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
-        echo "</div>";
+        echo $OUTPUT->notification(get_string('coursegroupenrolled','block_cegep',implode($students_enrolled,'<br />')),'notifysuccess');
+        $linkyes = new moodle_url('block_cegep_enrolment.php', array('a' => 'enrol', 'id' => $COURSE->id));
+        $linkno = new moodle_url($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id));
+        echo $OUTPUT->confirm(get_string('enrolanother','block_cegep'), $linkyes, $linkno);
     }
     // Display the enrolment form
     else {
@@ -181,13 +178,10 @@ function cegep_enrol() {
         }
 
         // Display nice confirmation with student list and buttons
-        notify(get_string('coursegroupenrolled','block_cegep',implode($students_enrolled,'<br />')),'notifysuccess');
-        echo "<div class='continuebutton'>";
-        print_single_button('block_cegep_enrolment.php', array('a' => 'enrol', 'id' => $COURSE->id), get_string('enrolanother','block_cegep'));
-        echo "</div><br />";
-        echo "<div class='continuebutton'>";
-        print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
-        echo "</div>";
+        echo $OUTPUT->notification(get_string('coursegroupenrolled','block_cegep',implode($students_enrolled,'<br />')),'notifysuccess');
+        $linkyes = new moodle_url('block_cegep_enrolment.php', array('a' => 'enrol', 'id' => $COURSE->id));
+        $linkno = new moodle_url($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id));
+        echo $OUTPUT->confirm(get_string('enrolanother','block_cegep'), $linkyes, $linkno);
     }
     // Display the enrolment form
     else {
@@ -246,10 +240,8 @@ function cegep_unenrol() {
             print_error('errordeletingenrolment','block_cegep');
             break;
         } else {
-            notify(get_string('coursegroupunenrolled','block_cegep',$enroldb->Affected_Rows()),'notifysuccess');
-            echo "<div class='continuebutton'>";
-            print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
-            echo "</div>";
+            echo $OUTPUT->notification(get_string('coursegroupunenrolled','block_cegep',$enroldb->Affected_Rows()),'notifysuccess');
+            echo $OUTPUT->continue_button($CFG->wwwroot.'/course/view.php?id='.$COURSE->id);
         }       
     }
     // Display the enrolment form
@@ -302,10 +294,8 @@ function cegep_enrolprogram() {
         }
         
         // Display nice confirmation with student list and buttons
-        notify(get_string('programenrolled','block_cegep'),'notifysuccess');
-        echo "<div class='continuebutton'>";
-        print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
-        echo "</div>";
+        echo $OUTPUT->notification(get_string('programenrolled','block_cegep'),'notifysuccess');
+        echo $OUTPUT->continue_button($CFG->wwwroot.'/course/view.php?id='.$COURSE->id);
     }
     // Display the enrolment form
     else {
@@ -363,10 +353,8 @@ function cegep_unenrolprogram() {
             print_error('errordeletingenrolment','block_cegep');
             break;
         } else {
-            notify(get_string('programunenrolled','block_cegep',$enroldb->Affected_Rows()),'notifysuccess');
-            echo "<div class='continuebutton'>";
-            print_single_button($CFG->wwwroot.'/course/view.php', array('id' => $COURSE->id), get_string('continuetocourse'));
-            echo "</div>";
+            echo $OUTPUT->notification(get_string('programunenrolled','block_cegep',$enroldb->Affected_Rows()),'notifysuccess');
+            echo $OUTPUT->continue_button($CFG->wwwroot.'/course/view.php?id='.$COURSE->id);
         }       
     }
     // Display the unenrolment form
@@ -545,7 +533,7 @@ function cegep_studentlist_enrolmenttable($select) {
     return $table;
 }
 
-print_footer();
+echo $OUTPUT->footer();
 
 $enroldb->Close();
 $sisdb->Close();
