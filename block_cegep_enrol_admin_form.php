@@ -37,9 +37,8 @@ class cegep_enrol_admin_form extends moodleform {
 
         $mform->addElement('text', 'coursecode', get_string('coursecode','block_cegep').' :', 'size="8", maxlength="8"');
         $mform->setType('coursecode', PARAM_TEXT);
-        $mform->addElement('text', 'coursegroup', get_string('coursegroup','block_cegep').' :', 'size="6", maxlength="6"');
+        $mform->addElement('text', 'coursegroup', get_string('coursegroup','block_cegep').' :', 'size="8", maxlength="32"');
         $mform->addRule('coursegroup', get_string('specifycoursegroup','block_cegep'), 'required');
-        $mform->addRule('coursegroup', get_string('coursegroupsixnumbersonly','block_cegep'), 'numeric');
         $mform->setType('coursegroup', PARAM_TEXT);
 
         $mform->SetDefaults(array(
@@ -64,66 +63,46 @@ class cegep_enrol_admin_form extends moodleform {
             $coursecode = $data['coursecode'];
         }
 
-        $coursegroup = $data['coursegroup'];
-
         if (empty($data['semester']) || empty($data['year'])) {
             $errors['semester'] = get_string('semesterinvalid','block_cegep');
         }
-        elseif (empty($coursegroup) || !is_numeric($coursegroup)) {
+        elseif (empty($data['coursegroup']) || preg_match('/[^0-9,]/', $data['coursegroup'])) {
             $errors['coursegroup'] = get_string('coursegroupinvalid','block_cegep');
         }
         
         if (!empty($errors)) {
             return $errors;
         }
-        // Verify if the coursegroup is available in the system
-        elseif (!$coursegroup_id = cegep_local_get_coursegroup_id($coursecode, $data['coursegroup'], $term)) {
-            $errors['coursegroup'] = get_string('coursegroupunavailable','block_cegep');
+
+        if (strstr($data['coursegroup'], ',')) {
+            $coursegroups = explode(',', $data['coursegroup']);
+        } else {
+            $coursegroups = array($data['coursegroup']);
         }
-        // Verify if the coursegroup is already enrolled into this course
-        elseif (self::validate_coursegroup_enrolled($coursegroup_id, $coursecode)) {
-            $errors['coursegroup'] = get_string('coursegroupalreadyenrolled','block_cegep');
+
+        foreach ($coursegroups as $coursegroup) {
+            $coursegroup = trim($coursegroup);
+            // Verify if the coursegroup is available in the system
+            if (!$coursegroup_id = cegep_local_get_coursegroup_id($coursecode, $coursegroup, $term)) {
+                $errors['coursegroup'] = get_string('coursegroupunavailable','block_cegep') . " ($coursegroup)";
+            }
+            // Verify if the coursegroup is already enrolled into this course
+            elseif (self::validate_coursegroup_enrolled($coursegroup_id)) {
+                $errors['coursegroup'] = get_string('coursegroupalreadyenrolled','block_cegep') . " ($coursegroup)";
+            }
+            // Verify if the coursegroup has students registered
+            elseif (!self::validate_coursegroup_students_registered($coursegroup_id)) {
+                $errors['coursegroup'] = get_string('coursegrouphasnostudents','block_cegep') . " ($coursegroup)";
+            }
         }
-        // Verify if the coursegroup has students registered
-        elseif (!self::validate_coursegroup_students_registered($coursegroup_id)) {
-            $errors['coursegroup'] = get_string('coursegrouphasnostudents','block_cegep');
-        }
-        
+
         return $errors;
     }
 
-    private function validate_coursegroup_exists($coursecode, $coursegroup, $term) {
-        global $CFG, $COURSE, $USER, $sisdb;
-
-        if (empty($coursecode) || !is_siteadmin($USER)) {
-            $cc = explode('_', $COURSE->idnumber);
-            $coursecode = $cc[0];
-        }
-
-        $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `term` = '$term' AND `group` = '$coursegroup' LIMIT 1";
-
-        $result = $sisdb->Execute($select);
-        
-        if (!$result) {
-            trigger_error($sisdb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
-            return false;
-        } 
-        elseif ($result->RecordCount() < 1) {
-            return false;
-        }
-        else {
-            return $result->fields['id'];
-        }
-    }
-
-    private function validate_coursegroup_enrolled($coursegroup_id, $coursecode = '') {
+    private function validate_coursegroup_enrolled($coursegroup_id) {
         global $CFG, $COURSE, $enroldb;
 
-		if (strlen($coursecode) == 0) {
-			$coursecode = $COURSE->idnumber;
-		}
-
-        $select = "SELECT COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$coursecode' AND `coursegroup_id` = '$coursegroup_id' LIMIT 1";
+        $select = "SELECT COUNT(`coursegroup_id`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `coursegroup_id` = '$coursegroup_id' LIMIT 1";
 
         $result = $enroldb->Execute($select);
         

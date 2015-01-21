@@ -114,9 +114,20 @@ function cegep_enrol_admin() {
         // Extract term info
         $term = $data->year . $data->semester;
 
-        // Enrol coursegroup
-        if (!$students_enrolled = cegep_local_enrol_coursegroup($coursecode, $data->coursegroup, $term)) {
-            print_error('errorimportingstudentlist','block_cegep');
+        if (strstr($data->coursegroup, ',')) {
+            $coursegroups = explode(',', $data->coursegroup);
+        } else {
+            $coursegroups = array($data->coursegroup);
+        }
+
+        $students_enrolled = array();
+        foreach ($coursegroups as $coursegroup) {
+            // Enrol coursegroup
+            if (!$s = cegep_local_enrol_coursegroup($coursecode, $coursegroup, $term)) {
+                print_error('errorimportingstudentlist','block_cegep');
+            } else {
+                $students_enrolled = array_merge($students_enrolled, $s);
+            }
         }
 
         if (!$COURSE->visible && isset($data->makevisible) && $data->makevisible) {
