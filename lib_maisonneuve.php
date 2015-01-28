@@ -196,3 +196,17 @@ function cegep_maisonneuve_get_coursegroup_id($coursecode, $coursegroup, $term) 
     $select_coursegroup = "SELECT id FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = ? AND (`group` = ? OR `group` = ?) AND `term` = ?;";
     return $sisdb->Execute($select_coursegroup, array($coursecode, $coursegroup, sprintf('%06d', $coursegroup), $term))->fields['id'];
 }
+
+/**
+ * Teacher idnumber in clara is derived from email address, so use that to query teacher_enrolments
+ */
+function cegep_local_get_real_teacher_idnumber($idnumber) {
+    global $DB;
+    $user = $DB->get_record('user', array('idnumber' => $idnumber));
+    if ($user) {
+        $mail = explode('@', $user->email);
+        return $mail[0];
+    } else {
+        return $idnumber;
+    }
+}

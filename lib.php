@@ -172,6 +172,8 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
         print_error('dbconnectionfailed','error');
     }
 
+    $idnumber = cegep_local_get_real_teacher_idnumber($idnumber);
+
     $select = "
             SELECT DISTINCT
                 cg.coursecode AS coursecode,
@@ -808,6 +810,15 @@ function cegep_local_enrol_coursegroup() {
     }
 
     return $students_enrolled;
+}
+
+function cegep_local_get_real_teacher_idnumber($idnumber) {
+    global $CFG;
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_get_real_teacher_idnumber')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_get_real_teacher_idnumber', $idnumber);
+    } else {
+        return $idnumber;
+    }
 }
 
 ?>
