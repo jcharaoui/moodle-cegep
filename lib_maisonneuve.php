@@ -200,7 +200,7 @@ function cegep_maisonneuve_get_coursegroup_id($coursecode, $coursegroup, $term) 
 /**
  * Teacher idnumber in clara is derived from email address, so use that to query teacher_enrolments
  */
-function cegep_local_get_real_teacher_idnumber($idnumber) {
+function cegep_maisonneuve_get_real_teacher_idnumber($idnumber) {
     global $DB;
     $user = $DB->get_record('user', array('idnumber' => $idnumber));
     if ($user) {
