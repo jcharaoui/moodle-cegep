@@ -528,7 +528,7 @@ function cegep_studentlist_enrolmenttable($select) {
                 $select = "SELECT `title` FROM `$CFG->sisdb_name`.`program` WHERE `id` = '" . $student_sisdb['program_id'] . "'";
                 $program = $sisdb->Execute($select)->fields;
 
-                $table->data[] = array('<a href="'.$CFG->wwwroot.'/user/view.php?id='.$student_moodle->id.'" title="'.get_string('accessuserprofile','block_cegep').'">'.$student_sisdb['username'].'</a>', $student_sisdb['firstname'], $student_sisdb['lastname'], $program['title'] . " (" . $student_sisdb['program_id'] . ")");
+                $table->data[] = array('<a href="'.$CFG->wwwroot.'/user/view.php?id='.$student_moodle->id.'" title="'.get_string('accessuserprofile','block_cegep').'">'.$student_sisdb['username'].'</a>', $student_sisdb['lastname'], $student_sisdb['firstname'], $program['title'] . " (" . $student_sisdb['program_id'] . ")");
                 $lastnames[] = $student_sisdb['lastname'];
             } else {
                 $select = "SELECT `title` FROM `$CFG->sisdb_name`.`program` WHERE `id` = '" . $student_sisdb['program_id'] . "'";
