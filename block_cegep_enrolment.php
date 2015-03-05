@@ -509,7 +509,7 @@ function cegep_studentlist_enrolmenttable($select) {
     $table->cellpadding = 4;
     $table->cellspacing = 3;
     $table->align = array('left','left','left');
-    $table->head = array(get_string('username'),get_string('firstname'),get_string('lastname'),get_string('program','block_cegep'));
+    $table->head = array(get_string('username'),get_string('lastname'),get_string('firstname'),get_string('program','block_cegep'));
     $table->data = array();
 
     // Obtenir la liste des étudiants
@@ -528,7 +528,7 @@ function cegep_studentlist_enrolmenttable($select) {
                 $select = "SELECT `title` FROM `$CFG->sisdb_name`.`program` WHERE `id` = '" . $student_sisdb['program_id'] . "'";
                 $program = $sisdb->Execute($select)->fields;
 
-                $table->data[] = array('<a href="'.$CFG->wwwroot.'/user/view.php?id='.$student_moodle->id.'" title="'.get_string('accessuserprofile','block_cegep').'">'.$student_sisdb['username'].'</a>', $student_sisdb['firstname'], $student_sisdb['lastname'], $program['title'] . " (" . $student_sisdb['program_id'] . ")");
+                $table->data[] = array('<a href="'.$CFG->wwwroot.'/user/view.php?id='.$student_moodle->id.'" title="'.get_string('accessuserprofile','block_cegep').'">'.$student_sisdb['username'].'</a>', $student_sisdb['lastname'], $student_sisdb['firstname'], $program['title'] . " (" . $student_sisdb['program_id'] . ")");
                 $lastnames[] = $student_sisdb['lastname'];
             } else {
                 $select = "SELECT `title` FROM `$CFG->sisdb_name`.`program` WHERE `id` = '" . $student_sisdb['program_id'] . "'";
