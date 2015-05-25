@@ -15,7 +15,7 @@ $access = FALSE;
 $is_admin = FALSE;
 
 // Admins and teachers can create courses
-if (is_siteadmin($USER))) {
+if (is_siteadmin($USER)) {
     $access = TRUE;
     $is_admin = TRUE;
 }
@@ -33,7 +33,7 @@ else {
 if ($access) {
     if ($newcourseid = cegep_local_create_course($coursecode, $term)) {
         // Enrol current user (teacher) into the new course (except if admin)
-        $course = $DB->get_record('course', 'id', $newcourseid);
+        $course = $DB->get_record('course', array('id', $newcourseid));
         if (!$is_admin) {
             cegep_local_enrol_user($course->idnumber, $USER->username, 'editingteacher');
         }
