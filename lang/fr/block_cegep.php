@@ -163,6 +163,7 @@ $string['specifycoursenumber'] = "Veuillez spécifier le nombre de cours.";
 $string['errorenroldbnotavailable'] = 'Le module d\'inscription base de données externe doit être activé pour le fonctionnement de ce module.';
 $string['erroractionnotavailable'] = 'Cette action n\'est pas disponible pour ce cours.';
 $string['errormustbeteacher'] = 'Cette page est disponible uniquement pour les enseignants.';
+$string['errormustbeteachercourse'] = 'Vous devez être enseignant dans ce cours.';
 $string['errormustbeadmin'] = 'Cette page est disponible uniquement pour les administraeurs du système.';
 $string['errorcreatingcourse'] = "Une erreur s'est produite lors de la création du cours!";
 $string['errorimportingstudentlist'] = 'Une erreur s\'est produite lors de l\'importation de la liste d\'étudiants!';

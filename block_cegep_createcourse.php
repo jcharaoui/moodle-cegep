@@ -2,49 +2,55 @@
 
 require_once('../../config.php');
 require('lib.php');
+require('block_cegep_createcourse_form.php');
 
-global $CFG, $DB, $USER;
+global $CFG, $DB, $USER, $PAGE, $OUTPUT;
 
 $coursecode = optional_param('coursecode', null, PARAM_ALPHANUM);
-$term = optional_param('term', null, PARAM_INT);
-$redirect = optional_param('redirect', null, PARAM_URL);
 
 require_login();
 
-$access = FALSE;
-$is_admin = FALSE;
+$coursetitle = cegep_local_get_course_title($coursecode);
 
-// Admins and teachers can create courses
-if (is_siteadmin($USER)) {
-    $access = TRUE;
-    $is_admin = TRUE;
-}
-else {
-    // Check if the current user is a teacher enrolled in this course
-    $enrolments = cegep_local_get_teacher_enrolments($USER->idnumber, $term);
-    foreach ($enrolments as $enrolment) {
-        if ($enrolment['coursecode'] == $coursecode) {
-            $access = TRUE;
-            break;
-        }
-    }
-}
+$createcourse_form = new cegep_createcourse_form(null, array('coursecode' => $coursecode, 'coursetitle' => $coursetitle));
 
-if ($access) {
-    if ($newcourseid = cegep_local_create_course($coursecode, $term)) {
+if ($createcourse_form->is_cancelled()){
+
+    redirect($CFG->wwwroot);
+
+}
+elseif ($data = $createcourse_form->get_data()) {
+    require_once('../../course/lib.php');
+
+    $course = cegep_local_new_course_template($data->coursecode);
+    $course->shortname = $course->idnumber;
+    $course->fullname = $data->fullname;
+    $course->visible = $data->visible;
+
+    $course = create_course($course);
+
+    if (is_object($course) && $course->id > 0) {
         // Enrol current user (teacher) into the new course (except if admin)
-        $course = $DB->get_record('course', array('id', $newcourseid));
-        if (!$is_admin) {
+        if (!is_siteadmin($USER)) {
             cegep_local_enrol_user($course->idnumber, $USER->username, 'editingteacher');
         }
         // Redirect to the enrolment form
-        redirect($CFG->wwwroot.'/blocks/cegep/block_cegep_enrolment.php?a=enrol&id=' . $newcourseid, get_string('coursecreatesuccess','block_cegep'));
+        redirect($CFG->wwwroot.'/blocks/cegep/block_cegep_enrolment.php?a=enrol&id=' . $course->id, get_string('coursecreatesuccess','block_cegep'));
     } else {
         print_error('errorcreatingcourse','block_cegep');
     }
-} else {
-    print_error('errormustbeteacher','block_cegep');
-}
 
+}
+else {
+
+    $PAGE->navbar->add(get_string('coursecreate','block_cegep'));
+    $PAGE->set_heading('heading');
+    $PAGE->set_title(get_string('coursecreate','block_cegep'));
+    echo $OUTPUT->header();
+
+    $createcourse_form->display();
+
+    echo $OUTPUT->footer();
+}
 
 ?>

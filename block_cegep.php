@@ -11,8 +11,16 @@ class block_cegep extends block_list {
     
     function has_config() {return true;}
 
+    function applicable_formats() {
+        return array(
+            'course-view' => true,
+            'my-index' => true,
+            'site-index' => true,
+        );
+    }
+
     function get_content() {
-        global $DB, $COURSE;
+        global $USER, $COURSE, $PAGE;
 
         if ($this->content !== NULL) {
             return $this->content;
@@ -23,9 +31,9 @@ class block_cegep extends block_list {
         $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
 
         // Show MyMoodle block
-        if (mb_strpos($_SERVER['PHP_SELF'], '/my') !== false) {
-            $this->content->items = cegep_local_get_create_course_buttons();
-            $this->content->icons = null; // don't show any bullet
+        if ($PAGE->pagetype == 'my-index') {
+            $this->title = get_string('coursecreate', 'block_cegep');
+            $this->content = cegep_local_get_create_course_menu();
         }
         // Show course block
         elseif (has_capability('moodle/course:update', $context)) {

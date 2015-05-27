@@ -104,26 +104,33 @@ function cegep_local_sisdbsource_select_teachers($term) {
 }
 
 /**
- * Return course creation buttons for the MyMoodle block variant.
+ * Return course creation menu for the MyMoodle block variant.
  * Allows teacher to easily create courses.
  */
-function cegep_local_get_create_course_buttons() {
-    global $CFG, $USER;
+function cegep_local_get_create_course_menu() {
+    global $CFG;
 
-    if (function_exists('cegep_' . $CFG->block_cegep_name . '_get_create_course_buttons')) {
-        return call_user_func('cegep_' . $CFG->block_cegep_name . '_get_create_course_buttons', $term);
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_get_create_course_menu')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_get_create_course_menu', $term);
     } else {
+        global $USER, $OUTPUT;
 
-        $items = array();
-        $previous_term_str = '';
+        $content = new stdClass();
+        $content->items = array();
+        $content->icons = array();
 
-        $courseterms = array();
-        $enrolments = cegep_local_get_teacher_enrolments($USER->idnumber, cegep_local_current_term());
+        $term = cegep_local_current_term();
+        $courses = array();
+
+        if (!cegep_local_is_teacher($USER->idnumber, $term)) {
+            return $content;
+        }
+
+        $enrolments = cegep_local_get_teacher_enrolments($USER->idnumber, $term);
 
         foreach ($enrolments as $enrolment) {
-        
             // Skip already displayed courses
-            if (in_array($enrolment['coursecode'] . $enrolment['term'], $courseterms)) {
+            if (in_array($enrolment['coursecode'], $courses)) {
                 continue;
             }
 
@@ -134,24 +141,15 @@ function cegep_local_get_create_course_buttons() {
                 $coursetitle = get_string('cousetitlemissing','block_cegep');
             }
 
-            // Display term string
-            $current_term_str = cegep_local_term_to_string($enrolment['term']);
-            if ($current_term_str != $previous_term_str) {
-                $items[] = '<div style="font-weight: bold; font-size: 1.2em;">' . $current_term_str . '</div>';
-            }
-            $previous_term_str = $current_term_str;
+            $coursetitle .= " ({$enrolment['coursecode']})";
 
-            $items[] = '<form action="' . $CFG->wwwroot . '/blocks/cegep/block_cegep_createcourse.php" method="post" class="form_create">'.
-            '<div class="coursenumber create_button">'.
-            '<input type="hidden" name="coursecode" value="'. $enrolment['coursecode'] .'" />'.
-            '<input type="hidden" name="term" value="' . $enrolment['term']. '" />' .
-            '<input type="submit" value="'.get_string('create','block_cegep').'" name="submit" style="margin-right: 5px;" />'.
-            $enrolment['coursecode'].'</div><div class="coursetitle">'. $coursetitle .'</div></form>';
-            
-            array_push($courseterms, $enrolment['coursecode'] . $enrolment['term']);
+            $content->items[] = html_writer::tag('a', $coursetitle, array('href' => $CFG->wwwroot.'/blocks/cegep/block_cegep_createcourse.php?coursecode=' . $enrolment['coursecode']));
+            $content->icons[] = html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/add'), 'alt'=>get_string('add'), 'class'=>'smallicon'));
+
+            array_push($courses, $enrolment['coursecode']);
         }
 
-        return $items;
+        return $content;
     }
 }
 
@@ -206,9 +204,9 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
 }
 
 /**
- * Create course
+ * Returns a $course object with idnumber and category
  */
-function cegep_local_create_course($coursecode, $term = '', $meta = false) {
+function cegep_local_new_course_template($coursecode) {
     global $CFG, $USER, $DB;
 
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_create_course')) {
@@ -235,9 +233,6 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
 
         // Build course object
         $course = new StdClass;
-        
-        // Course metacourse
-        $course->metacouse = $meta;
 
         // Course idnumber
         $coursecode = strtoupper($coursecode);
@@ -246,26 +241,6 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
             $course->idnumber = $coursecode . '_0';
         } else {
             $course->idnumber = $coursecode . '_' . ($coursemaxid->num + 1);
-        }
-        
-        // Course fullname and shortname
-        $select_course = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = ? LIMIT 1";
-        $course_data = $sisdb->Execute($select_course, array($coursecode));
-        $coursetitle = cegep_local_sisdbsource_decode('coursetitle',  $course_data->fields['title']);
-        if (!empty($coursetitle)) {
-            if (!empty($term)) {
-                $course->fullname = $coursetitle . ' (' . $coursecode . ' - ' . cegep_local_term_to_string($term) . ')';
-            } else {
-                $course->fullname = $coursetitle;
-            }
-            $course->shortname = $coursetitle . ' (' . $course->idnumber . ')';
-        } else {
-            if (!empty($term)) {
-                $course->fullname = $coursecode . ' - ' . cegep_local_term_to_string($term);
-            } else {
-                $course->fullname = $coursecode;
-            }
-            $course->shortname = $course->idnumber;
         }
 
         // Course category
@@ -283,73 +258,10 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
         if (!$course->category) {
             $sisdb->close();
             return false;
-       }
-
-        // Course sortorder
-        $sort = $DB->get_field_sql('SELECT COALESCE(MAX(sortorder)+1, 100) AS max FROM ' . $CFG->prefix . 'course  WHERE category=' . $course->category);
-        $course->sortorder = $sort;
-
-        // Course times
-        $course->startdate = time() + 3600 * 24;
-        $course->timecreated = time();
-        
-        // Course visible
-        $course->visible = 0;
-        
-        // Course enrollable
-        $course->enrollable = 0;
-
-        // Get course defaults
-        $courseconfig = get_config('moodlecourse');
-        $template = array(
-                'summary'        => get_string("defaultcoursesummary"),
-                'format'         => $courseconfig->format,
-                'password'       => "",
-                'guest'          => 0,
-                'numsections'    => $courseconfig->numsections,
-                'hiddensections' => $courseconfig->hiddensections,
-                'cost'           => '',
-                'maxbytes'       => $courseconfig->maxbytes,
-                'newsitems'      => $courseconfig->newsitems,
-                'showgrades'     => $courseconfig->showgrades,
-                'showreports'    => $courseconfig->showreports,
-                'groupmode'      => 0,
-                'groupmodeforce' => 0,
-                );
-
-        // Apply defaults to course object
-        foreach (array_keys($template) as $key) {
-            if (empty($course->$key)) {
-                $course->$key = $template[$key];
-            }
         }
 
-        // Course id (just in case)
-        unset($course->id);
-
-        // Store new course in database
-        if ($newcourseid = $DB->insert_record("course", $course)) {        
-            $course->id = $newcourseid;
-            blocks_add_default_course_blocks($course);
-            fix_course_sortorder();
-            add_to_log($newcourseid, "course", "new", "view.php?id=$newcourseid", "block_cegep/request course created");
-        } else {
-            print_error("An error occurred when trying to create the course.");
-        }
-
-        // Create a default section
-        $section = new stdClass;
-        $section->course = $newcourseid;
-        $section->section = 0;
-        // Autotopic (add course title & teacher name to topic 0) (skip if admin)
-        if ($CFG->block_cegep_autotopic && !is_siteadmin($USER)) {
-            $section->summary = '<h1 style="text-align: center;">' . $course->fullname . '</h1>';
-            $section->summary .= '<h3 style="text-align: center;">' . get_string('teacher','block_cegep') . ': ' . $USER->firstname . ' ' . $USER->lastname . '</h3>';
-            $section->summary = addslashes($section->summary);
-        }
-        $section->id = $DB->insert_record("course_sections", $section);
-
-        return $newcourseid;
+        $sisdb->close();
+        return $course;
     }
 }
 
@@ -632,10 +544,10 @@ function cegep_local_get_coursegroups($course_idnumber, $teacher_idnumber = '') 
         $coursecode = $course_idnumber;
     }
 
-    $term = cegep_local_date_to_datecode();
+    $term = cegep_local_current_term();
 
     $select = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `coursecode` = '$coursecode' AND `term` >= $term;";
-    $coursegroups_rs = $sisdb->Execute($select); 
+    $coursegroups_rs = $sisdb->Execute($select);
 
     if (!$coursegroups_rs) {
         trigger_error($enroldb->ErrorMsg() .' STATEMENT: '. $select, E_USER_ERROR);
@@ -818,6 +730,68 @@ function cegep_local_get_real_teacher_idnumber($idnumber) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_get_real_teacher_idnumber', $idnumber);
     } else {
         return $idnumber;
+    }
+}
+
+function cegep_local_get_course_title($coursecode) {
+    global $CFG;
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_get_course_title')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_get_course_title', $coursecode);
+    } else {
+
+        // Prepare external SIS database connection
+        if ($sisdb = sisdb_connect()) {
+            $sisdb->Execute("SET NAMES 'utf8'");
+        }
+        else {
+            error_log('[SIS_DB] Could not make a connection');
+            print_error('dbconnectionfailed','error');
+        }
+
+        $select = "SELECT title FROM `$CFG->sisdb_name`.course WHERE coursecode = '$coursecode' LIMIT 1";
+        $sisdb_rs = $sisdb->Execute($select);
+
+        $title = false;
+        while ($sisdb_rs && !$sisdb_rs->EOF) {
+            $title = $sisdb_rs->fields['title'];
+            $sisdb_rs->moveNext();
+        }
+
+        $sisdb->Close();
+
+        return $title;
+
+    }
+}
+
+function cegep_local_is_teacher($idnumber, $term) {
+    global $CFG;
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_is_teacher')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_is_teacher', $idnumber, $term);
+    } else {
+
+        // Prepare external SIS database connection
+        if ($sisdb = sisdb_connect()) {
+            $sisdb->Execute("SET NAMES 'utf8'");
+        }
+        else {
+            error_log('[SIS_DB] Could not make a connection');
+            print_error('dbconnectionfailed','error');
+        }
+
+        $idnumber = cegep_local_get_real_teacher_idnumber($idnumber);
+        $is_teacher = FALSE;
+
+        $select = "SELECT idnumber FROM `$CFG->sisdb_name`.teacher_enrolment WHERE idnumber = '$idnumber' AND term >= $term;";
+        $sisdb_rs = $sisdb->Execute($select);
+        if (!$sisdb_rs->EOF) {
+            $is_teacher = TRUE;
+        }
+
+        $sisdb->Close();
+
+        return $is_teacher;
+
     }
 }
 

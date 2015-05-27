@@ -161,7 +161,8 @@ $string['specifycoursenumber'] = '';
 // Errors
 $string['errorenroldbnotavailable'] = 'The external database enrolment plugin is not activated. Please activate it and retry this operation.';
 $string['erroractionnotavailable'] = '';
-$string['errormustbeteacher'] = '';
+$string['errormustbeteacher'] = 'This page is only available to teachers.';
+$string['errormustbeteachercourse'] = 'You must be enrolled as a teacher in this course.';
 $string['errorcreatingcourse'] = 'Error: could not create course';
 $string['errorimportingstudentlist'] = '';
 $string['errordeletingenrolment'] = '';
