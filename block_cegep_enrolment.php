@@ -509,7 +509,7 @@ function cegep_studentlist_enrolmenttable($select) {
     $table->cellpadding = 4;
     $table->cellspacing = 3;
     $table->align = array('left','left','left');
-    $table->head = array(get_string('username'),get_string('firstname'),get_string('lastname'),get_string('program','block_cegep'));
+    $table->head = array(get_string('username'),get_string('lastname'),get_string('firstname'),get_string('program','block_cegep'));
     $table->data = array();
 
     // Obtenir la liste des étudiants
