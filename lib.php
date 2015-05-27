@@ -68,7 +68,7 @@ function cegep_local_course_category($category) {
  * - CourseCampus
  * - CourseTerm
  * - CourseNumber
- * - CourseTitle 
+ * - CourseTitle
  * - CourseGroup
  * - StudentNo
  * - StudentFirstName
@@ -177,15 +177,15 @@ function cegep_local_get_teacher_enrolments($idnumber, $term) {
     $select = "
             SELECT DISTINCT
                 cg.coursecode AS coursecode,
-                cg.group AS coursegroup, 
-                c.title AS coursetitle, 
-                cg.term AS term 
-            FROM `$CFG->sisdb_name`.teacher_enrolment te 
-            LEFT JOIN `$CFG->sisdb_name`.coursegroup cg ON cg.id = te.coursegroup_id 
-            LEFT JOIN `$CFG->sisdb_name`.course c ON c.coursecode = cg.coursecode 
-            WHERE 
-                te.idnumber = '$idnumber' AND 
-                cg.term >= $term 
+                cg.group AS coursegroup,
+                c.title AS coursetitle,
+                cg.term AS term
+            FROM `$CFG->sisdb_name`.teacher_enrolment te
+            LEFT JOIN `$CFG->sisdb_name`.coursegroup cg ON cg.id = te.coursegroup_id
+            LEFT JOIN `$CFG->sisdb_name`.course c ON c.coursecode = cg.coursecode
+            WHERE
+                te.idnumber = '$idnumber' AND
+                cg.term >= $term
             ORDER BY term, coursecode;";
 
     $sisdb_rs = $sisdb->Execute($select);
@@ -223,7 +223,7 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
             error_log('[SIS_DB] Could not make a connection');
             print_error('dbconnectionfailed','error');
         }
-        
+
         // Validate coursecode
         $select_course = "SELECT * FROM `$CFG->sisdb_name`.`course` WHERE `coursecode` = '$coursecode' LIMIT 1";
         $result = $sisdb->execute($select_course);
@@ -232,7 +232,7 @@ function cegep_local_create_course($coursecode, $term = '', $meta = false) {
             print_error("Le code de cours demandé n'existe pas!");
             return false;
         }
-        
+
         // Build course object
         $course = new StdClass;
         
@@ -360,7 +360,7 @@ function cegep_local_prepare_select_query($query) {
     global $CFG;
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_prepare_select_query')) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_prepare_select_query', $query);
-    } 
+    }
     else {
         return $query;
     }
@@ -374,7 +374,7 @@ function cegep_local_term_to_string($code) {
     global $CFG;
     if (function_exists('cegep_' . $CFG->block_cegep_name . '_term_to_string')) {
         return call_user_func('cegep_' . $CFG->block_cegep_name . '_term_to_string', $code);
-    } 
+    }
     else {
         $year = substr($code, 0, 4);
         $semester = substr($code, 4, 1);
@@ -462,7 +462,7 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
             return false;
         }
 
-		// If user exists in database, assign its role right away and add to group
+                // If user exists in database, assign its role right away and add to group
         if ($user = $DB->get_record('user', array($CFG->enrol_localuserfield => $username))) {
             $course = $DB->get_record('course', array($CFG->enrol_localcoursefield => $courseidnumber));
             $role = $DB->get_record('role', array($CFG->enrol_localrolefield => $rolename));
@@ -488,13 +488,13 @@ function cegep_local_enrol_user($courseidnumber, $username, $rolename = '', $cou
  */
 function cegep_delete_course_enrolments($course) {
     global $CFG;
-    
+
     $enroldb = enroldb_connect();
 
     $delete = "DELETE FROM `$CFG->enrol_dbname`.`$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$course->idnumber';";
 
     $result = $enroldb->Execute($delete);
-    
+
     if (!$result) {
         notify(get_string('errordeletingenrolment','block_cegep'));
         $enroldb->Close();
@@ -733,7 +733,7 @@ function cegep_local_get_coursegroup_id($coursecode, $coursegroup, $term) {
 function cegep_local_enrol_coursegroup() {
     global $CFG, $COURSE, $DB, $enroldb, $sisdb;
 
-    $args = func_get_args();    
+    $args = func_get_args();
 
     if (count($args) == 1) {
         $coursegroup_id = $args[0];
@@ -755,7 +755,7 @@ function cegep_local_enrol_coursegroup() {
     // Fetch records of students enrolled into this course from SIS
     $select_students = "SELECT * FROM `$CFG->sisdb_name`.`student_enrolment` WHERE `coursegroup_id` = $coursegroup_id;";
     $students_rs = $sisdb->Execute($select_students);
-    
+
     // Fail if can't find coursegroup id or student list
     if (!$coursegroup_id || !$students_rs) {
         return FALSE;

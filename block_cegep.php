@@ -35,6 +35,7 @@ class block_cegep extends block_list {
         $this->content->footer = '';
         return $this->content;
     }
+
 }
 
 ?>
