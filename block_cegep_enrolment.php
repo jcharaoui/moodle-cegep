@@ -52,7 +52,7 @@ $select = "SELECT COUNT(DISTINCT `coursegroup_id`) AS num FROM `$CFG->enrol_remo
 $num_enrolments = $enroldb->Execute($select)->fields['num'];
 $select = "SELECT COUNT(DISTINCT `program_idyear`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IS NOT NULL LIMIT 1";
 $num_programenrolments = $enroldb->Execute($select)->fields['num'];
-
+$num_enrolments_available = count(cegep_local_get_unenrolled_coursegroups($COURSE->idnumber, $USER->idnumber));
 // Get system context for global Admin CEGEP permissions
 $syscontext = get_context_instance(CONTEXT_SYSTEM, 1);
 
@@ -61,8 +61,12 @@ switch ($action) {
     case 'enrol' :
         if (is_siteadmin() || has_capability('block/cegep:enroladmin_course', $syscontext))
             cegep_enrol_admin();
-        else
-            cegep_enrol();
+        else {
+            if ($num_enrolments_available > 0)
+                cegep_enrol();
+            else
+                notify(get_string('nocoursegroupsavailable','block_cegep'));
+        }
         break;
    case 'unenrol' : 
         if ($num_enrolments > 0)
@@ -174,18 +178,13 @@ function cegep_enrol() {
 
         $students_enrolled = array();
 
-        foreach ($data as $key => $value) {
-            if (substr($key, 0, 11) == 'coursegroup' && $value == 1) {
-                $cg = explode('_', $key);
-                $coursegroup_id = $cg[1];
-
-                // Enrol selected coursegroup(s)
-                if (!$se = cegep_local_enrol_coursegroup($coursegroup_id)) {
-                    print_error('errorimportingstudentlist','block_cegep');
-                }
-
-                $students_enrolled += $se;
+        foreach ($data->coursegroup as $coursegroup_id) {
+            // Enrol selected coursegroup(s)
+            if (!$se = cegep_local_enrol_coursegroup($coursegroup_id)) {
+                print_error('errorimportingstudentlist','block_cegep');
             }
+
+            $students_enrolled += $se;
         }
 
         // Display nice confirmation with student list and buttons

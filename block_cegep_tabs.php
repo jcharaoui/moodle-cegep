@@ -1,14 +1,16 @@
 <?php
-    global $COURSE, $USER, $num_enrolments, $num_programenrolments;
+    global $COURSE, $USER, $num_enrolments, $num_programenrolments, $num_enrolments_available;
 
     $row = $tabs = array();
     $row[] = new tabobject('studentlist',
                            'block_cegep_enrolment.php?id='.$COURSE->id,
                            get_string('studentlist','block_cegep'));
 
-    $row[] = new tabobject('enrol',
-                           'block_cegep_enrolment.php?a=enrol&id='.$COURSE->id,
-                           get_string('enrol','block_cegep')); 
+    if ($num_enrolments_available > 0) {
+        $row[] = new tabobject('enrol',
+            'block_cegep_enrolment.php?a=enrol&id='.$COURSE->id,
+            get_string('enrol','block_cegep'));
+    }
 
     if ($num_enrolments > 0) {
         $row[] = new tabobject('unenrol',

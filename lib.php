@@ -621,6 +621,28 @@ function cegep_local_get_enrolled_coursegroups($course_idnumber) {
     return $coursegroups;
 }
 
+/* Get an array of coursegroups/sections that are available
+ * for enrollement in a given Moodle course.
+ */
+function cegep_local_get_unenrolled_coursegroups($course_idnumber, $user_idnumber) {
+    $coursegroups = array();
+
+    if (!$all_coursegroups = cegep_local_get_coursegroups($course_idnumber, $user_idnumber)) {
+        return false;
+    }
+
+    $enrolled_coursegroups = cegep_local_get_enrolled_coursegroups($course_idnumber);
+    foreach ($all_coursegroups as $coursegroup) {
+        foreach ($enrolled_coursegroups as $enrolled_coursegroup) {
+            if ($coursegroup['id'] == $enrolled_coursegroup['id']) {
+                continue 2;
+            }
+        }
+        array_push($coursegroups, $coursegroup);
+    }
+    return $coursegroups;
+}
+
 /**
  * Get a coursegroup id.
  */
