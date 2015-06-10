@@ -47,12 +47,6 @@ else {
     print_error('dbconnectionfailed','error');
 }
 
-// Check how many coursegroups/programs are enrolled at the moment
-$select = "SELECT COUNT(DISTINCT `coursegroup_id`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `coursegroup_id` IS NOT NULL LIMIT 1";
-$num_enrolments = $enroldb->Execute($select)->fields['num'];
-$select = "SELECT COUNT(DISTINCT `program_idyear`) AS num FROM `$CFG->enrol_remoteenroltable` WHERE `$CFG->enrol_remotecoursefield` = '$COURSE->idnumber' AND `$CFG->enrol_remoterolefield` = '$CFG->block_cegep_studentrole' AND `program_idyear` IS NOT NULL LIMIT 1";
-$num_programenrolments = $enroldb->Execute($select)->fields['num'];
-$num_enrolments_available = count(cegep_local_get_unenrolled_coursegroups($COURSE->idnumber, $USER->idnumber));
 // Get system context for global Admin CEGEP permissions
 $syscontext = get_context_instance(CONTEXT_SYSTEM, 1);
 
@@ -61,18 +55,11 @@ switch ($action) {
     case 'enrol' :
         if (is_siteadmin() || has_capability('block/cegep:enroladmin_course', $syscontext))
             cegep_enrol_admin();
-        else {
-            if ($num_enrolments_available > 0)
-                cegep_enrol();
-            else
-                notify(get_string('nocoursegroupsavailable','block_cegep'));
-        }
+        else
+            cegep_enrol();
         break;
    case 'unenrol' : 
-        if ($num_enrolments > 0)
             cegep_unenrol();
-        else
-            notify(get_string('nocoursegroupsenrolled','block_cegep'));
         break;
      case 'enrolprogram' :
         require_capability('block/cegep:enroladmin_program', $syscontext);
@@ -132,6 +119,25 @@ function cegep_enrol_admin() {
             } else {
                 $students_enrolled = array_merge($students_enrolled, $s);
             }
+
+            // Create Moodle group
+            if (isset($data->creategroups) && $data->creategroups) {
+                $groupname = sprintf('%s gr.%d %s', $coursecode, $coursegroup, cegep_local_term_to_string($term));
+                $group = $DB->get_record('groups', array('name' => $groupname), '*');
+                if (is_object($group) && isset($group->id)) {
+                    $groupid = $group->id;
+                }
+                else {
+                    $group = new stdClass();
+                    $group->courseid = $COURSE->id;
+                    $group->name = $groupname;
+                    $groupid = groups_create_group($group);
+                }
+                foreach ($s as $username) {
+                    $u = $DB->get_record('user', array('username' => $username), 'id', MUST_EXIST);
+                    groups_add_member($groupid, $u->id);
+                }
+            }
         }
 
         if (!$COURSE->visible && isset($data->makevisible) && $data->makevisible) {
@@ -160,7 +166,7 @@ function cegep_enrol_admin() {
  *
  */
 function cegep_enrol() {
-    global $CFG, $USER, $COURSE, $OUTPUT, $enroldb, $sisdb;
+    global $CFG, $DB, $USER, $COURSE, $OUTPUT, $enroldb, $sisdb;
 
     $currenttab = 'enrol';
     require('block_cegep_tabs.php');
@@ -182,6 +188,26 @@ function cegep_enrol() {
             // Enrol selected coursegroup(s)
             if (!$se = cegep_local_enrol_coursegroup($coursegroup_id)) {
                 print_error('errorimportingstudentlist','block_cegep');
+            }
+
+            // Create Moodle group
+            if (isset($data->creategroups) && $data->creategroups) {
+                $coursegroup = cegep_local_get_coursegroup($coursegroup_id);
+                $groupname = sprintf('%s gr.%d %s', $coursegroup['coursecode'], $coursegroup['group'], cegep_local_term_to_string($coursegroup['term']));
+                $group = $DB->get_record('groups', array('name' => $groupname), '*');
+                if (is_object($group) && isset($group->id)) {
+                    $groupid = $group->id;
+                }
+                else {
+                    $group = new stdClass();
+                    $group->courseid = $COURSE->id;
+                    $group->name = $groupname;
+                    $groupid = groups_create_group($group);
+                }
+                foreach ($se as $username) {
+                    $u = $DB->get_record('user', array('username' => $username), 'id', MUST_EXIST);
+                    groups_add_member($groupid, $u->id);
+                }
             }
 
             $students_enrolled += $se;

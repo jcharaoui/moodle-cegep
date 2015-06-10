@@ -46,6 +46,8 @@ class cegep_enrol_admin_form extends moodleform {
             'semester' => $semester,
         ));
 
+        $mform->addElement('checkbox', 'creategroups', null, get_string('creategroups','block_cegep'));
+
         $this->add_action_buttons();
     }
 

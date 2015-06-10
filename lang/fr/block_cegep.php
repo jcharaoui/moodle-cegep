@@ -60,6 +60,8 @@ $string['nocoursegroupsavailable'] = "Aucun groupe-cours n'est disponible pour i
 $string['nocoursegroupselected'] = 'Veuillez choisir un groupe à inscrire.';
 $string['alreadyenrolled'] = 'déjà inscrit';
 $string['coursegrouphasnostudents'] = 'Aucun étudiant n\'est inscrit dans ce groupe-cours.';
+$string['creategroups'] = 'Créer un groupe Moodle par groupe-cours';
+$string['selectmultiplehelp'] = 'Ctrl-clic pour sélectionner plusieurs à la fois.';
 
 // Unenrol form
 $string['students'] = 'étudiants';

@@ -25,9 +25,6 @@ $settings->add(new admin_setting_configtext('block_cegep_cron_password', get_str
 $settings->add(new admin_setting_configselect('block_cegep_autotopic', get_string('autotopic', 'block_cegep'),
                   get_string('autotopic_help', 'block_cegep'), '0', array(0=>get_string('no'), 1=>get_string('yes'))));
 
-$settings->add(new admin_setting_configselect('block_cegep_autogroups', get_string('autogroups', 'block_cegep'),
-                  get_string('autogroups_help', 'block_cegep'), '0', array(0=>get_string('no'), 1=>get_string('yes'))));
-
 $settings->add(new admin_setting_heading('sisdb', get_string('sisdb_heading', 'block_cegep'), get_string('sisdb_help', 'block_cegep')));
                    
 $settings->add(new admin_setting_configselect('sisdb_type', get_string('sisdb_type', 'block_cegep'),

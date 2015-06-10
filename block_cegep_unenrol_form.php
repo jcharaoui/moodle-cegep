@@ -10,15 +10,18 @@ class cegep_unenrol_form extends moodleform {
         // Extract enrolled coursegroups info
         $coursegroups = self::get_enrolled_coursegroups_list(); 
         
-        $coursegroup_select = $mform->createElement('select', 'coursegroup', null, $coursegroups);
-        $coursegroup_select->setMultiple(true);
-        
-        $mform->addElement($coursegroup_select);
-        $mform->addRule('coursegroup', get_string('specifycoursegroup','block_cegep'), 'required');
-
-        $mform->setType('coursegroup', PARAM_INT);
-
-        $this->add_action_buttons(true, get_string('unenrolbutton', 'block_cegep'));
+        if ($coursegroups != FALSE && count($coursegroups) > 0) {
+            $mform->addElement('html', '<p>' . get_string('selectmultiplehelp','block_cegep') . '</p>');
+            $coursegroup_select = $mform->createElement('select', 'coursegroup', null, $coursegroups);
+            $coursegroup_select->setMultiple(true);
+            $mform->addElement($coursegroup_select);
+            $mform->addRule('coursegroup', get_string('specifycoursegroup','block_cegep'), 'required');
+            $mform->setType('coursegroup', PARAM_INT);
+            $this->add_action_buttons(true, get_string('unenrolbutton', 'block_cegep'));
+        }
+        else {
+            $mform->addElement('html', '<div class="alert alert-error">' . get_string('nocoursegroupsenrolled','block_cegep') . '</div>');
+        }
     }
 
     function validation($data, $files) {

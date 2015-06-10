@@ -57,6 +57,8 @@ $string['nocoursegroupsavailable'] = 'No sections are available for enrolment in
 $string['nocoursegroupselected'] = 'Please select a section to enrol.';
 $string['alreadyenrolled'] = 'already enrolled';
 $string['coursegrouphasnostudents'] = 'There are no students enrolled in this section.';
+$string['creategroups'] = 'Create a Moodle group per section';
+$string['selectmultiplehelp'] = 'Ctrl-click to select multiple';
 
 // Unenrol form
 $string['students'] = 'students';

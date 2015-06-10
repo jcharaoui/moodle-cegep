@@ -660,6 +660,23 @@ function cegep_local_get_coursegroup_id($coursecode, $coursegroup, $term) {
 }
 
 /**
+ * Get a coursegroup info (coursecode, group no. and term) from coursegroup id.
+ */
+function cegep_local_get_coursegroup($coursegroup_id) {
+    global $CFG, $sisdb;
+
+    if (function_exists('cegep_' . $CFG->block_cegep_name . '_get_coursegroup')) {
+        return call_user_func('cegep_' . $CFG->block_cegep_name . '_get_coursegroup', $coursegroup_id);
+    }
+    else {
+        // Fetch record of the coursegroup from SIS
+        $select_coursegroup = "SELECT * FROM `$CFG->sisdb_name`.`coursegroup` WHERE `id` = ?;";
+        return $sisdb->Execute($select_coursegroup, array($coursegroup_id))->fields;
+    }
+}
+
+
+/**
  * Enrol a coursegroup/section into a Moodle course.
  * Accepts either the coursegroup id OR coursecode, coursegroup
  * and term for the coursegroup/section to enrol.
@@ -671,13 +688,6 @@ function cegep_local_enrol_coursegroup() {
 
     if (count($args) == 1) {
         $coursegroup_id = $args[0];
-
-        // Get the name of the section if autogroups is set
-        if ($CFG->block_cegep_autogroups) {
-            $select_coursegroup = "SELECT `group` FROM `$CFG->sisdb_name`.`coursegroup` WHERE `id` = $coursegroup_id;";
-            $coursegroup_rs = $sisdb->Execute($select_coursegroup);
-            $coursegroup = $coursegroup_rs->fields['group'];
-        }
     }
     elseif (count($args) == 3) {
         $coursegroup_id = cegep_local_get_coursegroup_id($args[0], $args[1], $args[2]);
@@ -698,33 +708,6 @@ function cegep_local_enrol_coursegroup() {
     $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
     $student_role = $DB->get_record('role', array($CFG->enrol_localrolefield => $CFG->block_cegep_studentrole));
 
-    // Autogroups
-    if ($CFG->block_cegep_autogroups && !empty($coursegroup)) {
-        // Check if a group already exists for this course
-        $groupname = get_string('coursegroup','block_cegep') . " $coursegroup";
-        $group = $DB->get_record("groups", array("courseid" => $COURSE->id, "name" => $groupname));
-
-        if ($group) {
-            $groupid = $group->id;
-        }
-        else {
-            // Create new group
-            $groupdata = new stdClass();
-            $groupdata->name = $groupname;
-            $groupdata->description = '';
-            $groupdata->enrolmentkey = '';
-            $groupdata->hidepicture = 0;
-            $groupdata->id = 0;
-            $groupdata->courseid = $COURSE->id;
-            $groupdata->submitbutton = "Save changes";
-            $groupdata->timecreated = time();
-            $groupdata->timemodified = $groupdata->timecreated;
-            if (!$groupid = $DB->insert_record('groups', $groupdata)) {
-                return FALSE;
-            }
-        }
-    }
-
     // Go through each student and insert Moodle external enrolment database record
     $students_enrolled = array();
     while ($students_rs && !$students_rs->EOF) {
@@ -733,12 +716,6 @@ function cegep_local_enrol_coursegroup() {
             return FALSE;
         } else {
             array_push($students_enrolled, $student['username']);
-        }
-        // Add group membership
-        if ($student_user = $DB->get_record('user', array($CFG->enrol_localuserfield => $student['username']))) {
-            if ($CFG->block_cegep_autogroups && !empty($groupid)) {
-                groups_add_member($groupid, $student_user->id);
-            }
         }
         $students_rs->MoveNext();
     }
